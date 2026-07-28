@@ -246,56 +246,10 @@ button {
   gap: 12px;
 }
 
-/* ---------------- イントロ（新NISAとは） ---------------- */
-.intro-card { padding: 0; overflow: hidden; }
-.intro-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  background: linear-gradient(120deg, rgba(var(--matcha),0.14), rgba(var(--gold),0.08));
-  border: none;
-  text-align: left;
-}
-.intro-emblem { font-size: 1.5rem; animation: sway 3.4s ease-in-out infinite; }
-.intro-toggle-text { flex: 1; display: flex; flex-direction: column; gap: 1px; }
-.intro-toggle-text strong { font-size: 0.92rem; }
-.intro-toggle-text span { font-size: 0.8rem; color: rgb(var(--ink-soft)); }
-.chev { color: rgb(var(--ink-soft)); transition: transform .3s var(--ease-brush); flex: 0 0 auto; }
-.intro-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
-
-.intro-body {
-  padding: 4px 16px 16px;
-  animation: accordion-in .3s var(--ease-brush);
-}
-.intro-lead { font-size: 0.86rem; line-height: 1.7; margin: 4px 0 12px; color: rgb(var(--ink)); }
-.intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.intro-item {
-  display: flex; flex-direction: column; align-items: center; text-align: center;
-  gap: 4px;
-  padding: 12px 8px;
-  background: rgba(var(--gold), 0.08);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(var(--gold), 0.22);
-}
-.intro-item-emblem { font-size: 1.4rem; }
-.intro-item strong { font-size: 0.85rem; }
-.intro-item span { font-size: 0.72rem; color: rgb(var(--ink-soft)); line-height: 1.5; }
-.intro-note { font-size: 0.8rem; line-height: 1.7; color: rgb(var(--ink-soft)); margin: 0; }
-.intro-note strong { color: rgb(var(--vermillion)); }
-
-@keyframes accordion-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes sway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
-
 /* ---------------- 盆栽ビジュアライザ ---------------- */
 .tree-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.tree-canvas-wrap { position: relative; width: 100%; display: flex; justify-content: center; }
-#treeCanvas { width: 100%; max-width: 420px; height: auto; aspect-ratio: 600 / 420; }
+.tree-canvas-wrap { position: relative; width: 100%; max-height: 320px; display: flex; justify-content: center; overflow: hidden; }
+#treeCanvas { width: 100%; max-width: 420px; max-height: 320px; height: auto; aspect-ratio: 600 / 420; }
 .tree-year-badge {
   position: absolute;
   top: 6px; right: 6px;

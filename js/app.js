@@ -50,7 +50,7 @@
     } catch (e) { /* 無視して初期値を使用 */ }
   }
   function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* 保存できない環境では無視 */ }
   }
 
   /* ---------------- 複利シミュレーション ---------------- */
@@ -72,8 +72,9 @@
   function animateNumber(el, to) {
     const from = Number(el.dataset.value || 0);
     el.dataset.value = to;
+    el.textContent = fmtYen(to); // 即時に正しい値を表示（アニメーションが動かない環境でも表示は保証する）
     cancelAnimationFrame(el._raf);
-    if (REDUCED) { el.textContent = fmtYen(to); return; }
+    if (REDUCED || from === to) return;
     const duration = 500;
     const start = performance.now();
     function step(now) {
@@ -81,6 +82,7 @@
       const eased = 1 - Math.pow(1 - t, 3);
       el.textContent = fmtYen(lerp(from, to, eased));
       if (t < 1) el._raf = requestAnimationFrame(step);
+      else el.textContent = fmtYen(to);
     }
     el._raf = requestAnimationFrame(step);
   }
@@ -394,14 +396,6 @@
     $("#lumpToggle").textContent = field.hidden ? "＋ はじめに一括投資額を追加する" : "－ 一括投資額を非表示にする";
   });
 
-  /* ---------------- イントロ開閉 ---------------- */
-  $("#introToggle").addEventListener("click", () => {
-    const body = $("#introBody");
-    const willShow = body.hidden;
-    body.hidden = !willShow;
-    $("#introToggle").setAttribute("aria-expanded", String(willShow));
-  });
-
   /* ---------------- メニュー ---------------- */
   const menuBtn = $("#menuBtn");
   const menuPanel = $("#menuPanel");
@@ -573,6 +567,13 @@
   syncSlidersFromState();
   treeCtx = $("#treeCanvas").getContext("2d");
   chartCtx = $("#growthChart").getContext("2d");
-  recalc();
+  try {
+    recalc();
+  } catch (e) {
+    console.warn("初期計算に失敗しました", e);
+  }
+  // 初回フレームを同期描画し、アニメーションフレームを待たずに絵が出るようにする
+  drawTree(performance.now());
+  drawChartFrame(chartData, 1);
   requestAnimationFrame(loop);
 })();
