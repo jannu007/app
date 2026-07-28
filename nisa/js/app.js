@@ -32,7 +32,7 @@
   }
 
   /* ---------------- 状態 ---------------- */
-  const DEFAULTS = { monthly: 30000, lumpsum: 0, rate: 5, years: 20 };
+  const DEFAULTS = { tsumitateMonthly: 30000, growthMonthly: 0, lumpsum: 0, rate: 5, years: 20 };
   let state = { ...DEFAULTS };
 
   function loadState() {
@@ -40,8 +40,16 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
+        // 旧バージョン（毎月の積立額が単一だった頃）のデータからの移行
+        let tsumitateMonthly = parsed.tsumitateMonthly;
+        let growthMonthly = parsed.growthMonthly;
+        if (tsumitateMonthly === undefined && typeof parsed.monthly === "number") {
+          tsumitateMonthly = Math.min(parsed.monthly, 100000);
+          growthMonthly = Math.max(0, parsed.monthly - 100000);
+        }
         state = {
-          monthly: clamp(Number(parsed.monthly) || DEFAULTS.monthly, 1000, 300000),
+          tsumitateMonthly: clamp(Number(tsumitateMonthly) || 0, 0, 100000),
+          growthMonthly: clamp(Number(growthMonthly) || 0, 0, 200000),
           lumpsum: clamp(Number(parsed.lumpsum) || 0, 0, 5000000),
           rate: clamp(Number(parsed.rate) || DEFAULTS.rate, 0.1, 15),
           years: clamp(Number(parsed.years) || DEFAULTS.years, 1, 40),
@@ -55,14 +63,15 @@
 
   /* ---------------- 複利シミュレーション ---------------- */
   function compute(s) {
+    const monthly = s.tsumitateMonthly + s.growthMonthly;
     const months = Math.round(s.years * 12);
     const i = s.rate / 100 / 12;
     let balance = s.lumpsum;
     let principal = s.lumpsum;
     const yearly = [{ year: 0, principal, balance }];
     for (let m = 1; m <= months; m++) {
-      balance = (balance + s.monthly) * (1 + i);
-      principal += s.monthly;
+      balance = (balance + monthly) * (1 + i);
+      principal += monthly;
       if (m % 12 === 0) yearly.push({ year: m / 12, principal, balance });
     }
     return { principal, balance, profit: balance - principal, yearly };
@@ -374,8 +383,10 @@
 
   /* ---------------- スライダーUI ---------------- */
   function syncSlidersFromState() {
-    $("#monthlySlider").value = state.monthly;
-    $("#monthlyOut").textContent = fmtYen(state.monthly);
+    $("#tsumitateSlider").value = state.tsumitateMonthly;
+    $("#tsumitateOut").textContent = fmtYen(state.tsumitateMonthly);
+    $("#growthMonthlySlider").value = state.growthMonthly;
+    $("#growthMonthlyOut").textContent = fmtYen(state.growthMonthly);
     $("#rateSlider").value = state.rate;
     $("#rateOut").textContent = state.rate.toFixed(1);
     $("#yearsSlider").value = state.years;
@@ -383,15 +394,20 @@
     $("#lumpSlider").value = state.lumpsum;
     $("#lumpOut").textContent = fmtYen(state.lumpsum);
     $$(".preset-chip").forEach((c) => c.classList.toggle("active", Number(c.dataset.rate) === state.rate));
-    if (state.lumpsum > 0) {
-      $("#lumpField").hidden = false;
-      $("#lumpToggle").textContent = "－ 一括投資額を非表示にする";
+    if (state.growthMonthly > 0 || state.lumpsum > 0) {
+      $("#growthField").hidden = false;
+      $("#growthToggle").textContent = "－ 成長投資枠を非表示にする";
     }
   }
 
-  $("#monthlySlider").addEventListener("input", (e) => {
-    state.monthly = Number(e.target.value);
-    $("#monthlyOut").textContent = fmtYen(state.monthly);
+  $("#tsumitateSlider").addEventListener("input", (e) => {
+    state.tsumitateMonthly = Number(e.target.value);
+    $("#tsumitateOut").textContent = fmtYen(state.tsumitateMonthly);
+    recalc();
+  });
+  $("#growthMonthlySlider").addEventListener("input", (e) => {
+    state.growthMonthly = Number(e.target.value);
+    $("#growthMonthlyOut").textContent = fmtYen(state.growthMonthly);
     recalc();
   });
   $("#lumpSlider").addEventListener("input", (e) => {
@@ -419,10 +435,10 @@
     $$(".preset-chip").forEach((c) => c.classList.toggle("active", c === chip));
     recalc();
   });
-  $("#lumpToggle").addEventListener("click", () => {
-    const field = $("#lumpField");
+  $("#growthToggle").addEventListener("click", () => {
+    const field = $("#growthField");
     field.hidden = !field.hidden;
-    $("#lumpToggle").textContent = field.hidden ? "＋ はじめに一括投資額を追加する" : "－ 一括投資額を非表示にする";
+    $("#growthToggle").textContent = field.hidden ? "＋ 成長投資枠も使う（追加積立・一括購入）" : "－ 成長投資枠を非表示にする";
   });
 
   /* ---------------- メニュー ---------------- */
@@ -452,8 +468,8 @@
   function resetInputs() {
     state = { ...DEFAULTS };
     syncSlidersFromState();
-    $("#lumpField").hidden = true;
-    $("#lumpToggle").textContent = "＋ はじめに一括投資額を追加する";
+    $("#growthField").hidden = true;
+    $("#growthToggle").textContent = "＋ 成長投資枠も使う（追加積立・一括購入）";
     recalc();
     toast("初期値にもどしました");
   }

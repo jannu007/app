@@ -314,6 +314,31 @@ button {
   color: rgb(var(--ink-soft));
   margin: 8px 2px 0;
 }
+
+.frame-block {
+  padding: 14px 14px 4px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  background: rgba(var(--gold), 0.05);
+  border: 1px solid rgba(var(--gold), 0.2);
+}
+.frame-block .slider-field:last-child { margin-bottom: 14px; }
+.frame-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+.frame-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+}
+.frame-badge.tsumitate { background: rgba(94, 140, 122, 0.18); color: rgb(var(--matcha)); }
+.frame-badge.growth { background: rgba(196, 149, 63, 0.2); color: rgb(150, 108, 40); }
+.frame-limit { font-size: 0.72rem; color: rgb(var(--ink-soft)); }
 .slider-head {
   display: flex;
   justify-content: space-between;

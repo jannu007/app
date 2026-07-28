@@ -92,13 +92,42 @@
     <section class="card sliders-card">
       <h2 class="section-title">積立の条件</h2>
 
-      <div class="slider-field">
-        <div class="slider-head">
-          <span class="slider-label">毎月の積立額</span>
-          <span class="slider-value"><span id="monthlyOut">30,000</span>円</span>
+      <div class="frame-block">
+        <div class="frame-head">
+          <span class="frame-badge tsumitate">つみたて投資枠</span>
+          <span class="frame-limit">年120万円まで</span>
         </div>
-        <input type="range" id="monthlySlider" min="1000" max="300000" step="1000" value="30000" />
-        <p class="field-hint">上限30万円 ＝ つみたて投資枠（月10万円）＋成長投資枠（月20万円）を毎月均等に使い切った場合の上限です。</p>
+        <div class="slider-field">
+          <div class="slider-head">
+            <span class="slider-label">毎月の積立額</span>
+            <span class="slider-value"><span id="tsumitateOut">30,000</span>円</span>
+          </div>
+          <input type="range" id="tsumitateSlider" min="0" max="100000" step="1000" value="30000" />
+          <p class="field-hint">上限は月10万円（年120万円）。長期・積立・分散投資に適した投資信託が対象です。</p>
+        </div>
+      </div>
+
+      <button type="button" id="growthToggle" class="btn btn-ghost full small-btn">＋ 成長投資枠も使う（追加積立・一括購入）</button>
+      <div class="frame-block growth-block" id="growthField" hidden>
+        <div class="frame-head">
+          <span class="frame-badge growth">成長投資枠</span>
+          <span class="frame-limit">年240万円まで</span>
+        </div>
+        <div class="slider-field">
+          <div class="slider-head">
+            <span class="slider-label">毎月の積立額</span>
+            <span class="slider-value"><span id="growthMonthlyOut">0</span>円</span>
+          </div>
+          <input type="range" id="growthMonthlySlider" min="0" max="200000" step="1000" value="0" />
+        </div>
+        <div class="slider-field">
+          <div class="slider-head">
+            <span class="slider-label">はじめの一括投資額</span>
+            <span class="slider-value"><span id="lumpOut">0</span>円</span>
+          </div>
+          <input type="range" id="lumpSlider" min="0" max="5000000" step="50000" value="0" />
+          <p class="field-hint">上場株式や幅広い投資信託が対象で、つみたてだけでなく一括（スポット）購入もできる枠です。</p>
+        </div>
       </div>
 
       <div class="slider-field">
@@ -120,16 +149,6 @@
           <span class="slider-value"><span id="yearsOut">20</span>年</span>
         </div>
         <input type="range" id="yearsSlider" min="1" max="40" step="1" value="20" />
-      </div>
-
-      <button type="button" id="lumpToggle" class="btn btn-ghost full small-btn">＋ はじめに一括投資額を追加する</button>
-      <div class="slider-field lump-field" id="lumpField" hidden>
-        <div class="slider-head">
-          <span class="slider-label">はじめの一括投資額</span>
-          <span class="slider-value"><span id="lumpOut">0</span>円</span>
-        </div>
-        <input type="range" id="lumpSlider" min="0" max="5000000" step="50000" value="0" />
-        <p class="field-hint">新NISAでは「成長投資枠」を使うと、積立とは別に一括（スポット）購入もできます。ここではその分を試算します。</p>
       </div>
     </section>
 
