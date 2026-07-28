@@ -123,7 +123,7 @@
     const years = (new Date(last.date) - new Date(first.date)) / (1000 * 60 * 60 * 24 * 365.25);
     if (!(years > 0.5)) throw new Error("期間が短すぎます");
     const rate = (Math.pow(last.close / first.close, 1 / years) - 1) * 100;
-    return { rate, years, asOf: last.date };
+    return { rate, years, asOf: last.date, series: rows };
   }
 
   function parseYahooChart(json) {
@@ -213,6 +213,61 @@
     $(`.fund-card[data-fund="${fund}"]`).classList.toggle("active", realtime.selected === fund && !!info && !info.error);
   }
 
+  /* ---------------- 選択した銘柄の推移グラフ ---------------- */
+  const FUND_TREND_W = 600, FUND_TREND_H = 180;
+  const FUND_LINE_COLOR = { acwi: "#5e8c7a", sp500: "#3a5282" };
+  let fundTrendCtx = null;
+
+  function drawFundTrendChart(fund) {
+    const wrap = $("#fundTrend");
+    if (!fundTrendCtx || !fund) { wrap.hidden = true; return; }
+    const info = realtime.funds[fund];
+    if (!info || info.error || !info.series || info.series.length < 2) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    const series = info.series;
+    const base = series[0].close;
+    const values = series.map((r) => (r.close / base) * 100);
+    const minV = Math.min(...values, 100), maxV = Math.max(...values, 100);
+    const range = Math.max(1, maxV - minV);
+    const padL = 40, padR = 10, padT = 12, padB = 20;
+    const plotW = FUND_TREND_W - padL - padR, plotH = FUND_TREND_H - padT - padB;
+    const x = (i) => padL + (i / (series.length - 1)) * plotW;
+    const y = (v) => padT + plotH - ((v - minV) / range) * plotH;
+
+    const ctx = fundTrendCtx;
+    ctx.clearRect(0, 0, FUND_TREND_W, FUND_TREND_H);
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "right";
+    [minV, 100, maxV].forEach((v) => {
+      const gy = y(v);
+      ctx.strokeStyle = v === 100 ? "rgba(176,58,46,0.35)" : "rgba(120,100,70,0.16)";
+      ctx.setLineDash(v === 100 ? [4, 3] : []);
+      ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(96,82,72,0.75)";
+      ctx.fillText(v.toFixed(0), padL - 6, gy + 3);
+    });
+
+    ctx.beginPath();
+    values.forEach((v, i) => (i === 0 ? ctx.moveTo(x(i), y(v)) : ctx.lineTo(x(i), y(v))));
+    ctx.strokeStyle = FUND_LINE_COLOR[fund] || "#3a5282";
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(96,82,72,0.75)";
+    ctx.textAlign = "left";
+    ctx.fillText(series[0].date, padL, FUND_TREND_H - 4);
+    ctx.textAlign = "right";
+    ctx.fillText(series[series.length - 1].date, padL + plotW, FUND_TREND_H - 4);
+
+    $("#fundTrendHint").textContent =
+      `${FUND_LABELS[fund]}の推移（開始時点を100として指数化）。${series[0].date} 〜 ${series[series.length - 1].date}`;
+  }
+
   async function refreshRealtimeData() {
     const btn = $("#realtimeRefresh");
     btn.disabled = true;
@@ -234,7 +289,10 @@
     realtime.fetchedAt = Date.now();
     saveRealtime();
     btn.disabled = false;
-    if (realtime.selected) renderFundCard(realtime.selected);
+    if (realtime.selected) {
+      renderFundCard(realtime.selected);
+      drawFundTrendChart(realtime.selected);
+    }
     if (fallbackUsed) toast("通信できなかったため、一部は長期の歴史的平均（参考値）を表示しています");
   }
 
@@ -243,6 +301,7 @@
     realtime.selected = null;
     saveRealtime();
     $$(".fund-card").forEach((c) => c.classList.remove("active"));
+    $("#fundTrend").hidden = true;
   }
 
   /* ---------------- 複利シミュレーション ---------------- */
@@ -631,6 +690,7 @@
     saveRealtime();
     if (!realtime.enabled) return;
     Object.keys(FUND_SOURCES).forEach(renderFundCard);
+    if (realtime.selected) drawFundTrendChart(realtime.selected);
     const stale = !realtime.fetchedAt || Date.now() - realtime.fetchedAt > 12 * 60 * 60 * 1000;
     if (stale) refreshRealtimeData();
   });
@@ -649,6 +709,7 @@
     $("#rateOut").textContent = state.rate.toFixed(1);
     $$(".preset-chip").forEach((c) => c.classList.remove("active"));
     recalc();
+    drawFundTrendChart(fund);
     toast(`${FUND_LABELS[fund]}の実績利回り ${state.rate.toFixed(1)}% を反映しました`);
   });
   $("#growthToggle").addEventListener("click", () => {
@@ -858,11 +919,13 @@
   /* ---------------- 初期化 ---------------- */
   loadState();
   syncSlidersFromState();
+  fundTrendCtx = $("#fundTrendChart").getContext("2d");
   loadRealtime();
   $("#realtimeToggle").checked = realtime.enabled;
   $("#realtimeBody").hidden = !realtime.enabled;
   if (realtime.enabled) {
     Object.keys(FUND_SOURCES).forEach(renderFundCard);
+    if (realtime.selected) drawFundTrendChart(realtime.selected);
     if (!realtime.fetchedAt || Date.now() - realtime.fetchedAt > 12 * 60 * 60 * 1000) refreshRealtimeData();
   }
   treeCtx = $("#treeCanvas").getContext("2d");

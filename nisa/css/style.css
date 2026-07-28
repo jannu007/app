@@ -440,6 +440,17 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); }
 }
 
 .fund-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+
+.fund-trend {
+  margin-bottom: 10px;
+  padding: 10px 8px 4px;
+  border-radius: var(--radius-sm);
+  background: rgba(var(--card-bg), 0.6);
+  border: 1px solid rgba(var(--gold), 0.2);
+  animation: accordion-in .28s var(--ease-brush);
+}
+#fundTrendChart { width: 100%; height: auto; display: block; }
+.fund-trend .field-hint { margin-top: 6px; text-align: center; }
 .fund-card {
   display: flex;
   flex-direction: column;

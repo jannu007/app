@@ -157,6 +157,10 @@
                 <span class="fund-meta" id="sp500Meta">未取得</span>
               </button>
             </div>
+            <div class="fund-trend" id="fundTrend" hidden>
+              <canvas id="fundTrendChart" width="600" height="180"></canvas>
+              <p class="field-hint" id="fundTrendHint"></p>
+            </div>
             <button type="button" id="realtimeRefresh" class="btn btn-ghost full small-btn">🔄 最新データを取得する</button>
             <p class="field-hint">タップした銘柄の年率リターンを想定利回りに反映します。オルカンは代替データとしてMAXIS全世界株式(オール・カントリー)上場投信(2559)、S&amp;P500は同指数の実績を、stooq.comまたはYahoo Financeから取得します。通信できない場合は、点線表示の「長期の歴史的平均（参考値）」に自動で切り替わります。過去の実績は将来の成果を保証するものではありません。</p>
           </div>
