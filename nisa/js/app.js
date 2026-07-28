@@ -421,7 +421,7 @@
     const progress = clamp(result.balance / BLOOM_TARGET, 0, 1); // 評価額そのもので木の育ち具合を決める
     assetProgress = progress;
     treeTarget = {
-      scale: clamp(0.22 + progress * 1.65, 0.22, 1.87), // 満開時は画面いっぱいに育つ大きさにする
+      scale: clamp(0.22 + progress * 1.48, 0.22, 1.7), // 満開時は画面いっぱいに育つが、上に余白を残す
       depthF: clamp(1.3 + progress * (MAX_DEPTH + 0.7 - 1.3), 1.3, MAX_DEPTH + 0.7),
       leafDensity: clamp(0.35 + progress * 1.8 + profitRatio * 0.3, 0.35, 3.2),
       goldRatio: clamp(profitRatio / 2.2, 0, 1),
@@ -546,7 +546,7 @@
     ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
 
-    if (node.depth >= MAX_DEPTH - 2) drawFoliage(ctx, nx, ny, node, params, grown);
+    if (node.depth >= MAX_DEPTH - 3) drawFoliage(ctx, nx, ny, node, params, grown);
 
     for (const child of node.children) {
       walk(ctx, child, nx, ny, drawAngle + child.angle, len * child.lenRatio, params, now);
