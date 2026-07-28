@@ -248,10 +248,12 @@
   let treeCurrent = { scale: 0.12, depthF: 0.6, leafDensity: 0.35, goldRatio: 0, bloomRatio: 0 };
   let treeTarget = { scale: 0.5, depthF: 2, leafDensity: 0.5, goldRatio: 0, bloomRatio: 0 };
   let hasBloomed = false;
+  let assetProgress = 0; // 評価額の進み具合（0〜1）。背景の花びらの数にも使う
 
   function updateTreeTarget(result) {
     const profitRatio = result.principal > 0 ? result.profit / result.principal : 0;
     const progress = clamp(result.balance / BLOOM_TARGET, 0, 1); // 評価額そのもので木の育ち具合を決める
+    assetProgress = progress;
     treeTarget = {
       scale: clamp(0.22 + progress * 1.1, 0.22, 1.32),
       depthF: clamp(1.3 + progress * (MAX_DEPTH + 0.5 - 1.3), 1.3, MAX_DEPTH + 1.5),
@@ -670,13 +672,14 @@
     resize();
     window.addEventListener("resize", resize);
 
+    // 資産が「育つ・上がる」イメージに合わせ、花びらは下から上へ舞い上がる
     function makePetal() {
       const gold = Math.random() < 0.3;
       return {
         x: Math.random() * w,
-        y: -20 - Math.random() * h * 0.3,
+        y: h + 20 + Math.random() * h * 0.3,
         size: (5 + Math.random() * 7) * devicePixelRatio,
-        speedY: (0.32 + Math.random() * 0.45) * devicePixelRatio,
+        speedY: -(0.32 + Math.random() * 0.45) * devicePixelRatio,
         speedX: (Math.random() - 0.5) * 0.55 * devicePixelRatio,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.03,
@@ -686,8 +689,13 @@
       };
     }
 
-    const COUNT = REDUCED ? 0 : (window.innerWidth < 480 ? 9 : 14);
-    for (let i = 0; i < COUNT; i++) {
+    // 評価額が増えるほど（資産の成長＝満開に近づくほど）花びらも増やす
+    const BASE_COUNT = REDUCED ? 0 : (window.innerWidth < 480 ? 9 : 14);
+    const MAX_EXTRA = REDUCED ? 0 : 26;
+    function desiredCount() {
+      return REDUCED ? 0 : Math.round(BASE_COUNT + assetProgress * MAX_EXTRA);
+    }
+    for (let i = 0; i < desiredCount(); i++) {
       const p = makePetal();
       p.y = Math.random() * h;
       arr.push(p);
@@ -707,12 +715,28 @@
 
     function tick() {
       ctx.clearRect(0, 0, w, h);
+      const target = desiredCount();
+      if (arr.length < target) {
+        const addN = Math.min(2, target - arr.length);
+        for (let i = 0; i < addN; i++) {
+          const p = makePetal();
+          p.y = h + 20 + Math.random() * h * 0.6;
+          arr.push(p);
+        }
+      } else if (arr.length > target) {
+        const removeN = Math.min(2, arr.length - target);
+        for (let i = 0; i < removeN; i++) {
+          let idx = 0, minY = Infinity;
+          arr.forEach((p, j) => { if (p.y < minY) { minY = p.y; idx = j; } });
+          arr.splice(idx, 1);
+        }
+      }
       arr.forEach((p) => {
         p.y += p.speedY;
         p.sway += 0.02;
         p.x += p.speedX + Math.sin(p.sway) * 0.4 * devicePixelRatio;
         p.rot += p.rotSpeed;
-        if (p.y > h + 20) { Object.assign(p, makePetal()); p.y = -20; }
+        if (p.y < -20) { Object.assign(p, makePetal()); p.y = h + 20; }
         drawPetal(p);
       });
       requestAnimationFrame(tick);
@@ -755,8 +779,17 @@
   }
 
   if ("serviceWorker" in navigator) {
+    // 新しいService Workerが有効になったら、最新版を確実に表示するため一度だけ自動リロードする
+    let swRefreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (swRefreshing) return;
+      swRefreshing = true;
+      window.location.reload();
+    });
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch((err) => console.warn("SW登録失敗", err));
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        reg.update().catch(() => {});
+      }).catch((err) => console.warn("SW登録失敗", err));
     });
   }
 
