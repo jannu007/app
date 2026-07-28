@@ -240,23 +240,45 @@
   const FUND_LINE_COLOR = { acwi: "#5e8c7a", sp500: "#3a5282" };
   let fundTrendCtx = null;
 
+  // 参考値（実データなし）の場合に、その年率で複利運用したと仮定した試算カーブを作る
+  function buildIllustrativeSeries(rate, years = 10) {
+    const months = years * 12;
+    const monthlyRate = Math.pow(1 + rate / 100, 1 / 12) - 1;
+    const values = [];
+    let v = 100;
+    for (let m = 0; m <= months; m++) { values.push(v); v *= 1 + monthlyRate; }
+    return values;
+  }
+
   function drawFundTrendChart(fund) {
     const wrap = $("#fundTrend");
     if (!fundTrendCtx || !fund) { wrap.hidden = true; return; }
     const info = realtime.funds[fund];
-    if (!info || info.error || !info.series || info.series.length < 2) {
-      wrap.hidden = true;
-      return;
-    }
+    if (!info || info.error) { wrap.hidden = true; return; }
     wrap.hidden = false;
-    const series = info.series;
-    const base = series[0].close;
-    const values = series.map((r) => (r.close / base) * 100);
+
+    const hasSeries = info.series && info.series.length >= 2;
+    let values, firstLabel, lastLabel, hintText;
+    if (hasSeries) {
+      const series = info.series;
+      const base = series[0].close;
+      values = series.map((r) => (r.close / base) * 100);
+      firstLabel = series[0].date;
+      lastLabel = series[series.length - 1].date;
+      hintText = `${FUND_LABELS[fund]}の推移（開始時点を100として指数化）。${firstLabel} 〜 ${lastLabel}`;
+    } else {
+      // 実データが取得できず参考値を使っている場合も、必ず何かのグラフを表示する
+      values = buildIllustrativeSeries(info.rate);
+      firstLabel = "0年目";
+      lastLabel = "10年目";
+      hintText = `${FUND_LABELS[fund]}の参考年率（${info.rate >= 0 ? "+" : ""}${info.rate.toFixed(1)}%）で複利運用したと仮定した試算カーブです。実際の値動きではありません。`;
+    }
+
     const minV = Math.min(...values, 100), maxV = Math.max(...values, 100);
     const range = Math.max(1, maxV - minV);
     const padL = 40, padR = 10, padT = 12, padB = 20;
     const plotW = FUND_TREND_W - padL - padR, plotH = FUND_TREND_H - padT - padB;
-    const x = (i) => padL + (i / (series.length - 1)) * plotW;
+    const x = (i) => padL + (i / (values.length - 1)) * plotW;
     const y = (v) => padT + plotH - ((v - minV) / range) * plotH;
 
     const ctx = fundTrendCtx;
@@ -278,16 +300,17 @@
     ctx.strokeStyle = FUND_LINE_COLOR[fund] || "#3a5282";
     ctx.lineWidth = 2.2;
     ctx.lineJoin = "round";
+    if (!hasSeries) ctx.setLineDash([5, 4]); // 試算カーブは点線で区別する
     ctx.stroke();
+    ctx.setLineDash([]);
 
     ctx.fillStyle = "rgba(96,82,72,0.75)";
     ctx.textAlign = "left";
-    ctx.fillText(series[0].date, padL, FUND_TREND_H - 4);
+    ctx.fillText(firstLabel, padL, FUND_TREND_H - 4);
     ctx.textAlign = "right";
-    ctx.fillText(series[series.length - 1].date, padL + plotW, FUND_TREND_H - 4);
+    ctx.fillText(lastLabel, padL + plotW, FUND_TREND_H - 4);
 
-    $("#fundTrendHint").textContent =
-      `${FUND_LABELS[fund]}の推移（開始時点を100として指数化）。${series[0].date} 〜 ${series[series.length - 1].date}`;
+    $("#fundTrendHint").textContent = hintText;
   }
 
   async function refreshRealtimeData() {
