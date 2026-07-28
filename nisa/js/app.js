@@ -75,6 +75,12 @@
       { provider: "yahoo", symbol: "^GSPC" },
     ],
   };
+  // 外部サイトへの通信が使えない環境でも必ず何か表示できるよう、長期の歴史的平均を参考値として同梱しておく
+  // （API取得に成功した場合はそちらを優先し、失敗した場合のみこの参考値にフォールバックする）
+  const STATIC_FUND_REFERENCE = {
+    acwi: { rate: 8.0, fallback: true },
+    sp500: { rate: 10.0, fallback: true },
+  };
   let realtime = { enabled: false, funds: {}, selected: null, fetchedAt: 0 };
 
   function loadRealtime() {
@@ -156,23 +162,23 @@
     return computeCagr(parseYahooChart(json));
   }
 
-  // 取得元を順番に試し、最初に成功したものを採用する（一つの通信経路がブロックされていても他で補う）
+  // 取得元を順番に試し、最初に成功したものを採用する（一つの通信経路がブロックされていても他で補う）。
+  // すべて失敗した場合も、通信不要の参考値（長期の歴史的平均）にフォールバックし、必ず何かを表示する。
   async function fetchFundReturn(fund) {
-    let lastError = null;
     for (const src of FUND_SOURCES[fund]) {
       for (const useProxy of [false, true]) {
         try {
           return await fetchOne(src.provider, src.symbol, useProxy);
         } catch (e) {
-          lastError = e;
           console.warn(`[つみたての庭] ${fund} の取得に失敗 (${src.provider}${useProxy ? "/proxy" : ""}):`, e);
         }
       }
     }
-    throw lastError || new Error("全ての取得元で失敗しました");
+    return { ...STATIC_FUND_REFERENCE[fund] };
   }
 
   function fundMetaText(info) {
+    if (info.fallback) return "長期の歴史的平均（参考値）";
     const label = info.years >= 4.5 ? `直近${Math.round(info.years)}年` : `設定来 約${info.years.toFixed(1)}年`;
     return `${label}年率・${info.asOf}時点`;
   }
@@ -195,6 +201,7 @@
     const card = $(`.fund-card[data-fund="${fund}"]`);
     card.disabled = false;
     card.classList.remove("error");
+    card.classList.toggle("fallback", !!info.fallback);
     $(`#${fund}Rate`).textContent = `${info.rate >= 0 ? "+" : ""}${info.rate.toFixed(1)}%`;
     $(`#${fund}Meta`).textContent = fundMetaText(info);
   }
@@ -210,10 +217,12 @@
     const btn = $("#realtimeRefresh");
     btn.disabled = true;
     Object.keys(FUND_SOURCES).forEach(setFundLoading);
+    let fallbackUsed = false;
     await Promise.all(
       Object.keys(FUND_SOURCES).map(async (fund) => {
         try {
           const info = await fetchFundReturn(fund);
+          if (info.fallback) fallbackUsed = true;
           realtime.funds[fund] = info;
           setFundData(fund, info);
         } catch (e) {
@@ -226,8 +235,7 @@
     saveRealtime();
     btn.disabled = false;
     if (realtime.selected) renderFundCard(realtime.selected);
-    const okCount = Object.values(realtime.funds).filter((f) => f && !f.error).length;
-    if (okCount === 0) toast("データを取得できませんでした。通信環境をご確認のうえ、時間をおいて再度お試しください");
+    if (fallbackUsed) toast("通信できなかったため、一部は長期の歴史的平均（参考値）を表示しています");
   }
 
   function clearFundSelection() {

@@ -459,6 +459,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); }
   background: rgba(var(--matcha), 0.14);
 }
 .fund-card.error { border-color: rgba(var(--vermillion), 0.5); }
+.fund-card.fallback { border-style: dashed; }
 .fund-name { font-size: 0.76rem; font-weight: 700; line-height: 1.4; }
 .fund-rate { font-family: "Shippori Mincho", serif; font-size: 1.3rem; font-weight: 700; color: rgb(var(--vermillion)); }
 .fund-meta { font-size: 0.66rem; color: rgb(var(--ink-soft)); line-height: 1.4; }
