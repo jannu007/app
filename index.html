@@ -51,15 +51,17 @@
     <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
     </button>
+
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <button data-action="export" class="menu-item">📤 データを書き出す (JSON)</button>
+      <button data-action="import" class="menu-item">📥 データを読み込む</button>
+      <button data-action="reset" class="menu-item danger">🗑 全データを削除</button>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+    </nav>
   </header>
 
-  <nav id="menuPanel" class="menu-panel" hidden>
-    <button data-action="export" class="menu-item">📤 データを書き出す (JSON)</button>
-    <button data-action="import" class="menu-item">📥 データを読み込む</button>
-    <button data-action="reset" class="menu-item danger">🗑 全データを削除</button>
-    <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
-    <input type="file" id="importFile" accept="application/json" hidden />
-  </nav>
+  <div id="menuScrim" class="menu-scrim" hidden></div>
 
   <!-- 日付ナビ -->
   <section class="date-nav card">

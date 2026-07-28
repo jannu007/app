@@ -230,16 +230,14 @@
   }
 
   /* ---------------- 日付ナビ操作 ---------------- */
-  $("#prevDay").addEventListener("click", () => {
-    currentDate.setDate(currentDate.getDate() - 1);
-    renderDate("prev");
+  function goToDay(offset) {
+    currentDate.setDate(currentDate.getDate() + offset);
+    renderDate(offset > 0 ? "next" : "prev");
     renderEntries();
-  });
-  $("#nextDay").addEventListener("click", () => {
-    currentDate.setDate(currentDate.getDate() + 1);
-    renderDate("next");
-    renderEntries();
-  });
+  }
+
+  $("#prevDay").addEventListener("click", () => goToDay(-1));
+  $("#nextDay").addEventListener("click", () => goToDay(1));
   $("#dateDisplay").addEventListener("click", () => {
     $("#datePicker").showPicker ? $("#datePicker").showPicker() : $("#datePicker").click();
   });
@@ -250,6 +248,34 @@
     renderDate();
     renderEntries();
   });
+
+  /* ---------------- スワイプで日付移動（左:翌日 / 右:前日） ---------------- */
+  (function swipeNav() {
+    const target = $(".app-shell");
+    let startX = 0, startY = 0, startT = 0, tracking = false;
+
+    target.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      startX = e.clientX;
+      startY = e.clientY;
+      startT = Date.now();
+      tracking = true;
+    });
+
+    target.addEventListener("pointerup", (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const dt = Date.now() - startT;
+      const absX = Math.abs(dx), absY = Math.abs(dy);
+      if (dt < 700 && absX > 60 && absX > absY * 1.4) {
+        goToDay(dx < 0 ? 1 : -1);
+      }
+    });
+
+    target.addEventListener("pointercancel", () => { tracking = false; });
+  })();
 
   /* ---------------- 追加モーダル ---------------- */
   const addModal = $("#addModal");
@@ -465,16 +491,18 @@
   /* ---------------- メニュー（書き出し/読み込み/削除） ---------------- */
   const menuBtn = $("#menuBtn");
   const menuPanel = $("#menuPanel");
-  menuBtn.addEventListener("click", () => {
-    const willShow = menuPanel.hidden;
-    menuPanel.hidden = !willShow;
-    menuBtn.setAttribute("aria-expanded", String(willShow));
-  });
-  document.addEventListener("click", (e) => {
-    if (!menuPanel.hidden && !menuPanel.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) {
-      menuPanel.hidden = true;
-      menuBtn.setAttribute("aria-expanded", "false");
-    }
+  const menuScrim = $("#menuScrim");
+
+  function setMenuOpen(open) {
+    menuPanel.hidden = !open;
+    menuScrim.hidden = !open;
+    menuBtn.setAttribute("aria-expanded", String(open));
+  }
+
+  menuBtn.addEventListener("click", () => setMenuOpen(menuPanel.hidden));
+  menuScrim.addEventListener("click", () => setMenuOpen(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menuPanel.hidden) setMenuOpen(false);
   });
 
   menuPanel.addEventListener("click", (e) => {
@@ -485,7 +513,7 @@
     if (action === "import") $("#importFile").click();
     if (action === "reset") resetData();
     if (action === "install") triggerInstall();
-    menuPanel.hidden = true;
+    setMenuOpen(false);
   });
 
   function exportData() {
