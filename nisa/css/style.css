@@ -249,7 +249,7 @@ button {
 /* ---------------- 桜の木ビジュアライザ ---------------- */
 .tree-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .tree-canvas-wrap { position: relative; width: 100%; max-height: 420px; display: flex; justify-content: center; overflow: hidden; }
-#treeCanvas { width: 100%; max-width: 420px; max-height: 420px; height: auto; aspect-ratio: 600 / 560; }
+#treeCanvas { width: 100%; max-width: 420px; max-height: 420px; height: auto; aspect-ratio: 600 / 600; }
 .tree-year-badge {
   position: absolute;
   bottom: 14%; right: 6px;

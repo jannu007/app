@@ -407,8 +407,8 @@
   const SAKURA = [237, 174, 190];
   const SAKURA_DEEP = [214, 132, 148];
   const INK = "rgb(58,46,40)";
-  const TREE_W = 600, TREE_H = 560;
-  const GROUND_Y = 500, BASE_LEN = 78;
+  const TREE_W = 600, TREE_H = 600;
+  const GROUND_Y = 535, BASE_LEN = 78;
   const BLOOM_TARGET = 100000000; // 評価額1億円で満開
 
   let treeCurrent = { scale: 0.12, depthF: 0.6, leafDensity: 0.35, goldRatio: 0, bloomRatio: 0 };
