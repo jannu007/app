@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>つみたての桜 - 新NISAシミュレーター</title>
+<meta name="description" content="初心者でもわかる新NISA資産運用シミュレーター。積立額・利回り・期間を動かすだけで、桜の木が育つように資産の成長をアニメーションで体感できます。" />
+<meta name="theme-color" content="#f7f1e2" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#211d19" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="つみたての桜" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- 動く水彩背景 -->
+<div class="washi-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <div class="paper-texture"></div>
+</div>
+<canvas id="petals" aria-hidden="true"></canvas>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <!-- ヘッダー -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="30" height="30">
+          <path d="M32 10c-7 8-16 12-16 24a16 16 0 0 0 32 0c0-12-9-16-16-24z" fill="currentColor" opacity="0.9"/>
+          <rect x="26" y="44" width="12" height="10" rx="1.5" fill="currentColor"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <h1>つみたての桜</h1>
+        <span class="brand-sub">新NISAシミュレーター</span>
+      </div>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
+    </button>
+  </header>
+
+  <nav id="menuPanel" class="menu-panel" hidden>
+    <button data-action="help" class="menu-item">📖 使い方・用語集</button>
+    <button data-action="reset" class="menu-item">🔄 入力を初期値にもどす</button>
+    <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+  </nav>
+
+  <main class="entry-area">
+
+    <!-- 育つ桜の木ビジュアライザ -->
+    <section class="card tree-card">
+      <div class="tree-canvas-wrap">
+        <canvas id="treeCanvas" width="600" height="420" aria-label="積立資産の成長を表す桜の木のアニメーション"></canvas>
+        <div class="tree-year-badge"><span id="treeYearLabel">20</span>年後</div>
+      </div>
+      <div class="result-headline">
+        <span class="result-label">最終評価額（見込み）</span>
+        <span class="result-value"><span id="finalValue">0</span><span class="yen">円</span></span>
+      </div>
+      <div class="result-sub-grid">
+        <div class="result-sub">
+          <span class="sub-dot principal-dot" aria-hidden="true"></span>
+          <span class="sub-label">積立元本</span>
+          <span class="sub-value"><span id="principalValue">0</span>円</span>
+        </div>
+        <div class="result-sub">
+          <span class="sub-dot profit-dot" aria-hidden="true"></span>
+          <span class="sub-label">運用益</span>
+          <span class="sub-value profit"><span id="profitValue">0</span>円</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 入力スライダー -->
+    <section class="card sliders-card">
+      <h2 class="section-title">積立の条件</h2>
+
+      <div class="frame-block">
+        <div class="frame-head">
+          <span class="frame-badge tsumitate">つみたて投資枠</span>
+          <span class="frame-limit">年120万円まで</span>
+        </div>
+        <div class="slider-field">
+          <div class="slider-head">
+            <span class="slider-label">毎月の積立額</span>
+            <span class="slider-value"><span id="tsumitateOut">30,000</span>円</span>
+          </div>
+          <input type="range" id="tsumitateSlider" min="0" max="100000" step="1000" value="30000" />
+          <p class="field-hint">上限は月10万円（年120万円）。長期・積立・分散投資に適した投資信託が対象です。</p>
+        </div>
+      </div>
+
+      <button type="button" id="growthToggle" class="btn btn-ghost full small-btn">＋ 成長投資枠も使う（追加積立・一括購入）</button>
+      <div class="frame-block growth-block" id="growthField" hidden>
+        <div class="frame-head">
+          <span class="frame-badge growth">成長投資枠</span>
+          <span class="frame-limit">年240万円まで</span>
+        </div>
+        <div class="slider-field">
+          <div class="slider-head">
+            <span class="slider-label">毎月の積立額</span>
+            <span class="slider-value"><span id="growthMonthlyOut">0</span>円</span>
+          </div>
+          <input type="range" id="growthMonthlySlider" min="0" max="200000" step="1000" value="0" />
+        </div>
+        <div class="slider-field">
+          <div class="slider-head">
+            <span class="slider-label">はじめの一括投資額</span>
+            <span class="slider-value"><span id="lumpOut">0</span>円</span>
+          </div>
+          <input type="range" id="lumpSlider" min="0" max="5000000" step="50000" value="0" />
+          <p class="field-hint">上場株式や幅広い投資信託が対象で、つみたてだけでなく一括（スポット）購入もできる枠です。</p>
+        </div>
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">想定利回り（年率）</span>
+          <span class="slider-value"><span id="rateOut">5.0</span>%</span>
+        </div>
+
+        <div class="realtime-block">
+          <div class="realtime-head">
+            <span class="realtime-title">📡 リアルタイム相場を使う</span>
+            <label class="switch">
+              <input type="checkbox" id="realtimeToggle" />
+              <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <div class="realtime-body" id="realtimeBody" hidden>
+            <div class="fund-cards" id="fundCards">
+              <button type="button" class="fund-card" data-fund="acwi" disabled>
+                <span class="fund-name">オルカン<br />（全世界株式）</span>
+                <span class="fund-rate" id="acwiRate">--</span>
+                <span class="fund-meta" id="acwiMeta">未取得</span>
+              </button>
+              <button type="button" class="fund-card" data-fund="sp500" disabled>
+                <span class="fund-name">S&amp;P500</span>
+                <span class="fund-rate" id="sp500Rate">--</span>
+                <span class="fund-meta" id="sp500Meta">未取得</span>
+              </button>
+            </div>
+            <div class="fund-trend" id="fundTrend" hidden>
+              <canvas id="fundTrendChart" width="600" height="180"></canvas>
+              <p class="field-hint" id="fundTrendHint"></p>
+            </div>
+            <button type="button" id="realtimeRefresh" class="btn btn-ghost full small-btn">🔄 最新データを取得する</button>
+            <p class="field-hint">タップした銘柄の年率リターンを想定利回りに反映します。オルカンは代替データとしてMAXIS全世界株式(オール・カントリー)上場投信(2559)、S&amp;P500は同指数の実績を、stooq.comまたはYahoo Financeから取得します。通信できない場合は、点線表示の「長期の歴史的平均（参考値）」に自動で切り替わります。過去の実績は将来の成果を保証するものではありません。</p>
+          </div>
+        </div>
+
+        <div class="preset-row" id="ratePresets">
+          <button type="button" class="preset-chip" data-rate="3">堅実 3%</button>
+          <button type="button" class="preset-chip active" data-rate="5">標準 5%</button>
+          <button type="button" class="preset-chip" data-rate="7">積極 7%</button>
+        </div>
+        <input type="range" id="rateSlider" min="0.1" max="15" step="0.1" value="5" />
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">積立期間</span>
+          <span class="slider-value"><span id="yearsOut">20</span>年</span>
+        </div>
+        <input type="range" id="yearsSlider" min="1" max="40" step="1" value="20" />
+      </div>
+    </section>
+
+    <!-- 成長グラフ -->
+    <section class="card chart-card">
+      <h2 class="section-title">資産の推移</h2>
+      <canvas id="growthChart" width="600" height="280"></canvas>
+      <div class="chart-legend">
+        <span><i class="legend-dot principal-dot"></i>積立元本</span>
+        <span><i class="legend-dot profit-line"></i>評価額（元本＋運用益）</span>
+      </div>
+    </section>
+
+    <!-- 非課税メリット比較 -->
+    <section class="card tax-card">
+      <h2 class="section-title">非課税のチカラ</h2>
+      <p class="tax-lead">同じ運用成績でも、課税口座なら運用益に約20.315%の税金がかかります。新NISAならその分がまるごと手元に残ります。</p>
+      <div class="tax-compare">
+        <div class="tax-bar-row">
+          <span class="tax-bar-label">課税口座の場合</span>
+          <div class="tax-bar-track"><div class="tax-bar-fill taxed" id="taxedBar"></div></div>
+          <span class="tax-bar-value"><span id="taxedValue">0</span>円</span>
+        </div>
+        <div class="tax-bar-row">
+          <span class="tax-bar-label">新NISAの場合</span>
+          <div class="tax-bar-track"><div class="tax-bar-fill nisa" id="nisaBar"></div></div>
+          <span class="tax-bar-value"><span id="nisaValue">0</span>円</span>
+        </div>
+      </div>
+      <div class="tax-savings-badge">
+        🎉 新NISAなら約<span id="savingsValue">0</span>円おトク
+      </div>
+    </section>
+
+    <p class="disclaimer">
+      ※このシミュレーションは入力条件にもとづく複利計算の目安であり、将来の運用成果や元本を保証するものではありません。実際の投資は各金融機関の情報をご確認のうえ、ご自身の判断で行ってください。データは端末内でのみ計算され、サーバーには送信されません。
+    </p>
+  </main>
+</div>
+
+<!-- ヘルプ・用語集モーダル -->
+<div id="helpModal" class="modal-overlay" hidden>
+  <div class="modal ink-modal help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">📖</span>
+      <h2 id="helpTitle">使い方・用語集</h2>
+    </div>
+
+    <div class="modal-body help-body">
+      <div class="glossary-item">
+        <strong>複利（ふくり）</strong>
+        <p>運用で得た利益を元本に加えて再投資すること。利益が利益を生み、雪だるま式に資産が育っていきます。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>つみたて投資枠</strong>
+        <p>年間120万円まで利用できる非課税枠。長期・積立・分散投資に適した一部の投資信託が対象です。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>成長投資枠</strong>
+        <p>年間240万円まで利用できる非課税枠。上場株式や幅広い投資信託が対象で、つみたてだけでなく一括（スポット）購入もできます。つみたて投資枠と併用可能です。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>非課税保有限度額</strong>
+        <p>生涯にわたって非課税で保有できる上限は合計1,800万円（うち成長投資枠は1,200万円まで）。売却すれば枠は翌年以降に復活します。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>想定利回り</strong>
+        <p>1年間でどれくらい資産が増えるかの見込み値。株式や投資信託の値動きは一定ではなく、あくまで試算のための仮定です。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>ドルコスト平均法</strong>
+        <p>毎月一定額をコツコツ買い続ける方法。価格が高い時は少なく、安い時は多く買うことになり、平均購入価格をならす効果があります。</p>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="helpCloseBtn" class="btn btn-secondary full">とじる</button>
+    </div>
+  </div>
+</div>
+
+<!-- インストール促し バナー -->
+<div id="installBanner" class="install-banner" hidden>
+  <span class="install-emblem" aria-hidden="true">🎋</span>
+  <div class="install-text">
+    <strong>ホーム画面に追加できます</strong>
+    <span>アプリのようにワンタッチで開けます</span>
+  </div>
+  <button id="installBtn" class="btn btn-primary small">インストール</button>
+  <button id="installDismiss" class="icon-btn small" aria-label="閉じる">✕</button>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

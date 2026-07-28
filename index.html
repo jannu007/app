@@ -3,205 +3,148 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-<title>京の家計帖 - かんたん家計簿</title>
-<meta name="description" content="水彩画風・京都風のデザインで、日々の収支をワンタッチで記録できる完全無料の家計簿アプリ。インストールしてオフラインでも使えます。" />
+<title>和風アプリ集 - 京の家計帖 / つみたての桜</title>
+<meta name="description" content="和風・水彩画風デザインのアプリ集。京の家計帖（家計簿）とつみたての桜（新NISAシミュレーター）を選んで開けます。" />
 <meta name="theme-color" content="#f6efe1" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#2c2622" media="(prefers-color-scheme: dark)" />
-
-<link rel="manifest" href="manifest.webmanifest" />
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="京の家計帖" />
+<meta name="theme-color" content="#211d19" media="(prefers-color-scheme: dark)" />
+<link rel="icon" type="image/png" sizes="32x32" href="nisa/icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="nisa/icons/favicon-16.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="css/style.css" />
+<style>
+  :root {
+    --paper: 246 239 225;
+    --ink: 58 46 40;
+    --ink-soft: 96 82 72;
+    --vermillion: 176 58 46;
+    --matcha: 94 140 122;
+    --gold: 196 149 63;
+    --card-bg: 255 253 248;
+    --shadow: 58 46 40;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: 33 29 25;
+      --ink: 236 227 214;
+      --ink-soft: 196 184 168;
+      --card-bg: 45 39 34;
+      --shadow: 0 0 0;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+    color: rgb(var(--ink));
+    background: rgb(var(--paper));
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(94,140,122,0.16), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(196,149,63,0.16), transparent 40%),
+      radial-gradient(circle at 70% 85%, rgba(176,58,46,0.10), transparent 45%);
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: max(28px, env(safe-area-inset-top)) 18px 40px;
+  }
+  header { text-align: center; margin-bottom: 26px; }
+  h1 {
+    font-family: "Shippori Mincho", serif;
+    font-size: 1.5rem;
+    margin: 0 0 6px;
+    letter-spacing: 0.04em;
+  }
+  header p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: rgb(var(--ink-soft));
+  }
+  .apps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  a.app-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+    background: rgba(var(--card-bg), 0.92);
+    border: 1px solid rgba(var(--gold), 0.3);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow: 0 8px 24px -10px rgba(var(--shadow), 0.25);
+    transition: transform .2s cubic-bezier(.22,.9,.32,1), box-shadow .2s;
+  }
+  a.app-card:active { transform: scale(0.98); }
+  .app-emblem {
+    flex: 0 0 auto;
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    font-size: 1.7rem;
+  }
+  .app-emblem.kakeibo { background: linear-gradient(135deg, rgba(176,58,46,0.18), rgba(196,149,63,0.14)); }
+  .app-emblem.nisa { background: linear-gradient(135deg, rgba(94,140,122,0.2), rgba(196,149,63,0.16)); }
+  .app-info { flex: 1; min-width: 0; }
+  .app-info h2 {
+    font-family: "Shippori Mincho", serif;
+    font-size: 1.08rem;
+    margin: 0 0 4px;
+  }
+  .app-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: rgb(var(--ink-soft));
+  }
+  .app-arrow { flex: 0 0 auto; color: rgb(var(--ink-soft)); font-size: 1.2rem; }
+  footer {
+    text-align: center;
+    margin-top: 34px;
+    font-size: 0.72rem;
+    color: rgb(var(--ink-soft));
+    opacity: 0.75;
+  }
+</style>
 </head>
 <body>
-
-<!-- 動く水彩背景 -->
-<div class="washi-bg" aria-hidden="true">
-  <div class="ink-blob blob-a"></div>
-  <div class="ink-blob blob-b"></div>
-  <div class="ink-blob blob-c"></div>
-  <div class="paper-texture"></div>
-</div>
-<canvas id="petals" aria-hidden="true"></canvas>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-<div class="app-shell">
-
-  <!-- ヘッダー -->
-  <header class="app-header">
-    <div class="brand">
-      <span class="brand-emblem" aria-hidden="true">
-        <svg viewBox="0 0 64 64" width="32" height="32">
-          <line x1="27" y1="23" x2="23" y2="53" stroke="rgb(199,155,64)" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
-          <line x1="37" y1="23" x2="41" y2="53" stroke="rgb(199,155,64)" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
-          <circle cx="23" cy="55" r="2.6" fill="rgb(199,155,64)"/>
-          <circle cx="41" cy="55" r="2.6" fill="rgb(199,155,64)"/>
-          <g fill="rgb(179,32,58)">
-            <circle cx="32" cy="13" r="7.5"/>
-            <circle cx="19" cy="20" r="7.5"/>
-            <circle cx="45" cy="20" r="7.5"/>
-            <circle cx="22" cy="31" r="7.5"/>
-            <circle cx="42" cy="31" r="7.5"/>
-          </g>
-          <circle cx="32" cy="22" r="4.2" fill="rgb(199,155,64)"/>
-        </svg>
-      </span>
-      <h1>京の家計帖</h1>
-    </div>
-    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
-    </button>
-
-    <nav id="menuPanel" class="menu-panel" hidden>
-      <button data-action="export" class="menu-item">📤 データを書き出す (JSON)</button>
-      <button data-action="import" class="menu-item">📥 データを読み込む</button>
-      <button data-action="reset" class="menu-item danger">🗑 全データを削除</button>
-      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
-      <input type="file" id="importFile" accept="application/json" hidden />
-    </nav>
+<div class="wrap">
+  <header>
+    <h1>和風アプリ集</h1>
+    <p>使いたいアプリを選んでください</p>
   </header>
 
-  <div class="wave-divider" aria-hidden="true"></div>
+  <div class="apps">
+    <a class="app-card" href="./kakeibo/">
+      <span class="app-emblem kakeibo" aria-hidden="true">💰</span>
+      <span class="app-info">
+        <h2>京の家計帖</h2>
+        <p>水彩画風・京都風デザインの、ワンタッチで使える無料の家計簿アプリ。</p>
+      </span>
+      <span class="app-arrow" aria-hidden="true">→</span>
+    </a>
 
-  <div id="menuScrim" class="menu-scrim" hidden></div>
-
-  <!-- 日付ナビ -->
-  <section class="date-nav card">
-    <button id="prevDay" class="day-btn" aria-label="前日">
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M15 18l-6-6 6-6v12z"/></svg>
-      前日
-    </button>
-    <button id="dateDisplay" class="date-display">
-      <span id="dateText">2026 / 07 / 28</span>
-      <span id="dateSub" class="date-sub"></span>
-    </button>
-    <button id="nextDay" class="day-btn" aria-label="翌日">
-      翌日
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M9 6l6 6-6 6V6z"/></svg>
-    </button>
-  </section>
-  <input type="date" id="datePicker" class="sr-picker" aria-label="日付を選択" />
-
-  <!-- 支出リスト -->
-  <main class="entry-area">
-    <ul id="entryList" class="entry-list" aria-live="polite"></ul>
-    <p id="emptyState" class="empty-state" hidden>
-      <span class="empty-emblem">🌸</span>
-      この日の記録はまだありません<br />
-      「追加」から書き込んでみましょう
-    </p>
-  </main>
-
-  <!-- 合計・操作バー -->
-  <footer class="bottom-bar card">
-    <div class="total-row">
-      <span class="total-label">合計</span>
-      <span class="total-value"><span id="totalValue">0</span><span class="yen">円</span></span>
-    </div>
-    <div class="bottom-buttons">
-      <button id="addOpenBtn" class="btn btn-primary">
-        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
-        追加
-      </button>
-      <button id="graphOpenBtn" class="btn btn-secondary">
-        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 21V9h3v12H5zm6 0V3h3v18h-3zm6 0v-7h3v7h-3z"/></svg>
-        グラフ表示
-      </button>
-    </div>
-  </footer>
-</div>
-
-<!-- 追加/編集 モーダル -->
-<div id="addModal" class="modal-overlay modal-overlay--top" hidden>
-  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-header">
-      <span class="modal-emblem" aria-hidden="true">💰</span>
-      <h2 id="modalTitle">追加</h2>
-    </div>
-
-    <div class="modal-body">
-      <label class="field">
-        <span class="field-label">名前</span>
-        <input id="itemName" type="text" placeholder="例）珈琲" autocomplete="off" />
-      </label>
-
-      <label class="field">
-        <span class="field-label">価格</span>
-        <input id="itemPrice" type="number" inputmode="numeric" placeholder="例）400" min="0" />
-      </label>
-
-      <label class="field kind-field">
-        <span class="field-label">種別</span>
-        <div class="segmented" id="kindSegment">
-          <button type="button" class="seg-btn active" data-kind="expense">支出</button>
-          <button type="button" class="seg-btn" data-kind="income">収入</button>
-        </div>
-      </label>
-
-      <div class="history-block">
-        <button type="button" id="historyToggle" class="btn btn-ghost full">履歴からえらぶ</button>
-        <div id="historyChips" class="history-chips" hidden></div>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button id="submitBtn" class="btn btn-primary full">追加</button>
-      <button id="cancelBtn" class="btn btn-secondary full">キャンセル</button>
-    </div>
+    <a class="app-card" href="./nisa/">
+      <span class="app-emblem nisa" aria-hidden="true">🌸</span>
+      <span class="app-info">
+        <h2>つみたての桜</h2>
+        <p>桜の木が育つように資産の成長を体感できる、初心者向け新NISAシミュレーター。</p>
+      </span>
+      <span class="app-arrow" aria-hidden="true">→</span>
+    </a>
   </div>
+
+  <footer>各アプリは端末内でのみデータを扱い、サーバーには送信されません。</footer>
 </div>
-
-<!-- グラフ モーダル -->
-<div id="graphModal" class="modal-overlay" hidden>
-  <div class="modal ink-modal graph-modal" role="dialog" aria-modal="true" aria-labelledby="graphTitle">
-    <div class="modal-header">
-      <span class="modal-emblem" aria-hidden="true">📊</span>
-      <h2 id="graphTitle">グラフ表示</h2>
-    </div>
-
-    <div class="graph-tabs">
-      <button class="tab-btn active" data-range="month">今月の内訳</button>
-      <button class="tab-btn" data-range="6month">半年の推移</button>
-    </div>
-
-    <div class="modal-body graph-body">
-      <div id="pieWrap" class="pie-wrap">
-        <canvas id="pieChart" width="260" height="260"></canvas>
-        <ul id="pieLegend" class="pie-legend"></ul>
-        <p id="pieEmpty" class="empty-state small" hidden>データがありません</p>
-      </div>
-      <div id="barWrap" class="bar-wrap" hidden>
-        <canvas id="barChart" width="320" height="220"></canvas>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button id="graphCloseBtn" class="btn btn-secondary full">とじる</button>
-    </div>
-  </div>
-</div>
-
-<!-- インストール促し バナー -->
-<div id="installBanner" class="install-banner" hidden>
-  <span class="install-emblem" aria-hidden="true">🎎</span>
-  <div class="install-text">
-    <strong>ホーム画面に追加できます</strong>
-    <span>アプリのようにワンタッチで開けます</span>
-  </div>
-  <button id="installBtn" class="btn btn-primary small">インストール</button>
-  <button id="installDismiss" class="icon-btn small" aria-label="閉じる">✕</button>
-</div>
-
-<script src="js/app.js"></script>
 </body>
 </html>
