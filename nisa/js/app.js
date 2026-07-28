@@ -579,33 +579,52 @@
     ctx.globalAlpha = 1;
   }
 
-  // 満開が近づくと、枝の隙間を覆うように大きな花のかたまりを重ねて描く
+  // 満開が近づくと、枝の隙間を細かい花びらの大集合で覆う
   // （枝先の小さな花房だけでは隙間が目立つため、面で覆って画面いっぱいの満開感を出す）
-  const BLOOM_BLOBS = [
-    [0, -0.06, 1.0], [-0.66, 0.05, 0.76], [0.64, 0.02, 0.78],
-    [-0.36, -0.52, 0.7], [0.4, -0.5, 0.72], [-0.6, -0.32, 0.6], [0.58, -0.3, 0.62],
-    [-0.1, -0.55, 0.66], [0.14, 0.32, 0.6], [-0.42, 0.28, 0.56], [0.44, 0.3, 0.58],
-  ];
+  const BLOOM_PETALS = (() => {
+    const rng2 = mulberry32(7788);
+    const petals = [];
+    const N = 260;
+    for (let i = 0; i < N; i++) {
+      const ang = rng2() * Math.PI * 2;
+      const rad = Math.sqrt(rng2()); // 中心ほど密になる分布
+      const lobe = 0.8 + 0.22 * Math.sin(ang * 3 + rng2() * 2); // 輪郭に凹凸をつけて花のかたまり感を出す
+      petals.push({
+        ox: Math.cos(ang) * rad * lobe,
+        oy: Math.sin(ang) * rad * lobe * 0.8 - 0.08,
+        size: 0.05 + rng2() * 0.065,
+        rot: rng2() * Math.PI,
+        colorT: clamp(rad * 0.6 + rng2() * 0.35, 0, 1),
+        phase: rng2() * Math.PI * 2,
+      });
+    }
+    return petals;
+  })();
+
   function drawBloomCanopy(ctx, now, params) {
     const bloom = clamp(params.bloomRatio, 0, 1);
     if (bloom <= 0.02) return;
     const cx = TREE_W / 2;
-    const canopyR = Math.min(128 * params.scale, TREE_W * 0.46); // 横にはみ出さない範囲でスケール
+    const canopyR = Math.min(150 * params.scale, TREE_W * 0.47); // 横にはみ出さない範囲でスケール
     const centerY = Math.max(
-      GROUND_Y - BASE_LEN * params.scale * 3.6,
-      canopyR * 0.72 + 6 // 上にはみ出さない範囲に収める
+      GROUND_Y - BASE_LEN * params.scale * 3.5,
+      canopyR * 0.88 + 6 // 上にはみ出さない範囲に収める
     );
-    ctx.globalAlpha = 0.94 * bloom;
-    BLOOM_BLOBS.forEach(([ox, oy, s], i) => {
-      const sway = REDUCED ? 0 : Math.sin(now / 1400 + i * 1.7) * canopyR * 0.015;
-      const bx = cx + ox * canopyR + sway;
-      const by = centerY + oy * canopyR;
-      const br = canopyR * s * 0.6;
-      const mix = lerpColorArr(SAKURA, SAKURA_DEEP, clamp((Math.abs(ox) + Math.abs(oy)) * 0.32, 0, 1));
+    BLOOM_PETALS.forEach((p) => {
+      const flicker = 0.75 + 0.25 * Math.sin(now / 900 + p.phase);
+      ctx.globalAlpha = clamp(flicker, 0, 1) * bloom;
+      const bx = cx + p.ox * canopyR;
+      const by = centerY + p.oy * canopyR;
+      const r = p.size * canopyR;
+      const mix = lerpColorArr(SAKURA, SAKURA_DEEP, p.colorT);
       ctx.fillStyle = toRgb(mix);
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(p.rot);
       ctx.beginPath();
-      ctx.arc(bx, by, br, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, r, r * 0.58, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     });
     ctx.globalAlpha = 1;
   }
