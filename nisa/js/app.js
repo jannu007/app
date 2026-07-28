@@ -495,14 +495,15 @@
   }
 
   function drawFoliage(ctx, x, y, node, params, grown) {
-    const r = (MAX_DEPTH - node.depth + 1.4) * 3.1 * params.scale * clamp(params.leafDensity, 0.3, 2.8) * grown;
-    if (r < 1.2) return;
     const bloom = clamp(params.bloomRatio, 0, 1);
+    const bloomBoost = 1 + bloom * 0.55; // 満開に近づくほど、枝先の花房自体が大きく育っていく
+    const r = (MAX_DEPTH - node.depth + 1.4) * 3.1 * params.scale * clamp(params.leafDensity, 0.3, 2.8) * grown * bloomBoost;
+    if (r < 1.2) return;
     const goldMix = lerpColorArr(MATCHA, GOLD, clamp(params.goldRatio, 0, 1) * (0.5 + node.leafSeed * 0.5));
     const finalColor = toRgb(lerpColorArr(goldMix, SAKURA, bloom));
     ctx.globalAlpha = 0.88 * grown;
     ctx.fillStyle = finalColor;
-    const dotCount = 3 + Math.round(bloom * 3); // 満開に近づくほど花房が増える
+    const dotCount = 3 + Math.round(bloom * 4); // 満開に近づくほど花房が増える
     for (let k = 0; k < dotCount; k++) {
       const ang = node.leafSeed * Math.PI * 2 + (k * Math.PI * 2) / dotCount;
       const ox = Math.cos(ang) * r * 0.42, oy = Math.sin(ang) * r * 0.42;
@@ -579,83 +580,12 @@
     ctx.globalAlpha = 1;
   }
 
-  // 満開が近づくと、枝の隙間を「柔らかい下地＋細かい花びら」の二層で自然に覆う
-  const BLOOM_BASE = [
-    [0, -0.06, 0.88], [-0.32, 0.06, 0.62], [0.32, 0.05, 0.63],
-    [-0.13, -0.32, 0.6], [0.15, -0.31, 0.6], [0, 0.22, 0.58],
-  ];
-  const BLOOM_PETALS = (() => {
-    const rng2 = mulberry32(7788);
-    const petals = [];
-    const N = 300;
-    for (let i = 0; i < N; i++) {
-      const ang = rng2() * Math.PI * 2;
-      const rad = Math.pow(rng2(), 0.6); // 中心ほど密になる分布（端はなだらかに薄く）
-      const lobe = 0.92 + 0.08 * Math.sin(ang * 3 + rng2() * 1.5); // 輪郭のがたつきを控えめに
-      petals.push({
-        ox: Math.cos(ang) * rad * lobe,
-        oy: Math.sin(ang) * rad * lobe * 0.62 - 0.06, // 縦方向は控えめにし、丸くまとめる
-        size: 0.022 + rng2() * 0.026,
-        rot: rng2() * Math.PI,
-        colorT: clamp(rad * 0.5 + rng2() * 0.35, 0, 1),
-        phase: rng2() * Math.PI * 2,
-      });
-    }
-    return petals;
-  })();
-
-  function drawBloomCanopy(ctx, now, params) {
-    const bloom = clamp(params.bloomRatio, 0, 1);
-    if (bloom <= 0.02) return;
-    const cx = TREE_W / 2;
-    const canopyR = Math.min(140 * params.scale, TREE_W * 0.44); // 横にはみ出さない範囲でスケール
-    const centerY = Math.max(
-      GROUND_Y - BASE_LEN * params.scale * 3.5,
-      canopyR * 0.78 + 6 // 上にはみ出さない範囲に収める
-    );
-
-    // 下地: ぼかした大きな塊で枝を覆い隠し、丸みのあるシルエットにする
-    ctx.save();
-    if (!REDUCED) ctx.filter = `blur(${Math.max(5, canopyR * 0.06)}px)`;
-    ctx.globalAlpha = 0.8 * bloom;
-    BLOOM_BASE.forEach(([ox, oy, s]) => {
-      ctx.fillStyle = toRgb(lerpColorArr(SAKURA, SAKURA_DEEP, 0.2));
-      ctx.beginPath();
-      ctx.arc(cx + ox * canopyR, centerY + oy * canopyR, canopyR * s * 0.64, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    ctx.restore();
-
-    // 花びら: 細かい粒でふんわりした質感を重ねる
-    ctx.save();
-    if (!REDUCED) ctx.filter = `blur(${Math.max(0.4, canopyR * 0.004)}px)`;
-    BLOOM_PETALS.forEach((p) => {
-      const flicker = 0.8 + 0.2 * Math.sin(now / 1000 + p.phase);
-      ctx.globalAlpha = clamp(flicker, 0, 1) * bloom;
-      const bx = cx + p.ox * canopyR;
-      const by = centerY + p.oy * canopyR;
-      const r = p.size * canopyR;
-      const mix = lerpColorArr(SAKURA, SAKURA_DEEP, p.colorT);
-      ctx.fillStyle = toRgb(mix);
-      ctx.beginPath();
-      ctx.save();
-      ctx.translate(bx, by);
-      ctx.rotate(p.rot);
-      ctx.ellipse(0, 0, r, r * 0.78, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
   let treeCtx = null;
   function drawTree(now) {
     if (!treeCtx) return;
     treeCtx.clearRect(0, 0, TREE_W, TREE_H);
     drawGround(treeCtx);
     walk(treeCtx, treeSkeleton, TREE_W / 2, GROUND_Y, -Math.PI / 2, BASE_LEN * treeCurrent.scale, treeCurrent, now);
-    drawBloomCanopy(treeCtx, now, treeCurrent);
     updateSparkles(treeCtx, now);
   }
 
