@@ -15,11 +15,11 @@
   const fmtMan = (n) => Math.round(n / 10000) + "万円";
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function lerpColor(c1, c2, t) {
-    const r = Math.round(lerp(c1[0], c2[0], t));
-    const g = Math.round(lerp(c1[1], c2[1], t));
-    const b = Math.round(lerp(c1[2], c2[2], t));
-    return `rgb(${r},${g},${b})`;
+  function lerpColorArr(c1, c2, t) {
+    return [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+  }
+  function toRgb(c) {
+    return `rgb(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])})`;
   }
 
   function mulberry32(seed) {
@@ -107,21 +107,34 @@
 
   const MATCHA = [94, 140, 122];
   const GOLD = [196, 149, 63];
+  const SAKURA = [237, 174, 190];
+  const SAKURA_DEEP = [214, 132, 148];
   const INK = "rgb(58,46,40)";
   const TREE_W = 600, TREE_H = 420;
   const POT_Y = 360, BASE_LEN = 68;
+  const BLOOM_TARGET = 100000000; // 評価額1億円で満開
 
-  let treeCurrent = { scale: 0.05, depthF: 0.3, leafDensity: 0.3, goldRatio: 0 };
-  let treeTarget = { scale: 0.6, depthF: 3, leafDensity: 0.6, goldRatio: 0 };
+  let treeCurrent = { scale: 0.12, depthF: 0.6, leafDensity: 0.35, goldRatio: 0, bloomRatio: 0 };
+  let treeTarget = { scale: 0.5, depthF: 2, leafDensity: 0.5, goldRatio: 0, bloomRatio: 0 };
+  let hasBloomed = false;
 
-  function updateTreeTarget(result, s) {
+  function updateTreeTarget(result) {
     const profitRatio = result.principal > 0 ? result.profit / result.principal : 0;
+    const progress = clamp(result.balance / BLOOM_TARGET, 0, 1); // 評価額そのもので木の育ち具合を決める
     treeTarget = {
-      scale: clamp(0.55 + (s.years / 40) * 0.65, 0.55, 1.25),
-      depthF: clamp(2.2 + (s.years / 40) * 5.3, 2.2, MAX_DEPTH + 1.5),
-      leafDensity: clamp(0.5 + profitRatio * 0.8, 0.5, 2.4),
+      scale: clamp(0.22 + progress * 1.1, 0.22, 1.32),
+      depthF: clamp(1.3 + progress * (MAX_DEPTH + 0.5 - 1.3), 1.3, MAX_DEPTH + 1.5),
+      leafDensity: clamp(0.35 + progress * 1.6 + profitRatio * 0.3, 0.35, 2.8),
       goldRatio: clamp(profitRatio / 2.2, 0, 1),
+      bloomRatio: clamp((progress - 0.7) / 0.3, 0, 1), // 1億円に近づくと桜色へ
     };
+    if (progress >= 1 && !hasBloomed) {
+      hasBloomed = true;
+      toast("🌸 資産の桜が満開になりました！");
+      for (let i = 0; i < 22; i++) spawnSparkle(true);
+    } else if (progress < 1) {
+      hasBloomed = false;
+    }
   }
 
   function drawPot(ctx) {
@@ -146,20 +159,33 @@
   }
 
   function drawFoliage(ctx, x, y, node, params, grown) {
-    const r = (MAX_DEPTH - node.depth + 1.4) * 3.1 * params.scale * clamp(params.leafDensity, 0.4, 2.4) * grown;
+    const r = (MAX_DEPTH - node.depth + 1.4) * 3.1 * params.scale * clamp(params.leafDensity, 0.3, 2.8) * grown;
     if (r < 1.2) return;
-    const color = lerpColor(MATCHA, GOLD, clamp(params.goldRatio, 0, 1) * (0.5 + node.leafSeed * 0.5));
+    const bloom = clamp(params.bloomRatio, 0, 1);
+    const goldMix = lerpColorArr(MATCHA, GOLD, clamp(params.goldRatio, 0, 1) * (0.5 + node.leafSeed * 0.5));
+    const finalColor = toRgb(lerpColorArr(goldMix, SAKURA, bloom));
     ctx.globalAlpha = 0.88 * grown;
-    ctx.fillStyle = color;
-    for (let k = 0; k < 3; k++) {
-      const ang = node.leafSeed * Math.PI * 2 + k * 2.1;
-      const ox = Math.cos(ang) * r * 0.4, oy = Math.sin(ang) * r * 0.4;
+    ctx.fillStyle = finalColor;
+    const dotCount = 3 + Math.round(bloom * 3); // 満開に近づくほど花房が増える
+    for (let k = 0; k < dotCount; k++) {
+      const ang = node.leafSeed * Math.PI * 2 + (k * Math.PI * 2) / dotCount;
+      const ox = Math.cos(ang) * r * 0.42, oy = Math.sin(ang) * r * 0.42;
       ctx.beginPath();
-      ctx.arc(x + ox, y + oy, r * 0.55, 0, Math.PI * 2);
+      ctx.arc(x + ox, y + oy, r * (0.5 + bloom * 0.12), 0, Math.PI * 2);
       ctx.fill();
+      if (bloom > 0.55) {
+        // 花芯（花びらの中心の濃い点）
+        ctx.globalAlpha = 0.85 * grown;
+        ctx.fillStyle = toRgb(SAKURA_DEEP);
+        ctx.beginPath();
+        ctx.arc(x + ox, y + oy, r * 0.14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = finalColor;
+        ctx.globalAlpha = 0.88 * grown;
+      }
     }
     ctx.globalAlpha = 1;
-    if (node.leafSeed < params.goldRatio * 0.55) {
+    if (bloom < 0.5 && node.leafSeed < params.goldRatio * 0.55) {
       const cr = clamp(2.4 * params.scale * grown, 0, 5);
       ctx.fillStyle = "#c4953f";
       ctx.strokeStyle = "#8a6530";
@@ -191,24 +217,27 @@
   }
 
   let sparkles = [];
+  function spawnSparkle(forcePink) {
+    const pink = forcePink || Math.random() < treeCurrent.bloomRatio;
+    sparkles.push({
+      x: TREE_W / 2 + (Math.random() - 0.5) * 190 * treeCurrent.scale,
+      y: POT_Y - 90 * treeCurrent.scale - Math.random() * 100 * treeCurrent.scale,
+      vy: -0.22 - Math.random() * 0.28,
+      vx: (Math.random() - 0.5) * 0.14,
+      life: 0,
+      maxLife: 70 + Math.random() * 50,
+      size: 1.3 + Math.random() * (pink ? 2.4 : 1.7),
+      pink,
+    });
+  }
   function updateSparkles(ctx, now) {
-    if (!REDUCED && Math.random() < 0.015 + treeCurrent.leafDensity * 0.015) {
-      sparkles.push({
-        x: TREE_W / 2 + (Math.random() - 0.5) * 190 * treeCurrent.scale,
-        y: POT_Y - 90 * treeCurrent.scale - Math.random() * 100 * treeCurrent.scale,
-        vy: -0.22 - Math.random() * 0.28,
-        vx: (Math.random() - 0.5) * 0.14,
-        life: 0,
-        maxLife: 70 + Math.random() * 50,
-        size: 1.3 + Math.random() * 1.7,
-      });
-    }
+    if (!REDUCED && Math.random() < 0.015 + treeCurrent.leafDensity * 0.015) spawnSparkle(false);
     sparkles = sparkles.filter((p) => p.life < p.maxLife);
     for (const p of sparkles) {
       p.life++; p.x += p.vx; p.y += p.vy;
       const t = p.life / p.maxLife;
       ctx.globalAlpha = Math.max(0, Math.sin(Math.PI * t) * 0.9);
-      ctx.fillStyle = "#d6b26c";
+      ctx.fillStyle = p.pink ? "#edaebe" : "#d6b26c";
       ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -316,7 +345,7 @@
     $("#treeYearLabel").textContent = state.years;
     updateTaxCompare(result);
     updateChartTarget(result);
-    updateTreeTarget(result, state);
+    updateTreeTarget(result);
     saveState();
   }
 
