@@ -1,4 +1,4 @@
-const CACHE_NAME = "kyo-kakeicho-v2";
+const CACHE_NAME = "kyo-kakeicho-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -42,9 +42,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // アプリ本体: network-first。更新を即座に反映し、オフライン時のみキャッシュを使う
+  // アプリ本体: network-first。ブラウザのHTTPキャッシュも無視して常に最新を取りに行く
   event.respondWith(
-    fetch(req)
+    fetch(req, { cache: "no-store" })
       .then((res) => {
         if (res.ok && res.type === "basic") {
           const clone = res.clone();

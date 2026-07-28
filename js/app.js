@@ -697,6 +697,13 @@
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("sw.js").catch((err) => console.warn("SW登録失敗", err));
     });
+    // 新しいバージョンが有効化されたら、最新のコードを確実に反映するため自動で1度だけ再読み込みする
+    let swRefreshed = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (swRefreshed) return;
+      swRefreshed = true;
+      window.location.reload();
+    });
   }
 
   /* ---------------- 初期化 ---------------- */
