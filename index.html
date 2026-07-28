@@ -41,9 +41,19 @@
   <header class="app-header">
     <div class="brand">
       <span class="brand-emblem" aria-hidden="true">
-        <svg viewBox="0 0 64 64" width="30" height="30">
-          <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="2"/>
-          <path d="M32 14c-3 6-9 9-9 16a9 9 0 0 0 18 0c0-7-6-10-9-16z" fill="currentColor" opacity="0.9"/>
+        <svg viewBox="0 0 64 64" width="32" height="32">
+          <line x1="27" y1="23" x2="23" y2="53" stroke="rgb(199,155,64)" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
+          <line x1="37" y1="23" x2="41" y2="53" stroke="rgb(199,155,64)" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
+          <circle cx="23" cy="55" r="2.6" fill="rgb(199,155,64)"/>
+          <circle cx="41" cy="55" r="2.6" fill="rgb(199,155,64)"/>
+          <g fill="rgb(179,32,58)">
+            <circle cx="32" cy="13" r="7.5"/>
+            <circle cx="19" cy="20" r="7.5"/>
+            <circle cx="45" cy="20" r="7.5"/>
+            <circle cx="22" cy="31" r="7.5"/>
+            <circle cx="42" cy="31" r="7.5"/>
+          </g>
+          <circle cx="32" cy="22" r="4.2" fill="rgb(199,155,64)"/>
         </svg>
       </span>
       <h1>京の家計帖</h1>
@@ -60,6 +70,8 @@
       <input type="file" id="importFile" accept="application/json" hidden />
     </nav>
   </header>
+
+  <div class="wave-divider" aria-hidden="true"></div>
 
   <div id="menuScrim" class="menu-scrim" hidden></div>
 

@@ -381,7 +381,7 @@
 
   /* ---------------- グラフモーダル ---------------- */
   const graphModal = $("#graphModal");
-  const PALETTE = ["#b03a2e", "#3a5282", "#5e8c7a", "#c4953f", "#e8a8b0", "#7a6650", "#8fa3b0", "#c77b45"];
+  const PALETTE = ["#b3203a", "#c79b40", "#5e8c7a", "#2b141a", "#e8a8b0", "#7a6650", "#8fa3b0", "#c77b45"];
 
   function openGraphModal() {
     graphModal.hidden = false;
@@ -493,7 +493,7 @@
         const barW = groupW * 0.28;
         const eH = (d.expense / maxVal) * h * eased;
         const iH = (d.income / maxVal) * h * eased;
-        ctx.fillStyle = "#b03a2e";
+        ctx.fillStyle = "#b3203a";
         ctx.fillRect(gx, padT + h - eH, barW, eH);
         ctx.fillStyle = "#5e8c7a";
         ctx.fillRect(gx + barW + 4, padT + h - iH, barW, iH);

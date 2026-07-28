@@ -7,11 +7,12 @@
   --paper-deep: 235 224 200;
   --ink: 58 46 40;             /* 墨色 */
   --ink-soft: 96 82 72;
-  --vermillion: 176 58 46;     /* 朱色 鳥居 */
-  --vermillion-soft: 199 96 78;
-  --indigo: 58 82 130;         /* 藍色 */
+  --vermillion: 179 32 58;     /* 紅色（べに）— 舞妓の襟・唇の紅 */
+  --vermillion-soft: 199 84 96;
+  --lacquer: 43 20 26;         /* 漆黒に近い深紅黒 — 髷・櫛 */
+  --indigo: 58 82 130;         /* 藍色（控えめに使用） */
   --matcha: 94 140 122;        /* 抹茶 */
-  --gold: 196 149 63;          /* 金箔 */
+  --gold: 199 155 64;          /* 金箔・簪の金具 */
   --gold-soft: 214 178 108;
   --sakura: 232 168 176;       /* 桜色 */
   --card-bg: 255 253 248;
@@ -33,6 +34,7 @@
     --ink-soft: 196 184 168;
     --card-bg: 46 40 36;
     --shadow: 0 0 0;
+    --vermillion-soft: 214 108 118;
     color-scheme: dark;
   }
 }
@@ -98,9 +100,9 @@ button {
 }
 @media (prefers-color-scheme: dark) { .ink-blob { opacity: 0.22; } }
 
-.blob-a { width: 46vw; height: 46vw; top: -10%; left: -12%; background: radial-gradient(circle, rgb(var(--indigo)), transparent 70%); animation-duration: 30s; }
+.blob-a { width: 46vw; height: 46vw; top: -10%; left: -12%; background: radial-gradient(circle, rgb(var(--lacquer)), transparent 70%); animation-duration: 30s; }
 .blob-b { width: 40vw; height: 40vw; top: 30%; right: -14%; background: radial-gradient(circle, rgb(var(--vermillion-soft)), transparent 70%); animation-duration: 24s; animation-delay: -6s; }
-.blob-c { width: 38vw; height: 38vw; bottom: -14%; left: 18%; background: radial-gradient(circle, rgb(var(--matcha)), transparent 70%); animation-duration: 34s; animation-delay: -12s; }
+.blob-c { width: 38vw; height: 38vw; bottom: -14%; left: 18%; background: radial-gradient(circle, rgb(var(--gold)), transparent 70%); animation-duration: 34s; animation-delay: -12s; }
 
 @keyframes blob-float {
   0%, 100% { transform: translate(0,0) scale(1) rotate(0deg); }
@@ -163,12 +165,16 @@ button {
 .brand-emblem {
   color: rgb(var(--vermillion));
   display: inline-flex;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
-  animation: emblem-breathe 5s ease-in-out infinite;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.18));
+  transform-origin: 50% 20%;
+  animation: kanzashi-sway 4.5s ease-in-out infinite;
 }
-@keyframes emblem-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+@keyframes kanzashi-sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-emblem { animation: none; }
 }
 
 .brand h1 {
@@ -241,6 +247,18 @@ button {
 @keyframes pop-in {
   from { opacity: 0; transform: translateY(-6px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 青海波（せいがいは）風の装飾ライン — 帯地をイメージした雅なアクセント */
+.wave-divider {
+  height: 9px;
+  margin: 2px 2px 4px;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(circle at 10px 0, transparent 7px, rgb(var(--gold)) 8px, rgb(var(--gold)) 9px, transparent 10px),
+    radial-gradient(circle at 30px 0, transparent 7px, rgb(var(--gold)) 8px, rgb(var(--gold)) 9px, transparent 10px);
+  background-size: 40px 9px;
+  background-repeat: repeat-x;
 }
 
 /* ---------------- 日付ナビ ---------------- */
@@ -455,8 +473,9 @@ button {
 
 .btn-primary {
   color: #fff8ee;
-  background: linear-gradient(135deg, rgb(var(--vermillion)), rgb(198 92 66));
-  box-shadow: 0 6px 16px -6px rgba(176,58,46,0.55);
+  background: linear-gradient(135deg, rgb(var(--vermillion)), rgb(var(--lacquer)));
+  border: 1px solid rgba(var(--gold), 0.55);
+  box-shadow: 0 6px 16px -6px rgba(var(--vermillion), 0.55);
 }
 .btn-secondary {
   color: rgb(var(--ink));
