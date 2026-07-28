@@ -1,6 +1,6 @@
 /* ===========================================================
-   つみたての庭 — 新NISAシミュレーター
-   複利計算・盆栽モーショングラフィックス・成長グラフ
+   つみたての桜 — 新NISAシミュレーター
+   複利計算・桜の木モーショングラフィックス・成長グラフ
    すべて端末内で計算されます（サーバー送信なし）。
    =========================================================== */
 (() => {
@@ -192,7 +192,7 @@
         try {
           return await fetchOne(src.provider, src.symbol, useProxy);
         } catch (e) {
-          console.warn(`[つみたての庭] ${fund} の取得に失敗 (${src.provider}${useProxy ? "/proxy" : ""}):`, e);
+          console.warn(`[つみたての桜] ${fund} の取得に失敗 (${src.provider}${useProxy ? "/proxy" : ""}):`, e);
         }
       }
     }
@@ -384,7 +384,7 @@
     el._raf = requestAnimationFrame(step);
   }
 
-  /* ---------------- 盆栽の骨格（シード固定でランダム生成） ---------------- */
+  /* ---------------- 桜の木の骨格（シード固定でランダム生成） ---------------- */
   const MAX_DEPTH = 6;
   const rng = mulberry32(2024);
   function buildNode(depth) {
@@ -408,7 +408,7 @@
   const SAKURA_DEEP = [214, 132, 148];
   const INK = "rgb(58,46,40)";
   const TREE_W = 600, TREE_H = 420;
-  const POT_Y = 360, BASE_LEN = 68;
+  const GROUND_Y = 378, BASE_LEN = 72;
   const BLOOM_TARGET = 100000000; // 評価額1億円で満開
 
   let treeCurrent = { scale: 0.12, depthF: 0.6, leafDensity: 0.35, goldRatio: 0, bloomRatio: 0 };
@@ -436,25 +436,62 @@
     }
   }
 
-  function drawPot(ctx) {
+  function drawGround(ctx) {
     const cx = TREE_W / 2;
-    ctx.fillStyle = "rgba(94,140,122,0.16)";
+
+    // 幹の足元の柔らかい影
+    ctx.fillStyle = "rgba(58,46,40,0.12)";
     ctx.beginPath();
-    ctx.ellipse(cx, POT_Y + 4, 128, 14, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, GROUND_Y + 10, 118, 12, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#c4953f";
-    ctx.strokeStyle = "#8a6530";
-    ctx.lineWidth = 2;
+
+    // なだらかに波打つ地面（芝）
+    ctx.fillStyle = "#8aab72";
     ctx.beginPath();
-    ctx.moveTo(cx - 78, POT_Y);
-    ctx.lineTo(cx + 78, POT_Y);
-    ctx.lineTo(cx + 60, POT_Y + 46);
-    ctx.lineTo(cx - 60, POT_Y + 46);
+    ctx.moveTo(0, TREE_H);
+    ctx.lineTo(0, GROUND_Y + 6);
+    for (let gx = 0; gx <= TREE_W; gx += 15) {
+      ctx.lineTo(gx, GROUND_Y + Math.sin(gx * 0.045 + 1.2) * 4);
+    }
+    ctx.lineTo(TREE_W, TREE_H);
     ctx.closePath();
-    ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#d6b26c";
-    ctx.fillRect(cx - 84, POT_Y - 8, 168, 10);
-    ctx.strokeRect(cx - 84, POT_Y - 8, 168, 10);
+    ctx.fill();
+    ctx.fillStyle = "#728f5c";
+    ctx.beginPath();
+    ctx.moveTo(0, TREE_H);
+    ctx.lineTo(0, GROUND_Y + 12);
+    for (let gx = 0; gx <= TREE_W; gx += 15) {
+      ctx.lineTo(gx, GROUND_Y + 8 + Math.sin(gx * 0.045 + 1.2) * 4);
+    }
+    ctx.lineTo(TREE_W, TREE_H);
+    ctx.closePath();
+    ctx.fill();
+
+    // 幹のまわりの小さな草
+    ctx.strokeStyle = "#5e8c4a";
+    ctx.lineCap = "round";
+    for (let i = -6; i <= 6; i++) {
+      const gx = cx + i * 13 + (i % 2 === 0 ? 4 : -3);
+      const gy = GROUND_Y + Math.sin(gx * 0.045 + 1.2) * 4 + 2;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.quadraticCurveTo(gx + (i % 2 === 0 ? 3 : -3), gy - 8, gx + (i % 2 === 0 ? 1 : -1), gy - 13);
+      ctx.stroke();
+    }
+
+    // 足元に舞い落ちた桜の花びら
+    ctx.fillStyle = "#edaebe";
+    [[-70, 6, 0.5], [-24, 12, -0.3], [40, 4, 0.8], [86, 10, -0.6]].forEach(([ox, oy, rot]) => {
+      const gx = cx + ox, gy = GROUND_Y + oy + Math.sin(gx * 0.045 + 1.2) * 4;
+      ctx.save();
+      ctx.translate(gx, gy);
+      ctx.rotate(rot);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 4.2, 2.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
   }
 
   function drawFoliage(ctx, x, y, node, params, grown) {
@@ -520,7 +557,7 @@
     const pink = forcePink || Math.random() < treeCurrent.bloomRatio;
     sparkles.push({
       x: TREE_W / 2 + (Math.random() - 0.5) * 190 * treeCurrent.scale,
-      y: POT_Y - 90 * treeCurrent.scale - Math.random() * 100 * treeCurrent.scale,
+      y: GROUND_Y - 90 * treeCurrent.scale - Math.random() * 100 * treeCurrent.scale,
       vy: -0.22 - Math.random() * 0.28,
       vx: (Math.random() - 0.5) * 0.14,
       life: 0,
@@ -546,8 +583,8 @@
   function drawTree(now) {
     if (!treeCtx) return;
     treeCtx.clearRect(0, 0, TREE_W, TREE_H);
-    drawPot(treeCtx);
-    walk(treeCtx, treeSkeleton, TREE_W / 2, POT_Y - 4, -Math.PI / 2, BASE_LEN * treeCurrent.scale, treeCurrent, now);
+    drawGround(treeCtx);
+    walk(treeCtx, treeSkeleton, TREE_W / 2, GROUND_Y, -Math.PI / 2, BASE_LEN * treeCurrent.scale, treeCurrent, now);
     updateSparkles(treeCtx, now);
   }
 
