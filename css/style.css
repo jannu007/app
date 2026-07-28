@@ -111,8 +111,9 @@ button {
 #petals {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: -1;
   pointer-events: none;
+  filter: blur(0.6px);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -604,21 +604,25 @@
     resize();
     window.addEventListener("resize", resize);
 
+    // 雅（みやび）を意識し、控えめで邪魔にならない花びらに調整
+    // (帳面カード類より背面に描画され、隙間にだけ淡く見える)
+    const PETAL_COLORS = ["#e8a8b0", "#d7b98f"]; // 桜色・淡い金
     function makePetal() {
       return {
         x: Math.random() * w,
         y: -20 - Math.random() * h * 0.3,
-        size: (6 + Math.random() * 8) * devicePixelRatio,
-        speedY: (0.35 + Math.random() * 0.5) * devicePixelRatio,
-        speedX: (Math.random() - 0.5) * 0.6 * devicePixelRatio,
+        size: (4 + Math.random() * 5) * devicePixelRatio,
+        speedY: (0.16 + Math.random() * 0.22) * devicePixelRatio,
+        speedX: (Math.random() - 0.5) * 0.3 * devicePixelRatio,
         rot: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.03,
+        rotSpeed: (Math.random() - 0.5) * 0.015,
         sway: Math.random() * Math.PI * 2,
-        opacity: 0.5 + Math.random() * 0.4,
+        opacity: 0.18 + Math.random() * 0.2,
+        color: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)],
       };
     }
 
-    const COUNT = reduced ? 0 : (window.innerWidth < 480 ? 10 : 16);
+    const COUNT = reduced ? 0 : (window.innerWidth < 480 ? 5 : 8);
     for (let i = 0; i < COUNT; i++) {
       const p = makePetal();
       p.y = Math.random() * h;
@@ -630,7 +634,7 @@
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
       ctx.globalAlpha = p.opacity;
-      ctx.fillStyle = "#e8a8b0";
+      ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.ellipse(0, 0, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -641,8 +645,8 @@
       ctx.clearRect(0, 0, w, h);
       petalsArr.forEach((p) => {
         p.y += p.speedY;
-        p.sway += 0.02;
-        p.x += p.speedX + Math.sin(p.sway) * 0.4 * devicePixelRatio;
+        p.sway += 0.012;
+        p.x += p.speedX + Math.sin(p.sway) * 0.25 * devicePixelRatio;
         p.rot += p.rotSpeed;
         if (p.y > h + 20) {
           Object.assign(p, makePetal());
