@@ -61,10 +61,20 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* 保存できない環境では無視 */ }
   }
 
-  /* ---------------- リアルタイム相場（任意・端末からstooq.comへ直接通信） ---------------- */
+  /* ---------------- リアルタイム相場（任意・端末から外部データ源へ直接通信） ---------------- */
   const REALTIME_KEY = "tsumitate-niwa:realtime:v1";
-  const FUND_SYMBOLS = { acwi: "2559.jp", sp500: "^spx" };
   const FUND_LABELS = { acwi: "オルカン（全世界株式）", sp500: "S&P500" };
+  // 銘柄ごとに複数の取得元を用意し、上から順に試す（通信環境によりCORSが通らない場合があるため）
+  const FUND_SOURCES = {
+    acwi: [
+      { provider: "stooq", symbol: "2559.jp" },
+      { provider: "yahoo", symbol: "2559.T" },
+    ],
+    sp500: [
+      { provider: "stooq", symbol: "^spx" },
+      { provider: "yahoo", symbol: "^GSPC" },
+    ],
+  };
   let realtime = { enabled: false, funds: {}, selected: null, fetchedAt: 0 };
 
   function loadRealtime() {
@@ -110,12 +120,56 @@
     return { rate, years, asOf: last.date };
   }
 
-  async function fetchFundReturn(symbol) {
-    const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol)}&i=m`;
+  function parseYahooChart(json) {
+    const result = json && json.chart && json.chart.result && json.chart.result[0];
+    if (!result || !result.timestamp) throw new Error("yahoo: invalid response");
+    const ts = result.timestamp;
+    const quote = result.indicators && result.indicators.quote && result.indicators.quote[0];
+    const closes = quote && quote.close;
+    if (!closes) throw new Error("yahoo: no series");
+    const rows = [];
+    for (let i = 0; i < ts.length; i++) {
+      const c = closes[i];
+      if (typeof c === "number" && c > 0) {
+        rows.push({ date: new Date(ts[i] * 1000).toISOString().slice(0, 10), close: c });
+      }
+    }
+    rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    if (rows.length < 2) throw new Error("yahoo: insufficient data");
+    return rows;
+  }
+
+  const stooqUrl = (symbol) => `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol)}&i=m`;
+  const yahooUrl = (symbol) => `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=10y&interval=1mo`;
+  const viaProxy = (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+  async function fetchOne(provider, symbol, useProxy) {
+    const rawUrl = provider === "stooq" ? stooqUrl(symbol) : yahooUrl(symbol);
+    const url = useProxy ? viaProxy(rawUrl) : rawUrl;
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("http " + res.status);
-    const text = await res.text();
-    return computeCagr(parseStooqCsv(text));
+    if (!res.ok) throw new Error(`${provider} http ${res.status}`);
+    if (provider === "stooq") {
+      const text = await res.text();
+      return computeCagr(parseStooqCsv(text));
+    }
+    const json = await res.json();
+    return computeCagr(parseYahooChart(json));
+  }
+
+  // 取得元を順番に試し、最初に成功したものを採用する（一つの通信経路がブロックされていても他で補う）
+  async function fetchFundReturn(fund) {
+    let lastError = null;
+    for (const src of FUND_SOURCES[fund]) {
+      for (const useProxy of [false, true]) {
+        try {
+          return await fetchOne(src.provider, src.symbol, useProxy);
+        } catch (e) {
+          lastError = e;
+          console.warn(`[つみたての庭] ${fund} の取得に失敗 (${src.provider}${useProxy ? "/proxy" : ""}):`, e);
+        }
+      }
+    }
+    throw lastError || new Error("全ての取得元で失敗しました");
   }
 
   function fundMetaText(info) {
@@ -155,11 +209,11 @@
   async function refreshRealtimeData() {
     const btn = $("#realtimeRefresh");
     btn.disabled = true;
-    Object.keys(FUND_SYMBOLS).forEach(setFundLoading);
+    Object.keys(FUND_SOURCES).forEach(setFundLoading);
     await Promise.all(
-      Object.keys(FUND_SYMBOLS).map(async (fund) => {
+      Object.keys(FUND_SOURCES).map(async (fund) => {
         try {
-          const info = await fetchFundReturn(FUND_SYMBOLS[fund]);
+          const info = await fetchFundReturn(fund);
           realtime.funds[fund] = info;
           setFundData(fund, info);
         } catch (e) {
@@ -568,7 +622,7 @@
     $("#realtimeBody").hidden = !realtime.enabled;
     saveRealtime();
     if (!realtime.enabled) return;
-    Object.keys(FUND_SYMBOLS).forEach(renderFundCard);
+    Object.keys(FUND_SOURCES).forEach(renderFundCard);
     const stale = !realtime.fetchedAt || Date.now() - realtime.fetchedAt > 12 * 60 * 60 * 1000;
     if (stale) refreshRealtimeData();
   });
@@ -800,7 +854,7 @@
   $("#realtimeToggle").checked = realtime.enabled;
   $("#realtimeBody").hidden = !realtime.enabled;
   if (realtime.enabled) {
-    Object.keys(FUND_SYMBOLS).forEach(renderFundCard);
+    Object.keys(FUND_SOURCES).forEach(renderFundCard);
     if (!realtime.fetchedAt || Date.now() - realtime.fetchedAt > 12 * 60 * 60 * 1000) refreshRealtimeData();
   }
   treeCtx = $("#treeCanvas").getContext("2d");
