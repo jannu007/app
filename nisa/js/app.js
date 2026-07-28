@@ -421,9 +421,9 @@
     const progress = clamp(result.balance / BLOOM_TARGET, 0, 1); // 評価額そのもので木の育ち具合を決める
     assetProgress = progress;
     treeTarget = {
-      scale: clamp(0.22 + progress * 1.1, 0.22, 1.32),
-      depthF: clamp(1.3 + progress * (MAX_DEPTH + 0.5 - 1.3), 1.3, MAX_DEPTH + 1.5),
-      leafDensity: clamp(0.35 + progress * 1.6 + profitRatio * 0.3, 0.35, 2.8),
+      scale: clamp(0.22 + progress * 1.18, 0.22, 1.4), // 満開時は画面いっぱいに育つ大きさにする
+      depthF: clamp(1.3 + progress * (MAX_DEPTH + 0.7 - 1.3), 1.3, MAX_DEPTH + 0.7),
+      leafDensity: clamp(0.35 + progress * 1.8 + profitRatio * 0.3, 0.35, 3.2),
       goldRatio: clamp(profitRatio / 2.2, 0, 1),
       bloomRatio: clamp((progress - 0.7) / 0.3, 0, 1), // 1億円に近づくと桜色へ
     };
