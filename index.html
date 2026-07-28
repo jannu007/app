@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-<title>京の家計帖 - かんたん家計簿</title>
-<meta name="description" content="水彩画風・京都風のデザインで、日々の収支をワンタッチで記録できる完全無料の家計簿アプリ。インストールしてオフラインでも使えます。" />
-<meta name="theme-color" content="#f6efe1" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#2c2622" media="(prefers-color-scheme: dark)" />
+<title>つみたての庭 - 新NISAシミュレーター</title>
+<meta name="description" content="初心者でもわかる新NISA資産運用シミュレーター。積立額・利回り・期間を動かすだけで、盆栽が育つように資産の成長をアニメーションで体感できます。" />
+<meta name="theme-color" content="#f7f1e2" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#211d19" media="(prefers-color-scheme: dark)" />
 
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="京の家計帖" />
+<meta name="apple-mobile-web-app-title" content="つみたての庭" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -42,11 +42,14 @@
     <div class="brand">
       <span class="brand-emblem" aria-hidden="true">
         <svg viewBox="0 0 64 64" width="30" height="30">
-          <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="2"/>
-          <path d="M32 14c-3 6-9 9-9 16a9 9 0 0 0 18 0c0-7-6-10-9-16z" fill="currentColor" opacity="0.9"/>
+          <path d="M32 10c-7 8-16 12-16 24a16 16 0 0 0 32 0c0-12-9-16-16-24z" fill="currentColor" opacity="0.9"/>
+          <rect x="26" y="44" width="12" height="10" rx="1.5" fill="currentColor"/>
         </svg>
       </span>
-      <h1>京の家計帖</h1>
+      <div class="brand-text">
+        <h1>つみたての庭</h1>
+        <span class="brand-sub">新NISAシミュレーター</span>
+      </div>
     </div>
     <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
       <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
@@ -54,132 +57,189 @@
   </header>
 
   <nav id="menuPanel" class="menu-panel" hidden>
-    <button data-action="export" class="menu-item">📤 データを書き出す (JSON)</button>
-    <button data-action="import" class="menu-item">📥 データを読み込む</button>
-    <button data-action="reset" class="menu-item danger">🗑 全データを削除</button>
+    <button data-action="help" class="menu-item">📖 使い方・用語集</button>
+    <button data-action="reset" class="menu-item">🔄 入力を初期値にもどす</button>
     <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
-    <input type="file" id="importFile" accept="application/json" hidden />
   </nav>
 
-  <!-- 日付ナビ -->
-  <section class="date-nav card">
-    <button id="prevDay" class="day-btn" aria-label="前日">
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M15 18l-6-6 6-6v12z"/></svg>
-      前日
-    </button>
-    <button id="dateDisplay" class="date-display">
-      <span id="dateText">2026 / 07 / 28</span>
-      <span id="dateSub" class="date-sub"></span>
-    </button>
-    <button id="nextDay" class="day-btn" aria-label="翌日">
-      翌日
-      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M9 6l6 6-6 6V6z"/></svg>
-    </button>
-  </section>
-  <input type="date" id="datePicker" class="sr-picker" aria-label="日付を選択" />
-
-  <!-- 支出リスト -->
   <main class="entry-area">
-    <ul id="entryList" class="entry-list" aria-live="polite"></ul>
-    <p id="emptyState" class="empty-state" hidden>
-      <span class="empty-emblem">🌸</span>
-      この日の記録はまだありません<br />
-      「追加」から書き込んでみましょう
+
+    <!-- 新NISAとは（開閉式イントロ） -->
+    <section class="card intro-card">
+      <button id="introToggle" class="intro-toggle" aria-expanded="false" aria-controls="introBody">
+        <span class="intro-emblem" aria-hidden="true">🌱</span>
+        <span class="intro-toggle-text">
+          <strong>はじめての方へ</strong>
+          <span>新NISAってなに？（30秒でわかります）</span>
+        </span>
+        <svg class="chev" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>
+      </button>
+      <div id="introBody" class="intro-body" hidden>
+        <p class="intro-lead">新NISAは、投資で得た利益に税金（約20%）がかからない国の制度です。売却してもこの非課税枠は翌年また使えます。</p>
+        <div class="intro-grid">
+          <div class="intro-item">
+            <span class="intro-item-emblem">🌾</span>
+            <strong>つみたて投資枠</strong>
+            <span>年120万円まで<br />コツコツ積立向け</span>
+          </div>
+          <div class="intro-item">
+            <span class="intro-item-emblem">🌳</span>
+            <strong>成長投資枠</strong>
+            <span>年240万円まで<br />個別株なども対象</span>
+          </div>
+        </div>
+        <p class="intro-note">生涯の非課税枠は合計<strong>1,800万円</strong>・非課税期間は<strong>無期限</strong>です。下のスライダーを動かして、将来の資産をシミュレーションしてみましょう。</p>
+      </div>
+    </section>
+
+    <!-- 育つ盆栽ビジュアライザ -->
+    <section class="card tree-card">
+      <div class="tree-canvas-wrap">
+        <canvas id="treeCanvas" width="600" height="420" aria-label="積立資産の成長を表す盆栽アニメーション"></canvas>
+        <div class="tree-year-badge"><span id="treeYearLabel">20</span>年後</div>
+      </div>
+      <div class="result-headline">
+        <span class="result-label">最終評価額（見込み）</span>
+        <span class="result-value"><span id="finalValue">0</span><span class="yen">円</span></span>
+      </div>
+      <div class="result-sub-grid">
+        <div class="result-sub">
+          <span class="sub-dot principal-dot" aria-hidden="true"></span>
+          <span class="sub-label">積立元本</span>
+          <span class="sub-value"><span id="principalValue">0</span>円</span>
+        </div>
+        <div class="result-sub">
+          <span class="sub-dot profit-dot" aria-hidden="true"></span>
+          <span class="sub-label">運用益</span>
+          <span class="sub-value profit"><span id="profitValue">0</span>円</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 入力スライダー -->
+    <section class="card sliders-card">
+      <h2 class="section-title">積立の条件</h2>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">毎月の積立額</span>
+          <span class="slider-value"><span id="monthlyOut">30,000</span>円</span>
+        </div>
+        <input type="range" id="monthlySlider" min="1000" max="300000" step="1000" value="30000" />
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">想定利回り（年率）</span>
+          <span class="slider-value"><span id="rateOut">5.0</span>%</span>
+        </div>
+        <div class="preset-row" id="ratePresets">
+          <button type="button" class="preset-chip" data-rate="3">堅実 3%</button>
+          <button type="button" class="preset-chip active" data-rate="5">標準 5%</button>
+          <button type="button" class="preset-chip" data-rate="7">積極 7%</button>
+        </div>
+        <input type="range" id="rateSlider" min="0.1" max="15" step="0.1" value="5" />
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">積立期間</span>
+          <span class="slider-value"><span id="yearsOut">20</span>年</span>
+        </div>
+        <input type="range" id="yearsSlider" min="1" max="40" step="1" value="20" />
+      </div>
+
+      <button type="button" id="lumpToggle" class="btn btn-ghost full small-btn">＋ はじめに一括投資額を追加する</button>
+      <div class="slider-field lump-field" id="lumpField" hidden>
+        <div class="slider-head">
+          <span class="slider-label">はじめの一括投資額</span>
+          <span class="slider-value"><span id="lumpOut">0</span>円</span>
+        </div>
+        <input type="range" id="lumpSlider" min="0" max="5000000" step="50000" value="0" />
+      </div>
+    </section>
+
+    <!-- 成長グラフ -->
+    <section class="card chart-card">
+      <h2 class="section-title">資産の推移</h2>
+      <canvas id="growthChart" width="600" height="280"></canvas>
+      <div class="chart-legend">
+        <span><i class="legend-dot principal-dot"></i>積立元本</span>
+        <span><i class="legend-dot profit-line"></i>評価額（元本＋運用益）</span>
+      </div>
+    </section>
+
+    <!-- 非課税メリット比較 -->
+    <section class="card tax-card">
+      <h2 class="section-title">非課税のチカラ</h2>
+      <p class="tax-lead">同じ運用成績でも、課税口座なら運用益に約20.315%の税金がかかります。新NISAならその分がまるごと手元に残ります。</p>
+      <div class="tax-compare">
+        <div class="tax-bar-row">
+          <span class="tax-bar-label">課税口座の場合</span>
+          <div class="tax-bar-track"><div class="tax-bar-fill taxed" id="taxedBar"></div></div>
+          <span class="tax-bar-value"><span id="taxedValue">0</span>円</span>
+        </div>
+        <div class="tax-bar-row">
+          <span class="tax-bar-label">新NISAの場合</span>
+          <div class="tax-bar-track"><div class="tax-bar-fill nisa" id="nisaBar"></div></div>
+          <span class="tax-bar-value"><span id="nisaValue">0</span>円</span>
+        </div>
+      </div>
+      <div class="tax-savings-badge">
+        🎉 新NISAなら約<span id="savingsValue">0</span>円おトク
+      </div>
+    </section>
+
+    <p class="disclaimer">
+      ※このシミュレーションは入力条件にもとづく複利計算の目安であり、将来の運用成果や元本を保証するものではありません。実際の投資は各金融機関の情報をご確認のうえ、ご自身の判断で行ってください。データは端末内でのみ計算され、サーバーには送信されません。
     </p>
   </main>
-
-  <!-- 合計・操作バー -->
-  <footer class="bottom-bar card">
-    <div class="total-row">
-      <span class="total-label">合計</span>
-      <span class="total-value"><span id="totalValue">0</span><span class="yen">円</span></span>
-    </div>
-    <div class="bottom-buttons">
-      <button id="addOpenBtn" class="btn btn-primary">
-        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
-        追加
-      </button>
-      <button id="graphOpenBtn" class="btn btn-secondary">
-        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 21V9h3v12H5zm6 0V3h3v18h-3zm6 0v-7h3v7h-3z"/></svg>
-        グラフ表示
-      </button>
-    </div>
-  </footer>
 </div>
 
-<!-- 追加/編集 モーダル -->
-<div id="addModal" class="modal-overlay modal-overlay--top" hidden>
-  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<!-- ヘルプ・用語集モーダル -->
+<div id="helpModal" class="modal-overlay" hidden>
+  <div class="modal ink-modal help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="modal-header">
-      <span class="modal-emblem" aria-hidden="true">💰</span>
-      <h2 id="modalTitle">追加</h2>
+      <span class="modal-emblem" aria-hidden="true">📖</span>
+      <h2 id="helpTitle">使い方・用語集</h2>
     </div>
 
-    <div class="modal-body">
-      <label class="field">
-        <span class="field-label">名前</span>
-        <input id="itemName" type="text" placeholder="例）珈琲" autocomplete="off" />
-      </label>
-
-      <label class="field">
-        <span class="field-label">価格</span>
-        <input id="itemPrice" type="number" inputmode="numeric" placeholder="例）400" min="0" />
-      </label>
-
-      <label class="field kind-field">
-        <span class="field-label">種別</span>
-        <div class="segmented" id="kindSegment">
-          <button type="button" class="seg-btn active" data-kind="expense">支出</button>
-          <button type="button" class="seg-btn" data-kind="income">収入</button>
-        </div>
-      </label>
-
-      <div class="history-block">
-        <button type="button" id="historyToggle" class="btn btn-ghost full">履歴からえらぶ</button>
-        <div id="historyChips" class="history-chips" hidden></div>
+    <div class="modal-body help-body">
+      <div class="glossary-item">
+        <strong>複利（ふくり）</strong>
+        <p>運用で得た利益を元本に加えて再投資すること。利益が利益を生み、雪だるま式に資産が育っていきます。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>つみたて投資枠</strong>
+        <p>年間120万円まで利用できる非課税枠。長期・積立・分散投資に適した一部の投資信託が対象です。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>成長投資枠</strong>
+        <p>年間240万円まで利用できる非課税枠。上場株式や幅広い投資信託が対象です。つみたて投資枠と併用できます。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>非課税保有限度額</strong>
+        <p>生涯にわたって非課税で保有できる上限は合計1,800万円（うち成長投資枠は1,200万円まで）。売却すれば枠は翌年以降に復活します。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>想定利回り</strong>
+        <p>1年間でどれくらい資産が増えるかの見込み値。株式や投資信託の値動きは一定ではなく、あくまで試算のための仮定です。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>ドルコスト平均法</strong>
+        <p>毎月一定額をコツコツ買い続ける方法。価格が高い時は少なく、安い時は多く買うことになり、平均購入価格をならす効果があります。</p>
       </div>
     </div>
 
     <div class="modal-actions">
-      <button id="submitBtn" class="btn btn-primary full">追加</button>
-      <button id="cancelBtn" class="btn btn-secondary full">キャンセル</button>
-    </div>
-  </div>
-</div>
-
-<!-- グラフ モーダル -->
-<div id="graphModal" class="modal-overlay" hidden>
-  <div class="modal ink-modal graph-modal" role="dialog" aria-modal="true" aria-labelledby="graphTitle">
-    <div class="modal-header">
-      <span class="modal-emblem" aria-hidden="true">📊</span>
-      <h2 id="graphTitle">グラフ表示</h2>
-    </div>
-
-    <div class="graph-tabs">
-      <button class="tab-btn active" data-range="month">今月の内訳</button>
-      <button class="tab-btn" data-range="6month">半年の推移</button>
-    </div>
-
-    <div class="modal-body graph-body">
-      <div id="pieWrap" class="pie-wrap">
-        <canvas id="pieChart" width="260" height="260"></canvas>
-        <ul id="pieLegend" class="pie-legend"></ul>
-        <p id="pieEmpty" class="empty-state small" hidden>データがありません</p>
-      </div>
-      <div id="barWrap" class="bar-wrap" hidden>
-        <canvas id="barChart" width="320" height="220"></canvas>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button id="graphCloseBtn" class="btn btn-secondary full">とじる</button>
+      <button id="helpCloseBtn" class="btn btn-secondary full">とじる</button>
     </div>
   </div>
 </div>
 
 <!-- インストール促し バナー -->
 <div id="installBanner" class="install-banner" hidden>
-  <span class="install-emblem" aria-hidden="true">🎎</span>
+  <span class="install-emblem" aria-hidden="true">🎋</span>
   <div class="install-text">
     <strong>ホーム画面に追加できます</strong>
     <span>アプリのようにワンタッチで開けます</span>

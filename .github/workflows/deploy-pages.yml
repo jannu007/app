@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - claude/household-budget-app-7r7elb
+      - claude/nisa-asset-simulator-7zcvfd
   workflow_dispatch:
 
 permissions:

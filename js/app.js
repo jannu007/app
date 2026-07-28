@@ -1,118 +1,335 @@
 /* ===========================================================
-   京の家計帖 — アプリロジック
-   すべてのデータは端末内 (localStorage) に保存されます。
+   つみたての庭 — 新NISAシミュレーター
+   複利計算・盆栽モーショングラフィックス・成長グラフ
+   すべて端末内で計算されます（サーバー送信なし）。
    =========================================================== */
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "kyo-kakeicho:v1";
+  const STORAGE_KEY = "tsumitate-niwa:v1";
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const fmtYen = (n) => Math.round(n).toLocaleString("ja-JP");
+  const fmtMan = (n) => Math.round(n / 10000) + "万円";
+  const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const pad2 = (n) => String(n).padStart(2, "0");
-  const toKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-  const fromKey = (key) => {
-    const [y, m, d] = key.split("-").map(Number);
-    return new Date(y, m - 1, d);
-  };
-  const fmtYen = (n) => n.toLocaleString("ja-JP");
+  function lerpColor(c1, c2, t) {
+    const r = Math.round(lerp(c1[0], c2[0], t));
+    const g = Math.round(lerp(c1[1], c2[1], t));
+    const b = Math.round(lerp(c1[2], c2[2], t));
+    return `rgb(${r},${g},${b})`;
+  }
 
-  const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
-
-  /* ---------------- データストア ---------------- */
-  const Store = {
-    data: { entries: {}, history: [] },
-
-    load() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) this.data = JSON.parse(raw);
-      } catch (e) {
-        console.warn("読み込みに失敗しました", e);
-      }
-      if (!this.data.entries) this.data.entries = {};
-      if (!this.data.history) this.data.history = [];
-    },
-
-    save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-    },
-
-    entriesFor(dateKey) {
-      return this.data.entries[dateKey] || [];
-    },
-
-    addEntry(dateKey, entry) {
-      if (!this.data.entries[dateKey]) this.data.entries[dateKey] = [];
-      this.data.entries[dateKey].push(entry);
-      this.touchHistory(entry);
-      this.save();
-    },
-
-    removeEntry(dateKey, id) {
-      const list = this.data.entries[dateKey];
-      if (!list) return;
-      this.data.entries[dateKey] = list.filter((e) => e.id !== id);
-      if (this.data.entries[dateKey].length === 0) delete this.data.entries[dateKey];
-      this.save();
-    },
-
-    touchHistory(entry) {
-      const existing = this.data.history.find(
-        (h) => h.name === entry.name && h.kind === entry.kind
-      );
-      if (existing) {
-        existing.price = entry.price;
-        existing.count = (existing.count || 1) + 1;
-        existing.lastUsed = Date.now();
-      } else {
-        this.data.history.unshift({
-          name: entry.name,
-          price: entry.price,
-          kind: entry.kind,
-          count: 1,
-          lastUsed: Date.now(),
-        });
-      }
-      this.data.history.sort((a, b) => (b.count - a.count) || (b.lastUsed - a.lastUsed));
-      this.data.history = this.data.history.slice(0, 40);
-    },
-
-    totalsForMonth(year, month) {
-      const totals = {};
-      for (const key in this.data.entries) {
-        const d = fromKey(key);
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          for (const e of this.data.entries[key]) {
-            if (e.kind !== "expense") continue;
-            totals[e.name] = (totals[e.name] || 0) + e.price;
-          }
-        }
-      }
-      return totals;
-    },
-
-    monthlyNet(year, month) {
-      let income = 0, expense = 0;
-      for (const key in this.data.entries) {
-        const d = fromKey(key);
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          for (const e of this.data.entries[key]) {
-            if (e.kind === "income") income += e.price;
-            else expense += e.price;
-          }
-        }
-      }
-      return { income, expense, net: income - expense };
-    },
-  };
-
-  Store.load();
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
 
   /* ---------------- 状態 ---------------- */
-  let currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
-  let selectedKind = "expense";
+  const DEFAULTS = { monthly: 30000, lumpsum: 0, rate: 5, years: 20 };
+  let state = { ...DEFAULTS };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = {
+          monthly: clamp(Number(parsed.monthly) || DEFAULTS.monthly, 1000, 300000),
+          lumpsum: clamp(Number(parsed.lumpsum) || 0, 0, 5000000),
+          rate: clamp(Number(parsed.rate) || DEFAULTS.rate, 0.1, 15),
+          years: clamp(Number(parsed.years) || DEFAULTS.years, 1, 40),
+        };
+      }
+    } catch (e) { /* 無視して初期値を使用 */ }
+  }
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  /* ---------------- 複利シミュレーション ---------------- */
+  function compute(s) {
+    const months = Math.round(s.years * 12);
+    const i = s.rate / 100 / 12;
+    let balance = s.lumpsum;
+    let principal = s.lumpsum;
+    const yearly = [{ year: 0, principal, balance }];
+    for (let m = 1; m <= months; m++) {
+      balance = (balance + s.monthly) * (1 + i);
+      principal += s.monthly;
+      if (m % 12 === 0) yearly.push({ year: m / 12, principal, balance });
+    }
+    return { principal, balance, profit: balance - principal, yearly };
+  }
+
+  /* ---------------- カウントアップ数字 ---------------- */
+  function animateNumber(el, to) {
+    const from = Number(el.dataset.value || 0);
+    el.dataset.value = to;
+    cancelAnimationFrame(el._raf);
+    if (REDUCED) { el.textContent = fmtYen(to); return; }
+    const duration = 500;
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = fmtYen(lerp(from, to, eased));
+      if (t < 1) el._raf = requestAnimationFrame(step);
+    }
+    el._raf = requestAnimationFrame(step);
+  }
+
+  /* ---------------- 盆栽の骨格（シード固定でランダム生成） ---------------- */
+  const MAX_DEPTH = 6;
+  const rng = mulberry32(2024);
+  function buildNode(depth) {
+    const node = { depth, children: [], leafSeed: rng() };
+    if (depth >= MAX_DEPTH) return node;
+    const nChildren = depth === 0 ? 1 : (rng() < 0.4 ? 3 : 2);
+    const angles = nChildren === 1 ? [0] : nChildren === 2 ? [-1, 1] : [-1, 0, 1];
+    for (let k = 0; k < nChildren; k++) {
+      const child = buildNode(depth + 1);
+      child.angle = angles[k] * (0.34 + rng() * 0.2) + (rng() - 0.5) * 0.1;
+      child.lenRatio = 0.68 + rng() * 0.15;
+      node.children.push(child);
+    }
+    return node;
+  }
+  const treeSkeleton = buildNode(0);
+
+  const MATCHA = [94, 140, 122];
+  const GOLD = [196, 149, 63];
+  const INK = "rgb(58,46,40)";
+  const TREE_W = 600, TREE_H = 420;
+  const POT_Y = 360, BASE_LEN = 68;
+
+  let treeCurrent = { scale: 0.05, depthF: 0.3, leafDensity: 0.3, goldRatio: 0 };
+  let treeTarget = { scale: 0.6, depthF: 3, leafDensity: 0.6, goldRatio: 0 };
+
+  function updateTreeTarget(result, s) {
+    const profitRatio = result.principal > 0 ? result.profit / result.principal : 0;
+    treeTarget = {
+      scale: clamp(0.55 + (s.years / 40) * 0.65, 0.55, 1.25),
+      depthF: clamp(2.2 + (s.years / 40) * 5.3, 2.2, MAX_DEPTH + 1.5),
+      leafDensity: clamp(0.5 + profitRatio * 0.8, 0.5, 2.4),
+      goldRatio: clamp(profitRatio / 2.2, 0, 1),
+    };
+  }
+
+  function drawPot(ctx) {
+    const cx = TREE_W / 2;
+    ctx.fillStyle = "rgba(94,140,122,0.16)";
+    ctx.beginPath();
+    ctx.ellipse(cx, POT_Y + 4, 128, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#c4953f";
+    ctx.strokeStyle = "#8a6530";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - 78, POT_Y);
+    ctx.lineTo(cx + 78, POT_Y);
+    ctx.lineTo(cx + 60, POT_Y + 46);
+    ctx.lineTo(cx - 60, POT_Y + 46);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#d6b26c";
+    ctx.fillRect(cx - 84, POT_Y - 8, 168, 10);
+    ctx.strokeRect(cx - 84, POT_Y - 8, 168, 10);
+  }
+
+  function drawFoliage(ctx, x, y, node, params, grown) {
+    const r = (MAX_DEPTH - node.depth + 1.4) * 3.1 * params.scale * clamp(params.leafDensity, 0.4, 2.4) * grown;
+    if (r < 1.2) return;
+    const color = lerpColor(MATCHA, GOLD, clamp(params.goldRatio, 0, 1) * (0.5 + node.leafSeed * 0.5));
+    ctx.globalAlpha = 0.88 * grown;
+    ctx.fillStyle = color;
+    for (let k = 0; k < 3; k++) {
+      const ang = node.leafSeed * Math.PI * 2 + k * 2.1;
+      const ox = Math.cos(ang) * r * 0.4, oy = Math.sin(ang) * r * 0.4;
+      ctx.beginPath();
+      ctx.arc(x + ox, y + oy, r * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (node.leafSeed < params.goldRatio * 0.55) {
+      const cr = clamp(2.4 * params.scale * grown, 0, 5);
+      ctx.fillStyle = "#c4953f";
+      ctx.strokeStyle = "#8a6530";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y - r * 0.25, cr, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+    }
+  }
+
+  function walk(ctx, node, x, y, angle, len, params, now) {
+    const grown = clamp(params.depthF - node.depth, 0, 1);
+    if (grown <= 0.004) return;
+    const sway = REDUCED ? 0 : Math.sin(now / 1000 * (0.6 + node.depth * 0.15) + node.leafSeed * 10) * (0.02 + node.depth * 0.01);
+    const drawAngle = angle + sway;
+    const segLen = len * grown;
+    const nx = x + Math.cos(drawAngle) * segLen;
+    const ny = y + Math.sin(drawAngle) * segLen;
+    ctx.lineWidth = Math.max(1.1, (MAX_DEPTH - node.depth + 1) * 1.5 * params.scale);
+    ctx.strokeStyle = INK;
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
+
+    if (node.depth >= MAX_DEPTH - 2) drawFoliage(ctx, nx, ny, node, params, grown);
+
+    for (const child of node.children) {
+      walk(ctx, child, nx, ny, drawAngle + child.angle, len * child.lenRatio, params, now);
+    }
+  }
+
+  let sparkles = [];
+  function updateSparkles(ctx, now) {
+    if (!REDUCED && Math.random() < 0.015 + treeCurrent.leafDensity * 0.015) {
+      sparkles.push({
+        x: TREE_W / 2 + (Math.random() - 0.5) * 190 * treeCurrent.scale,
+        y: POT_Y - 90 * treeCurrent.scale - Math.random() * 100 * treeCurrent.scale,
+        vy: -0.22 - Math.random() * 0.28,
+        vx: (Math.random() - 0.5) * 0.14,
+        life: 0,
+        maxLife: 70 + Math.random() * 50,
+        size: 1.3 + Math.random() * 1.7,
+      });
+    }
+    sparkles = sparkles.filter((p) => p.life < p.maxLife);
+    for (const p of sparkles) {
+      p.life++; p.x += p.vx; p.y += p.vy;
+      const t = p.life / p.maxLife;
+      ctx.globalAlpha = Math.max(0, Math.sin(Math.PI * t) * 0.9);
+      ctx.fillStyle = "#d6b26c";
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  let treeCtx = null;
+  function drawTree(now) {
+    if (!treeCtx) return;
+    treeCtx.clearRect(0, 0, TREE_W, TREE_H);
+    drawPot(treeCtx);
+    walk(treeCtx, treeSkeleton, TREE_W / 2, POT_Y - 4, -Math.PI / 2, BASE_LEN * treeCurrent.scale, treeCurrent, now);
+    updateSparkles(treeCtx, now);
+  }
+
+  /* ---------------- 成長グラフ ---------------- */
+  const CHART_W = 600, CHART_H = 280;
+  let chartCtx = null;
+  let chartData = [{ year: 0, principal: 0, balance: 0 }];
+  let chartAnimStart = 0;
+
+  function updateChartTarget(result) {
+    chartData = result.yearly;
+    chartAnimStart = performance.now();
+  }
+
+  function drawChartFrame(data, revealT) {
+    if (!chartCtx || data.length < 2) return;
+    const ctx = chartCtx;
+    ctx.clearRect(0, 0, CHART_W, CHART_H);
+    const padL = 58, padR = 12, padT = 14, padB = 26;
+    const plotW = CHART_W - padL - padR, plotH = CHART_H - padT - padB;
+    const maxVal = Math.max(1, ...data.map((d) => d.balance)) * 1.12;
+    const x = (i) => padL + (i / (data.length - 1)) * plotW;
+    const y = (v) => padT + plotH - (v / maxVal) * plotH;
+
+    ctx.strokeStyle = "rgba(120,100,70,0.16)";
+    ctx.fillStyle = "rgba(96,82,72,0.75)";
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "right";
+    for (let g = 0; g <= 4; g++) {
+      const v = (maxVal / 4) * g;
+      const gy = y(v);
+      ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+      ctx.fillText(fmtMan(v), padL - 8, gy + 3);
+    }
+    const years = data.length - 1;
+    const step = Math.max(1, Math.round(years / 5));
+    ctx.textAlign = "center";
+    for (let i = 0; i < data.length; i += step) {
+      ctx.fillText(`${data[i].year}年`, x(i), padT + plotH + 16);
+    }
+    if ((data.length - 1) % step !== 0) {
+      ctx.fillText(`${data[data.length - 1].year}年`, x(data.length - 1), padT + plotH + 16);
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(padL - 2, 0, plotW * revealT + 4, CHART_H);
+    ctx.clip();
+
+    const drawArea = (key, fillStyle, strokeStyle) => {
+      ctx.beginPath();
+      ctx.moveTo(x(0), y(0));
+      data.forEach((d, i) => ctx.lineTo(x(i), y(d[key])));
+      ctx.lineTo(x(data.length - 1), padT + plotH);
+      ctx.closePath();
+      ctx.fillStyle = fillStyle;
+      ctx.fill();
+      ctx.beginPath();
+      data.forEach((d, i) => (i === 0 ? ctx.moveTo(x(i), y(d[key])) : ctx.lineTo(x(i), y(d[key]))));
+      ctx.strokeStyle = strokeStyle;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+    };
+
+    drawArea("balance", "rgba(196,149,63,0.30)", "#c4953f");
+    drawArea("principal", "rgba(58,82,130,0.35)", "#3a5282");
+
+    ctx.restore();
+  }
+
+  /* ---------------- 非課税メリット比較 ---------------- */
+  function updateTaxCompare(result) {
+    const profit = Math.max(0, result.profit);
+    const taxedFinal = result.principal + profit * (1 - 0.20315);
+    const nisaFinal = result.balance;
+    const savings = profit * 0.20315;
+    const maxVal = Math.max(nisaFinal, taxedFinal, 1);
+
+    requestAnimationFrame(() => {
+      $("#taxedBar").style.width = clamp((taxedFinal / maxVal) * 100, 0, 100) + "%";
+      $("#nisaBar").style.width = clamp((nisaFinal / maxVal) * 100, 0, 100) + "%";
+    });
+    animateNumber($("#taxedValue"), taxedFinal);
+    animateNumber($("#nisaValue"), nisaFinal);
+    animateNumber($("#savingsValue"), savings);
+  }
+
+  /* ---------------- 全体の再計算 ---------------- */
+  function recalc() {
+    const result = compute(state);
+    animateNumber($("#finalValue"), result.balance);
+    animateNumber($("#principalValue"), result.principal);
+    animateNumber($("#profitValue"), result.profit);
+    $("#treeYearLabel").textContent = state.years;
+    updateTaxCompare(result);
+    updateChartTarget(result);
+    updateTreeTarget(result, state);
+    saveState();
+  }
+
+  /* ---------------- アニメーションループ ---------------- */
+  function loop(now) {
+    const followRate = REDUCED ? 1 : 0.09;
+    for (const k in treeTarget) {
+      treeCurrent[k] = lerp(treeCurrent[k], treeTarget[k], followRate);
+    }
+    drawTree(now);
+    const t = REDUCED ? 1 : Math.min(1, (now - chartAnimStart) / 450);
+    const eased = 1 - Math.pow(1 - t, 3);
+    drawChartFrame(chartData, eased);
+    requestAnimationFrame(loop);
+  }
 
   /* ---------------- トースト ---------------- */
   let toastTimer = null;
@@ -124,345 +341,68 @@
     toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
   }
 
-  /* ---------------- 日付表示 ---------------- */
-  function renderDate(direction) {
-    const key = toKey(currentDate);
-    const el = $("#dateText");
-    const wrap = $("#dateDisplay");
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const apply = () => {
-      el.textContent = `${currentDate.getFullYear()} / ${pad2(currentDate.getMonth() + 1)} / ${pad2(currentDate.getDate())}`;
-      const wd = WEEKDAYS[currentDate.getDay()];
-      const sub = $("#dateSub");
-      if (currentDate.getTime() === today.getTime()) {
-        sub.textContent = `本日（${wd}）`;
-      } else {
-        sub.textContent = `${wd}曜日`;
-      }
-      $("#datePicker").value = key;
-    };
-
-    if (direction && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const outAnim = direction === "next" ? "slideOutLeft" : "slideOutRight";
-      const inAnim = direction === "next" ? "slideInLeft" : "slideInRight";
-      el.style.animation = `${outAnim} .16s ${getComputedStyle(document.documentElement).getPropertyValue('--ease-brush') || 'ease'} forwards`;
-      setTimeout(() => {
-        apply();
-        el.style.animation = `${inAnim} .28s cubic-bezier(.22,.9,.32,1)`;
-      }, 150);
-    } else {
-      apply();
+  /* ---------------- スライダーUI ---------------- */
+  function syncSlidersFromState() {
+    $("#monthlySlider").value = state.monthly;
+    $("#monthlyOut").textContent = fmtYen(state.monthly);
+    $("#rateSlider").value = state.rate;
+    $("#rateOut").textContent = state.rate.toFixed(1);
+    $("#yearsSlider").value = state.years;
+    $("#yearsOut").textContent = state.years;
+    $("#lumpSlider").value = state.lumpsum;
+    $("#lumpOut").textContent = fmtYen(state.lumpsum);
+    $$(".preset-chip").forEach((c) => c.classList.toggle("active", Number(c.dataset.rate) === state.rate));
+    if (state.lumpsum > 0) {
+      $("#lumpField").hidden = false;
+      $("#lumpToggle").textContent = "－ 一括投資額を非表示にする";
     }
   }
 
-  /* ---------------- エントリー一覧 ---------------- */
-  function renderEntries() {
-    const key = toKey(currentDate);
-    const list = Store.entriesFor(key).slice().sort((a, b) => a.time - b.time);
-    const ul = $("#entryList");
-    const empty = $("#emptyState");
-
-    ul.innerHTML = "";
-    if (list.length === 0) {
-      empty.hidden = false;
-    } else {
-      empty.hidden = true;
-      list.forEach((entry, i) => {
-        const li = document.createElement("li");
-        li.className = `entry-item ${entry.kind}`;
-        li.style.animationDelay = `${Math.min(i * 40, 240)}ms`;
-        const time = new Date(entry.time);
-        li.innerHTML = `
-          <span class="entry-kind-mark" aria-hidden="true"></span>
-          <span class="entry-info">
-            <span class="entry-name"></span><br />
-            <span class="entry-time">${pad2(time.getHours())}:${pad2(time.getMinutes())}</span>
-          </span>
-          <span class="entry-price"></span>
-          <button class="entry-delete" aria-label="削除">
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 7h12l-1 13H7L6 7zm3-4h6l1 2h4v2H4V5h4l1-2z"/></svg>
-          </button>
-        `;
-        li.querySelector(".entry-name").textContent = entry.name;
-        li.querySelector(".entry-price").textContent = fmtYen(entry.price) + "円";
-        li.querySelector(".entry-delete").addEventListener("click", () => deleteEntry(key, entry.id, li));
-        ul.appendChild(li);
-      });
-    }
-
-    renderTotal(list);
-  }
-
-  function deleteEntry(dateKey, id, li) {
-    li.classList.add("removing");
-    setTimeout(() => {
-      Store.removeEntry(dateKey, id);
-      renderEntries();
-      toast("削除しました");
-    }, 260);
-  }
-
-  /* ---------------- 合計（カウントアップ） ---------------- */
-  let totalAnimFrame = null;
-  function renderTotal(list) {
-    const net = list.reduce((sum, e) => sum + (e.kind === "income" ? e.price : -e.price), 0);
-    const el = $("#totalValue");
-    const from = Number(el.dataset.value || 0);
-    const to = net;
-    el.dataset.value = to;
-
-    const valueRow = el.closest(".total-value");
-    valueRow.style.color = to < 0 ? "rgb(var(--vermillion))" : to > 0 ? "rgb(var(--matcha))" : "rgb(var(--ink))";
-
-    cancelAnimationFrame(totalAnimFrame);
-    const duration = 420;
-    const start = performance.now();
-    function step(now) {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      const val = Math.round(from + (to - from) * eased);
-      el.textContent = fmtYen(val);
-      if (t < 1) totalAnimFrame = requestAnimationFrame(step);
-    }
-    totalAnimFrame = requestAnimationFrame(step);
-  }
-
-  /* ---------------- 日付ナビ操作 ---------------- */
-  $("#prevDay").addEventListener("click", () => {
-    currentDate.setDate(currentDate.getDate() - 1);
-    renderDate("prev");
-    renderEntries();
+  $("#monthlySlider").addEventListener("input", (e) => {
+    state.monthly = Number(e.target.value);
+    $("#monthlyOut").textContent = fmtYen(state.monthly);
+    recalc();
   });
-  $("#nextDay").addEventListener("click", () => {
-    currentDate.setDate(currentDate.getDate() + 1);
-    renderDate("next");
-    renderEntries();
+  $("#lumpSlider").addEventListener("input", (e) => {
+    state.lumpsum = Number(e.target.value);
+    $("#lumpOut").textContent = fmtYen(state.lumpsum);
+    recalc();
   });
-  $("#dateDisplay").addEventListener("click", () => {
-    $("#datePicker").showPicker ? $("#datePicker").showPicker() : $("#datePicker").click();
+  $("#yearsSlider").addEventListener("input", (e) => {
+    state.years = Number(e.target.value);
+    $("#yearsOut").textContent = state.years;
+    recalc();
   });
-  $("#datePicker").addEventListener("change", (e) => {
-    if (!e.target.value) return;
-    const [y, m, d] = e.target.value.split("-").map(Number);
-    currentDate = new Date(y, m - 1, d);
-    renderDate();
-    renderEntries();
+  $("#rateSlider").addEventListener("input", (e) => {
+    state.rate = Number(e.target.value);
+    $("#rateOut").textContent = state.rate.toFixed(1);
+    $$(".preset-chip").forEach((c) => c.classList.toggle("active", Number(c.dataset.rate) === state.rate));
+    recalc();
+  });
+  $("#ratePresets").addEventListener("click", (e) => {
+    const chip = e.target.closest(".preset-chip");
+    if (!chip) return;
+    state.rate = Number(chip.dataset.rate);
+    $("#rateSlider").value = state.rate;
+    $("#rateOut").textContent = state.rate.toFixed(1);
+    $$(".preset-chip").forEach((c) => c.classList.toggle("active", c === chip));
+    recalc();
+  });
+  $("#lumpToggle").addEventListener("click", () => {
+    const field = $("#lumpField");
+    field.hidden = !field.hidden;
+    $("#lumpToggle").textContent = field.hidden ? "＋ はじめに一括投資額を追加する" : "－ 一括投資額を非表示にする";
   });
 
-  /* ---------------- 追加モーダル ---------------- */
-  const addModal = $("#addModal");
-  const nameInput = $("#itemName");
-  const priceInput = $("#itemPrice");
-
-  function openAddModal() {
-    addModal.hidden = false;
-    nameInput.value = "";
-    priceInput.value = "";
-    selectedKind = "expense";
-    $$(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.kind === "expense"));
-    $("#historyChips").hidden = true;
-    renderHistoryChips();
-    document.body.style.overflow = "hidden";
-    setTimeout(() => nameInput.focus(), 260);
-  }
-  function closeAddModal() {
-    addModal.hidden = true;
-    document.body.style.overflow = "";
-  }
-
-  $("#addOpenBtn").addEventListener("click", openAddModal);
-  $("#cancelBtn").addEventListener("click", closeAddModal);
-  addModal.addEventListener("click", (e) => { if (e.target === addModal) closeAddModal(); });
-
-  $("#kindSegment").addEventListener("click", (e) => {
-    const btn = e.target.closest(".seg-btn");
-    if (!btn) return;
-    selectedKind = btn.dataset.kind;
-    $$(".seg-btn").forEach((b) => b.classList.toggle("active", b === btn));
+  /* ---------------- イントロ開閉 ---------------- */
+  $("#introToggle").addEventListener("click", () => {
+    const body = $("#introBody");
+    const willShow = body.hidden;
+    body.hidden = !willShow;
+    $("#introToggle").setAttribute("aria-expanded", String(willShow));
   });
 
-  function submitEntry() {
-    const name = nameInput.value.trim();
-    const price = Number(priceInput.value);
-    if (!name) { toast("名前を入力してください"); nameInput.focus(); return; }
-    if (!Number.isFinite(price) || price < 0) { toast("価格を正しく入力してください"); priceInput.focus(); return; }
-
-    const key = toKey(currentDate);
-    Store.addEntry(key, {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      name,
-      price,
-      kind: selectedKind,
-      time: Date.now(),
-    });
-    renderEntries();
-    closeAddModal();
-    toast(`「${name}」を追加しました`);
-  }
-  $("#submitBtn").addEventListener("click", submitEntry);
-  priceInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitEntry(); });
-
-  $("#historyToggle").addEventListener("click", () => {
-    const chips = $("#historyChips");
-    chips.hidden = !chips.hidden;
-  });
-
-  function renderHistoryChips() {
-    const wrap = $("#historyChips");
-    wrap.innerHTML = "";
-    if (Store.data.history.length === 0) {
-      wrap.innerHTML = `<p class="empty-state small" style="width:100%">まだ履歴がありません</p>`;
-      return;
-    }
-    Store.data.history.forEach((h) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "history-chip";
-      chip.innerHTML = `<span>${h.kind === "income" ? "💰" : "🍵"} ${h.name}</span><span class="chip-price">${fmtYen(h.price)}円</span>`;
-      chip.addEventListener("click", () => {
-        nameInput.value = h.name;
-        priceInput.value = h.price;
-        selectedKind = h.kind;
-        $$(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.kind === h.kind));
-        priceInput.focus();
-      });
-      wrap.appendChild(chip);
-    });
-  }
-
-  /* ---------------- グラフモーダル ---------------- */
-  const graphModal = $("#graphModal");
-  const PALETTE = ["#b03a2e", "#3a5282", "#5e8c7a", "#c4953f", "#e8a8b0", "#7a6650", "#8fa3b0", "#c77b45"];
-
-  function openGraphModal() {
-    graphModal.hidden = false;
-    document.body.style.overflow = "hidden";
-    drawPie();
-  }
-  function closeGraphModal() {
-    graphModal.hidden = true;
-    document.body.style.overflow = "";
-  }
-  $("#graphOpenBtn").addEventListener("click", openGraphModal);
-  $("#graphCloseBtn").addEventListener("click", closeGraphModal);
-  graphModal.addEventListener("click", (e) => { if (e.target === graphModal) closeGraphModal(); });
-
-  $$(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      $$(".tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
-      const isMonth = btn.dataset.range === "month";
-      $("#pieWrap").hidden = !isMonth;
-      $("#barWrap").hidden = isMonth;
-      if (isMonth) drawPie(); else drawBar();
-    });
-  });
-
-  function drawPie() {
-    const canvas = $("#pieChart");
-    const ctx = canvas.getContext("2d");
-    const totals = Store.totalsForMonth(currentDate.getFullYear(), currentDate.getMonth());
-    const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-    const legend = $("#pieLegend");
-    legend.innerHTML = "";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (entries.length === 0) {
-      $("#pieEmpty").hidden = false;
-      return;
-    }
-    $("#pieEmpty").hidden = true;
-
-    const sum = entries.reduce((s, [, v]) => s + v, 0);
-    const cx = canvas.width / 2, cy = canvas.height / 2, r = Math.min(cx, cy) - 12;
-    let start = -Math.PI / 2;
-    const duration = 700;
-    const t0 = performance.now();
-
-    function frame(now) {
-      const t = Math.min(1, (now - t0) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let a = -Math.PI / 2;
-      entries.forEach(([name, val], i) => {
-        const slice = (val / sum) * Math.PI * 2 * eased;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, a, a + slice);
-        ctx.closePath();
-        ctx.fillStyle = PALETTE[i % PALETTE.length];
-        ctx.fill();
-        a += slice;
-      });
-      ctx.beginPath();
-      ctx.arc(cx, cy, r * 0.55, 0, Math.PI * 2);
-      ctx.fillStyle = getComputedStyle(document.body).backgroundColor || "#f6efe1";
-      ctx.fillStyle = "rgb(" + getComputedStyle(document.documentElement).getPropertyValue("--card-bg") + ")";
-      ctx.fill();
-      if (t < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-
-    entries.forEach(([name, val], i) => {
-      const li = document.createElement("li");
-      li.innerHTML = `<span class="legend-dot" style="background:${PALETTE[i % PALETTE.length]}"></span><span class="legend-name">${name}</span><span class="legend-amt">${fmtYen(val)}円</span>`;
-      legend.appendChild(li);
-    });
-  }
-
-  function drawBar() {
-    const canvas = $("#barChart");
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const months = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-      months.push(d);
-    }
-    const data = months.map((d) => Store.monthlyNet(d.getFullYear(), d.getMonth()));
-    const maxVal = Math.max(1, ...data.map((d) => Math.max(d.income, d.expense)));
-    const padL = 30, padB = 26, padT = 14;
-    const w = canvas.width - padL - 10, h = canvas.height - padB - padT;
-    const groupW = w / months.length;
-
-    ctx.strokeStyle = "rgba(120,100,70,0.25)";
-    ctx.beginPath();
-    ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + h); ctx.lineTo(padL + w, padT + h);
-    ctx.stroke();
-
-    const duration = 650, t0 = performance.now();
-    function frame(now) {
-      const t = Math.min(1, (now - t0) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = "rgba(120,100,70,0.25)";
-      ctx.beginPath();
-      ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + h); ctx.lineTo(padL + w, padT + h);
-      ctx.stroke();
-
-      data.forEach((d, i) => {
-        const gx = padL + i * groupW + groupW * 0.18;
-        const barW = groupW * 0.28;
-        const eH = (d.expense / maxVal) * h * eased;
-        const iH = (d.income / maxVal) * h * eased;
-        ctx.fillStyle = "#b03a2e";
-        ctx.fillRect(gx, padT + h - eH, barW, eH);
-        ctx.fillStyle = "#5e8c7a";
-        ctx.fillRect(gx + barW + 4, padT + h - iH, barW, iH);
-
-        ctx.fillStyle = "rgb(var(--ink-soft))";
-        ctx.fillStyle = "#6b5c4e";
-        ctx.font = "11px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(`${months[i].getMonth() + 1}月`, gx + barW + 2, padT + h + 16);
-      });
-      if (t < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  }
-
-  /* ---------------- メニュー（書き出し/読み込み/削除） ---------------- */
+  /* ---------------- メニュー ---------------- */
   const menuBtn = $("#menuBtn");
   const menuPanel = $("#menuPanel");
   menuBtn.addEventListener("click", () => {
@@ -476,53 +416,37 @@
       menuBtn.setAttribute("aria-expanded", "false");
     }
   });
-
   menuPanel.addEventListener("click", (e) => {
     const btn = e.target.closest(".menu-item");
     if (!btn) return;
     const action = btn.dataset.action;
-    if (action === "export") exportData();
-    if (action === "import") $("#importFile").click();
-    if (action === "reset") resetData();
+    if (action === "help") openHelpModal();
+    if (action === "reset") resetInputs();
     if (action === "install") triggerInstall();
     menuPanel.hidden = true;
   });
 
-  function exportData() {
-    const blob = new Blob([JSON.stringify(Store.data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `kyo-kakeicho_${toKey(new Date())}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast("書き出しました");
+  function resetInputs() {
+    state = { ...DEFAULTS };
+    syncSlidersFromState();
+    $("#lumpField").hidden = true;
+    $("#lumpToggle").textContent = "＋ はじめに一括投資額を追加する";
+    recalc();
+    toast("初期値にもどしました");
   }
 
-  $("#importFile").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      if (!parsed.entries) throw new Error("invalid");
-      Store.data = { entries: parsed.entries || {}, history: parsed.history || [] };
-      Store.save();
-      renderEntries();
-      toast("読み込みました");
-    } catch (err) {
-      toast("読み込みに失敗しました");
-    }
-    e.target.value = "";
-  });
-
-  function resetData() {
-    if (!confirm("すべての家計簿データを削除します。よろしいですか？")) return;
-    Store.data = { entries: {}, history: [] };
-    Store.save();
-    renderEntries();
-    toast("すべて削除しました");
+  /* ---------------- ヘルプモーダル ---------------- */
+  const helpModal = $("#helpModal");
+  function openHelpModal() {
+    helpModal.hidden = false;
+    document.body.style.overflow = "hidden";
   }
+  function closeHelpModal() {
+    helpModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+  $("#helpCloseBtn").addEventListener("click", closeHelpModal);
+  helpModal.addEventListener("click", (e) => { if (e.target === helpModal) closeHelpModal(); });
 
   /* ---------------- ボタン ripple ---------------- */
   document.addEventListener("pointerdown", (e) => {
@@ -539,12 +463,11 @@
     setTimeout(() => ripple.remove(), 620);
   });
 
-  /* ---------------- 桜の花びら（モーショングラフィックス） ---------------- */
+  /* ---------------- 桜と金の花びら（背景モーショングラフィックス） ---------------- */
   (function petals() {
     const canvas = $("#petals");
     const ctx = canvas.getContext("2d");
-    let w, h, petalsArr = [];
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let w, h, arr = [];
 
     function resize() {
       w = canvas.width = window.innerWidth * devicePixelRatio;
@@ -556,24 +479,26 @@
     window.addEventListener("resize", resize);
 
     function makePetal() {
+      const gold = Math.random() < 0.3;
       return {
         x: Math.random() * w,
         y: -20 - Math.random() * h * 0.3,
-        size: (6 + Math.random() * 8) * devicePixelRatio,
-        speedY: (0.35 + Math.random() * 0.5) * devicePixelRatio,
-        speedX: (Math.random() - 0.5) * 0.6 * devicePixelRatio,
+        size: (5 + Math.random() * 7) * devicePixelRatio,
+        speedY: (0.32 + Math.random() * 0.45) * devicePixelRatio,
+        speedX: (Math.random() - 0.5) * 0.55 * devicePixelRatio,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.03,
         sway: Math.random() * Math.PI * 2,
-        opacity: 0.5 + Math.random() * 0.4,
+        opacity: 0.45 + Math.random() * 0.4,
+        gold,
       };
     }
 
-    const COUNT = reduced ? 0 : (window.innerWidth < 480 ? 10 : 16);
+    const COUNT = REDUCED ? 0 : (window.innerWidth < 480 ? 9 : 14);
     for (let i = 0; i < COUNT; i++) {
       const p = makePetal();
       p.y = Math.random() * h;
-      petalsArr.push(p);
+      arr.push(p);
     }
 
     function drawPetal(p) {
@@ -581,7 +506,7 @@
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
       ctx.globalAlpha = p.opacity;
-      ctx.fillStyle = "#e8a8b0";
+      ctx.fillStyle = p.gold ? "#d6b26c" : "#e8a8b0";
       ctx.beginPath();
       ctx.ellipse(0, 0, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -590,20 +515,17 @@
 
     function tick() {
       ctx.clearRect(0, 0, w, h);
-      petalsArr.forEach((p) => {
+      arr.forEach((p) => {
         p.y += p.speedY;
         p.sway += 0.02;
         p.x += p.speedX + Math.sin(p.sway) * 0.4 * devicePixelRatio;
         p.rot += p.rotSpeed;
-        if (p.y > h + 20) {
-          Object.assign(p, makePetal());
-          p.y = -20;
-        }
+        if (p.y > h + 20) { Object.assign(p, makePetal()); p.y = -20; }
         drawPetal(p);
       });
       requestAnimationFrame(tick);
     }
-    if (!reduced) requestAnimationFrame(tick);
+    if (!REDUCED) requestAnimationFrame(tick);
   })();
 
   /* ---------------- PWA インストール ---------------- */
@@ -633,7 +555,7 @@
   window.addEventListener("appinstalled", () => {
     installBanner.hidden = true;
     installMenuItem.hidden = true;
-    toast("インストールしました🌸");
+    toast("インストールしました🌱");
   });
 
   if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
@@ -647,6 +569,10 @@
   }
 
   /* ---------------- 初期化 ---------------- */
-  renderDate();
-  renderEntries();
+  loadState();
+  syncSlidersFromState();
+  treeCtx = $("#treeCanvas").getContext("2d");
+  chartCtx = $("#growthChart").getContext("2d");
+  recalc();
+  requestAnimationFrame(loop);
 })();
