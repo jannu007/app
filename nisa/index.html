@@ -135,6 +135,33 @@
           <span class="slider-label">想定利回り（年率）</span>
           <span class="slider-value"><span id="rateOut">5.0</span>%</span>
         </div>
+
+        <div class="realtime-block">
+          <div class="realtime-head">
+            <span class="realtime-title">📡 リアルタイム相場を使う</span>
+            <label class="switch">
+              <input type="checkbox" id="realtimeToggle" />
+              <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <div class="realtime-body" id="realtimeBody" hidden>
+            <div class="fund-cards" id="fundCards">
+              <button type="button" class="fund-card" data-fund="acwi" disabled>
+                <span class="fund-name">オルカン<br />（全世界株式）</span>
+                <span class="fund-rate" id="acwiRate">--</span>
+                <span class="fund-meta" id="acwiMeta">未取得</span>
+              </button>
+              <button type="button" class="fund-card" data-fund="sp500" disabled>
+                <span class="fund-name">S&amp;P500</span>
+                <span class="fund-rate" id="sp500Rate">--</span>
+                <span class="fund-meta" id="sp500Meta">未取得</span>
+              </button>
+            </div>
+            <button type="button" id="realtimeRefresh" class="btn btn-ghost full small-btn">🔄 最新データを取得する</button>
+            <p class="field-hint">タップした銘柄の年率換算リターン（実績値）を想定利回りに反映します。オルカンは代替データとしてMAXIS全世界株式(オール・カントリー)上場投信(2559)、S&amp;P500は同指数の実績を、stooq.comのデータから計算しています。通信できない場合は取得できません。過去の実績は将来の成果を保証するものではありません。</p>
+          </div>
+        </div>
+
         <div class="preset-row" id="ratePresets">
           <button type="button" class="preset-chip" data-rate="3">堅実 3%</button>
           <button type="button" class="preset-chip active" data-rate="5">標準 5%</button>

@@ -61,6 +61,128 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* 保存できない環境では無視 */ }
   }
 
+  /* ---------------- リアルタイム相場（任意・端末からstooq.comへ直接通信） ---------------- */
+  const REALTIME_KEY = "tsumitate-niwa:realtime:v1";
+  const FUND_SYMBOLS = { acwi: "2559.jp", sp500: "^spx" };
+  const FUND_LABELS = { acwi: "オルカン（全世界株式）", sp500: "S&P500" };
+  let realtime = { enabled: false, funds: {}, selected: null, fetchedAt: 0 };
+
+  function loadRealtime() {
+    try {
+      const raw = localStorage.getItem(REALTIME_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        realtime = {
+          enabled: !!parsed.enabled,
+          funds: parsed.funds && typeof parsed.funds === "object" ? parsed.funds : {},
+          selected: parsed.selected || null,
+          fetchedAt: Number(parsed.fetchedAt) || 0,
+        };
+      }
+    } catch (e) { /* 無視して初期値を使用 */ }
+  }
+  function saveRealtime() {
+    try { localStorage.setItem(REALTIME_KEY, JSON.stringify(realtime)); } catch (e) { /* 保存できない環境では無視 */ }
+  }
+
+  function parseStooqCsv(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 3) throw new Error("データが不足しています");
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",");
+      if (parts.length < 5) continue;
+      const date = parts[0];
+      const close = Number(parts[4]);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(close) || close <= 0) continue;
+      rows.push({ date, close });
+    }
+    rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    if (rows.length < 2) throw new Error("有効なデータがありません");
+    return rows;
+  }
+
+  function computeCagr(rows) {
+    const first = rows[0], last = rows[rows.length - 1];
+    const years = (new Date(last.date) - new Date(first.date)) / (1000 * 60 * 60 * 24 * 365.25);
+    if (!(years > 0.5)) throw new Error("期間が短すぎます");
+    const rate = (Math.pow(last.close / first.close, 1 / years) - 1) * 100;
+    return { rate, years, asOf: last.date };
+  }
+
+  async function fetchFundReturn(symbol) {
+    const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol)}&i=m`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("http " + res.status);
+    const text = await res.text();
+    return computeCagr(parseStooqCsv(text));
+  }
+
+  function fundMetaText(info) {
+    const label = info.years >= 4.5 ? `直近${Math.round(info.years)}年` : `設定来 約${info.years.toFixed(1)}年`;
+    return `${label}年率・${info.asOf}時点`;
+  }
+  function setFundLoading(fund) {
+    const card = $(`.fund-card[data-fund="${fund}"]`);
+    card.disabled = true;
+    card.classList.remove("active", "error");
+    $(`#${fund}Rate`).textContent = "…";
+    $(`#${fund}Meta`).textContent = "取得中…";
+  }
+  function setFundError(fund) {
+    const card = $(`.fund-card[data-fund="${fund}"]`);
+    card.disabled = true;
+    card.classList.add("error");
+    card.classList.remove("active");
+    $(`#${fund}Rate`).textContent = "--";
+    $(`#${fund}Meta`).textContent = "取得できませんでした";
+  }
+  function setFundData(fund, info) {
+    const card = $(`.fund-card[data-fund="${fund}"]`);
+    card.disabled = false;
+    card.classList.remove("error");
+    $(`#${fund}Rate`).textContent = `${info.rate >= 0 ? "+" : ""}${info.rate.toFixed(1)}%`;
+    $(`#${fund}Meta`).textContent = fundMetaText(info);
+  }
+  function renderFundCard(fund) {
+    const info = realtime.funds[fund];
+    if (info && !info.error) setFundData(fund, info);
+    else if (info && info.error) setFundError(fund);
+    else setFundLoading(fund);
+    $(`.fund-card[data-fund="${fund}"]`).classList.toggle("active", realtime.selected === fund && !!info && !info.error);
+  }
+
+  async function refreshRealtimeData() {
+    const btn = $("#realtimeRefresh");
+    btn.disabled = true;
+    Object.keys(FUND_SYMBOLS).forEach(setFundLoading);
+    await Promise.all(
+      Object.keys(FUND_SYMBOLS).map(async (fund) => {
+        try {
+          const info = await fetchFundReturn(FUND_SYMBOLS[fund]);
+          realtime.funds[fund] = info;
+          setFundData(fund, info);
+        } catch (e) {
+          realtime.funds[fund] = { error: true };
+          setFundError(fund);
+        }
+      })
+    );
+    realtime.fetchedAt = Date.now();
+    saveRealtime();
+    btn.disabled = false;
+    if (realtime.selected) renderFundCard(realtime.selected);
+    const okCount = Object.values(realtime.funds).filter((f) => f && !f.error).length;
+    if (okCount === 0) toast("データを取得できませんでした。通信環境をご確認のうえ、時間をおいて再度お試しください");
+  }
+
+  function clearFundSelection() {
+    if (!realtime.selected) return;
+    realtime.selected = null;
+    saveRealtime();
+    $$(".fund-card").forEach((c) => c.classList.remove("active"));
+  }
+
   /* ---------------- 複利シミュレーション ---------------- */
   function compute(s) {
     const monthly = s.tsumitateMonthly + s.growthMonthly;
@@ -424,6 +546,7 @@
     state.rate = Number(e.target.value);
     $("#rateOut").textContent = state.rate.toFixed(1);
     $$(".preset-chip").forEach((c) => c.classList.toggle("active", Number(c.dataset.rate) === state.rate));
+    clearFundSelection();
     recalc();
   });
   $("#ratePresets").addEventListener("click", (e) => {
@@ -433,7 +556,36 @@
     $("#rateSlider").value = state.rate;
     $("#rateOut").textContent = state.rate.toFixed(1);
     $$(".preset-chip").forEach((c) => c.classList.toggle("active", c === chip));
+    clearFundSelection();
     recalc();
+  });
+
+  /* ---------------- リアルタイム相場のUI操作 ---------------- */
+  $("#realtimeToggle").addEventListener("change", (e) => {
+    realtime.enabled = e.target.checked;
+    $("#realtimeBody").hidden = !realtime.enabled;
+    saveRealtime();
+    if (!realtime.enabled) return;
+    Object.keys(FUND_SYMBOLS).forEach(renderFundCard);
+    const stale = !realtime.fetchedAt || Date.now() - realtime.fetchedAt > 12 * 60 * 60 * 1000;
+    if (stale) refreshRealtimeData();
+  });
+  $("#realtimeRefresh").addEventListener("click", refreshRealtimeData);
+  $("#fundCards").addEventListener("click", (e) => {
+    const card = e.target.closest(".fund-card");
+    if (!card || card.disabled) return;
+    const fund = card.dataset.fund;
+    const info = realtime.funds[fund];
+    if (!info || info.error) return;
+    realtime.selected = fund;
+    saveRealtime();
+    $$(".fund-card").forEach((c) => c.classList.toggle("active", c === card));
+    state.rate = clamp(Math.round(info.rate * 10) / 10, 0.1, 15);
+    $("#rateSlider").value = state.rate;
+    $("#rateOut").textContent = state.rate.toFixed(1);
+    $$(".preset-chip").forEach((c) => c.classList.remove("active"));
+    recalc();
+    toast(`${FUND_LABELS[fund]}の実績利回り ${state.rate.toFixed(1)}% を反映しました`);
   });
   $("#growthToggle").addEventListener("click", () => {
     const field = $("#growthField");
@@ -470,6 +622,7 @@
     syncSlidersFromState();
     $("#growthField").hidden = true;
     $("#growthToggle").textContent = "＋ 成長投資枠も使う（追加積立・一括購入）";
+    clearFundSelection();
     recalc();
     toast("初期値にもどしました");
   }
@@ -610,6 +763,13 @@
   /* ---------------- 初期化 ---------------- */
   loadState();
   syncSlidersFromState();
+  loadRealtime();
+  $("#realtimeToggle").checked = realtime.enabled;
+  $("#realtimeBody").hidden = !realtime.enabled;
+  if (realtime.enabled) {
+    Object.keys(FUND_SYMBOLS).forEach(renderFundCard);
+    if (!realtime.fetchedAt || Date.now() - realtime.fetchedAt > 12 * 60 * 60 * 1000) refreshRealtimeData();
+  }
   treeCtx = $("#treeCanvas").getContext("2d");
   chartCtx = $("#growthChart").getContext("2d");
   try {
