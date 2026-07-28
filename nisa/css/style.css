@@ -248,11 +248,11 @@ button {
 
 /* ---------------- 桜の木ビジュアライザ ---------------- */
 .tree-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.tree-canvas-wrap { position: relative; width: 100%; max-height: 320px; display: flex; justify-content: center; overflow: hidden; }
-#treeCanvas { width: 100%; max-width: 420px; max-height: 320px; height: auto; aspect-ratio: 600 / 420; }
+.tree-canvas-wrap { position: relative; width: 100%; max-height: 420px; display: flex; justify-content: center; overflow: hidden; }
+#treeCanvas { width: 100%; max-width: 420px; max-height: 420px; height: auto; aspect-ratio: 600 / 560; }
 .tree-year-badge {
   position: absolute;
-  top: 6px; right: 6px;
+  bottom: 14%; right: 6px;
   /* ダークモードで --ink が反転しても文字が読めるよう、背景・文字色は固定にする */
   background: rgba(58, 46, 40, 0.88);
   color: #fbf3e4;

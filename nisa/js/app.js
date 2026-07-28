@@ -394,7 +394,7 @@
     const angles = nChildren === 1 ? [0] : nChildren === 2 ? [-1, 1] : [-1, 0, 1];
     for (let k = 0; k < nChildren; k++) {
       const child = buildNode(depth + 1);
-      child.angle = angles[k] * (0.34 + rng() * 0.2) + (rng() - 0.5) * 0.1;
+      child.angle = angles[k] * (0.42 + rng() * 0.24) + (rng() - 0.5) * 0.1;
       child.lenRatio = 0.68 + rng() * 0.15;
       node.children.push(child);
     }
@@ -407,8 +407,8 @@
   const SAKURA = [237, 174, 190];
   const SAKURA_DEEP = [214, 132, 148];
   const INK = "rgb(58,46,40)";
-  const TREE_W = 600, TREE_H = 420;
-  const GROUND_Y = 378, BASE_LEN = 72;
+  const TREE_W = 600, TREE_H = 560;
+  const GROUND_Y = 500, BASE_LEN = 78;
   const BLOOM_TARGET = 100000000; // 評価額1億円で満開
 
   let treeCurrent = { scale: 0.12, depthF: 0.6, leafDensity: 0.35, goldRatio: 0, bloomRatio: 0 };
@@ -421,7 +421,7 @@
     const progress = clamp(result.balance / BLOOM_TARGET, 0, 1); // 評価額そのもので木の育ち具合を決める
     assetProgress = progress;
     treeTarget = {
-      scale: clamp(0.22 + progress * 1.18, 0.22, 1.4), // 満開時は画面いっぱいに育つ大きさにする
+      scale: clamp(0.22 + progress * 1.65, 0.22, 1.87), // 満開時は画面いっぱいに育つ大きさにする
       depthF: clamp(1.3 + progress * (MAX_DEPTH + 0.7 - 1.3), 1.3, MAX_DEPTH + 0.7),
       leafDensity: clamp(0.35 + progress * 1.8 + profitRatio * 0.3, 0.35, 3.2),
       goldRatio: clamp(profitRatio / 2.2, 0, 1),

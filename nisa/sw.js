@@ -1,4 +1,4 @@
-const CACHE_NAME = "tsumitate-niwa-v14";
+const CACHE_NAME = "tsumitate-niwa-v15";
 const ASSETS = [
   "./",
   "./index.html",
