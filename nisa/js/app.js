@@ -118,12 +118,34 @@
     return rows;
   }
 
+  // データ元の欠損・異常値（特に「当月分」の未確定な最終行が極端な値になるケース）を取り除く
+  function sanitizeSeries(rows) {
+    if (rows.length < 2) return rows;
+    const cleaned = [rows[0]];
+    for (let i = 1; i < rows.length; i++) {
+      const prev = cleaned[cleaned.length - 1];
+      const cur = rows[i];
+      const ratio = cur.close / prev.close;
+      if (ratio < 0.4 || ratio > 3) continue; // 1か月でこれ以上動くのは通常ありえないため異常値とみなす
+      cleaned.push(cur);
+    }
+    if (cleaned.length < 2) return rows;
+    // 今月分はまだ月の途中でデータが確定していないため、集計対象から外す
+    const now = new Date();
+    const last = new Date(cleaned[cleaned.length - 1].date);
+    if (cleaned.length > 2 && last.getFullYear() === now.getFullYear() && last.getMonth() === now.getMonth()) {
+      cleaned.pop();
+    }
+    return cleaned;
+  }
+
   function computeCagr(rows) {
-    const first = rows[0], last = rows[rows.length - 1];
+    const clean = sanitizeSeries(rows);
+    const first = clean[0], last = clean[clean.length - 1];
     const years = (new Date(last.date) - new Date(first.date)) / (1000 * 60 * 60 * 24 * 365.25);
     if (!(years > 0.5)) throw new Error("期間が短すぎます");
     const rate = (Math.pow(last.close / first.close, 1 / years) - 1) * 100;
-    return { rate, years, asOf: last.date, series: rows };
+    return { rate, years, asOf: last.date, series: clean };
   }
 
   function parseYahooChart(json) {
