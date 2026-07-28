@@ -526,15 +526,20 @@
     if (e.key === "Escape" && !menuPanel.hidden) setMenuOpen(false);
   });
 
-  menuPanel.addEventListener("click", (e) => {
+  menuPanel.addEventListener("click", async (e) => {
     const btn = e.target.closest(".menu-item");
     if (!btn) return;
     const action = btn.dataset.action;
+    setMenuOpen(false);
     if (action === "export") exportData();
+    if (action === "exportCsv") {
+      if (window.Premium && window.Premium.isUnlocked()) exportCsv();
+      else await handlePremiumPurchase();
+    }
     if (action === "import") $("#importFile").click();
     if (action === "reset") resetData();
     if (action === "install") triggerInstall();
-    setMenuOpen(false);
+    if (action === "premium") await handlePremiumPurchase();
   });
 
   function exportData() {
@@ -546,6 +551,50 @@
     a.click();
     URL.revokeObjectURL(url);
     toast("書き出しました");
+  }
+
+  function exportCsv() {
+    const rows = [["日付", "時刻", "名前", "種別", "金額"]];
+    Object.keys(Store.data.entries).sort().forEach((key) => {
+      Store.data.entries[key].forEach((entry) => {
+        const t = new Date(entry.time);
+        rows.push([key, `${pad2(t.getHours())}:${pad2(t.getMinutes())}`, entry.name, entry.kind === "income" ? "収入" : "支出", entry.price]);
+      });
+    });
+    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kyo-kakeicho_${toKey(new Date())}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("CSVを書き出しました");
+  }
+
+  /* ---------------- プレミアム機能（Google Play Billing） ---------------- */
+  function updatePremiumMenu() {
+    const unlocked = Boolean(window.Premium && window.Premium.isUnlocked());
+    $("#premiumMenuItem").hidden = unlocked;
+    $("#exportCsvItem").textContent = unlocked ? "📊 CSVで書き出す" : "📊 CSVで書き出す（プレミアム）";
+  }
+
+  async function handlePremiumPurchase() {
+    if (!window.Premium) return;
+    const result = await window.Premium.purchase();
+    if (result.ok) {
+      toast("プレミアム機能を購入しました🌸");
+      updatePremiumMenu();
+    } else if (result.reason === "unsupported") {
+      toast("購入はGoogle Play版アプリでのみご利用いただけます");
+    } else if (result.reason !== "cancelled") {
+      toast("購入に失敗しました");
+    }
+  }
+
+  if (window.Premium) {
+    updatePremiumMenu();
+    window.Premium.refresh().then(updatePremiumMenu);
   }
 
   $("#importFile").addEventListener("change", async (e) => {

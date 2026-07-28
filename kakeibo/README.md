@@ -34,6 +34,21 @@ python3 -m http.server 8000
 - `index.html` - アプリ本体
 - `css/style.css` - 和風・水彩画風のスタイルとアニメーション
 - `js/app.js` - アプリのロジック（データ保存・グラフ描画・アニメーション）
+- `js/premium.js` - プレミアム機能の権利確認・購入処理（下記参照）
 - `manifest.webmanifest` / `sw.js` - インストール可能にするためのPWA設定
 - `icons/` - アプリアイコン
 - `scripts/make_icons.py` - アイコン生成スクリプト（再生成したい場合のみ使用）
+
+## Google Playでの販売（プレミアム機能）について
+
+このアプリはWeb上では引き続き完全無料です。Google Playで**TWA（Trusted Web Activity）**としてパッケージ化した場合のみ、「CSVで書き出す」機能がアプリ内課金（買い切り）でアンロックできるようになっています（`js/premium.js`）。
+
+セットアップ手順の概要:
+
+1. [PWABuilder](https://www.pwabuilder.com/) または Bubblewrap でこのサイトからTWAのAndroidアプリ（AAB）を生成する。
+2. `https://<公開ドメイン>/.well-known/assetlinks.json` を配置し、TWAアプリの署名とサイトを紐付ける（Digital Asset Links）。
+3. Google Play Console → 収益化 → 商品 で、商品ID `premium_unlock` の管理対象アプリ内商品（買い切り）を作成し、価格を設定する。
+   - `js/premium.js` 内の `SKU` 定数は、Play Consoleで設定した商品IDと必ず一致させること。
+4. 通常のブラウザ（GitHub Pagesでのプレビューなど）ではDigital Goods APIが存在しないため、購入ボタンは「Google Play版アプリでのみご利用いただけます」と案内するだけで、無料機能には影響しません。
+
+**注意:** 権利情報（購入済みかどうか）は端末のlocalStorageにのみ保存しており、サーバー側での検証は行っていません。改ざん耐性が必要な場合は、購入トークンをバックエンドで検証する仕組みを別途追加してください。

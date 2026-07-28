@@ -243,6 +243,7 @@ button {
 }
 .menu-item:hover, .menu-item:active { background: rgba(var(--gold), 0.14); }
 .menu-item.danger { color: rgb(var(--vermillion)); }
+.menu-item.premium-item { color: rgb(var(--gold-soft)); font-weight: 700; }
 
 @keyframes pop-in {
   from { opacity: 0; transform: translateY(-6px) scale(0.96); }
