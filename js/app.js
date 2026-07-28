@@ -252,29 +252,50 @@
   /* ---------------- スワイプで日付移動（左:翌日 / 右:前日） ---------------- */
   (function swipeNav() {
     const target = $(".app-shell");
-    let startX = 0, startY = 0, startT = 0, tracking = false;
+    const LOCK_PX = 10;   // この移動量で縦/横どちらのジェスチャーか判定する
+    const SWIPE_PX = 45;  // この移動量を超えたら日付を切り替える
+    const SWIPE_MS = 800;
+    let active = false;
+    let axis = null; // "x" | "y" | null
+    let startX = 0, startY = 0, startT = 0, curX = 0;
 
-    target.addEventListener("pointerdown", (e) => {
-      if (e.pointerType === "mouse" && e.button !== 0) return;
-      startX = e.clientX;
-      startY = e.clientY;
+    // Pointer Eventsは端末によってジェスチャー中に pointercancel が誤発火することがあるため、
+    // タッチ操作の判定には素の Touch Events を使う（マウス操作は別途ボタンハンドラで対応済み）
+    target.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) return;
+      active = true;
+      axis = null;
+      startX = curX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
       startT = Date.now();
-      tracking = true;
-    });
+    }, { passive: true });
 
-    target.addEventListener("pointerup", (e) => {
-      if (!tracking) return;
-      tracking = false;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
+    target.addEventListener("touchmove", (e) => {
+      if (!active || e.touches.length !== 1) return;
+      const x = e.touches[0].clientX;
+      const y = e.touches[0].clientY;
+      curX = x;
+      const dx = x - startX;
+      const dy = y - startY;
+      if (axis === null && (Math.abs(dx) > LOCK_PX || Math.abs(dy) > LOCK_PX)) {
+        axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
+      }
+      // 横スワイプと判定したら、縦スクロールに奪われないようブラウザの既定動作を止める
+      if (axis === "x" && e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    target.addEventListener("touchend", () => {
+      if (!active) return;
+      active = false;
+      const dx = curX - startX;
       const dt = Date.now() - startT;
-      const absX = Math.abs(dx), absY = Math.abs(dy);
-      if (dt < 700 && absX > 60 && absX > absY * 1.4) {
+      if (axis === "x" && dt < SWIPE_MS && Math.abs(dx) > SWIPE_PX) {
         goToDay(dx < 0 ? 1 : -1);
       }
+      axis = null;
     });
 
-    target.addEventListener("pointercancel", () => { tracking = false; });
+    target.addEventListener("touchcancel", () => { active = false; axis = null; });
   })();
 
   /* ---------------- 追加モーダル ---------------- */
