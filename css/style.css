@@ -481,6 +481,16 @@ button {
 }
 @keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
 
+/* 入力系モーダル（追加/編集）はキーボードに隠れないよう上から表示 */
+.modal-overlay--top {
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: max(10px, env(safe-area-inset-top));
+}
+@media (min-width: 560px) {
+  .modal-overlay--top { align-items: center; padding-top: 0; }
+}
+
 .modal {
   width: 100%;
   max-width: 460px;
@@ -498,14 +508,29 @@ button {
   .modal { border-radius: 24px; border-bottom: 1px solid rgba(var(--gold), 0.3); }
 }
 
+/* 上から出る・コンパクトな入力モーダル */
+.modal--top {
+  border-radius: var(--radius-lg);
+  border-bottom: 1px solid rgba(var(--gold), 0.3);
+  max-height: 82vh;
+  padding-bottom: 18px;
+}
+
 .ink-modal {
   animation: modal-rise .38s var(--ease-brush);
+}
+.modal--top.ink-modal {
+  animation: modal-drop .34s var(--ease-brush);
 }
 @media (min-width: 560px) {
   .ink-modal { animation: modal-pop .3s var(--ease-brush); }
 }
 @keyframes modal-rise {
   from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes modal-drop {
+  from { transform: translateY(-24px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 @keyframes modal-pop {
@@ -524,7 +549,12 @@ button {
 
 .modal-body { display: flex; flex-direction: column; gap: 14px; }
 
+.compact-modal .modal-header { margin-bottom: 8px; }
+.compact-modal .modal-body { gap: 8px; }
+.compact-modal .modal-actions { margin-top: 10px; gap: 6px; }
+
 .field { display: flex; flex-direction: column; gap: 6px; }
+.compact-modal .field { gap: 3px; }
 .field-label { font-size: 0.82rem; color: rgb(var(--ink-soft)); font-weight: 700; }
 .field input[type="text"], .field input[type="number"] {
   border: 1.5px solid rgba(var(--gold), 0.4);
@@ -535,6 +565,9 @@ button {
   color: rgb(var(--ink));
   outline: none;
   transition: border-color .2s, box-shadow .2s;
+}
+.compact-modal .field input[type="text"], .compact-modal .field input[type="number"] {
+  padding: 9px 12px;
 }
 .field input:focus {
   border-color: rgb(var(--vermillion));
@@ -565,7 +598,11 @@ button {
 }
 .seg-btn[data-kind="income"].active { color: rgb(var(--matcha)); }
 
+.compact-modal .segmented { padding: 3px; }
+.compact-modal .seg-btn { padding: 7px 6px; }
+
 .history-block { display: flex; flex-direction: column; gap: 8px; }
+.compact-modal .history-chips { max-height: 110px; }
 .history-chips {
   display: flex;
   flex-wrap: wrap;
