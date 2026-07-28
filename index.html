@@ -3,223 +3,148 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-<title>つみたての庭 - 新NISAシミュレーター</title>
-<meta name="description" content="初心者でもわかる新NISA資産運用シミュレーター。積立額・利回り・期間を動かすだけで、盆栽が育つように資産の成長をアニメーションで体感できます。" />
-<meta name="theme-color" content="#f7f1e2" media="(prefers-color-scheme: light)" />
+<title>和風アプリ集 - 京の家計帖 / つみたての庭</title>
+<meta name="description" content="和風・水彩画風デザインのアプリ集。京の家計帖（家計簿）とつみたての庭（新NISAシミュレーター）を選んで開けます。" />
+<meta name="theme-color" content="#f6efe1" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#211d19" media="(prefers-color-scheme: dark)" />
-
-<link rel="manifest" href="manifest.webmanifest" />
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="つみたての庭" />
+<link rel="icon" type="image/png" sizes="32x32" href="nisa/icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="nisa/icons/favicon-16.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="css/style.css" />
+<style>
+  :root {
+    --paper: 246 239 225;
+    --ink: 58 46 40;
+    --ink-soft: 96 82 72;
+    --vermillion: 176 58 46;
+    --matcha: 94 140 122;
+    --gold: 196 149 63;
+    --card-bg: 255 253 248;
+    --shadow: 58 46 40;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: 33 29 25;
+      --ink: 236 227 214;
+      --ink-soft: 196 184 168;
+      --card-bg: 45 39 34;
+      --shadow: 0 0 0;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+    color: rgb(var(--ink));
+    background: rgb(var(--paper));
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(94,140,122,0.16), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(196,149,63,0.16), transparent 40%),
+      radial-gradient(circle at 70% 85%, rgba(176,58,46,0.10), transparent 45%);
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: max(28px, env(safe-area-inset-top)) 18px 40px;
+  }
+  header { text-align: center; margin-bottom: 26px; }
+  h1 {
+    font-family: "Shippori Mincho", serif;
+    font-size: 1.5rem;
+    margin: 0 0 6px;
+    letter-spacing: 0.04em;
+  }
+  header p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: rgb(var(--ink-soft));
+  }
+  .apps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  a.app-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+    background: rgba(var(--card-bg), 0.92);
+    border: 1px solid rgba(var(--gold), 0.3);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow: 0 8px 24px -10px rgba(var(--shadow), 0.25);
+    transition: transform .2s cubic-bezier(.22,.9,.32,1), box-shadow .2s;
+  }
+  a.app-card:active { transform: scale(0.98); }
+  .app-emblem {
+    flex: 0 0 auto;
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    font-size: 1.7rem;
+  }
+  .app-emblem.kakeibo { background: linear-gradient(135deg, rgba(176,58,46,0.18), rgba(196,149,63,0.14)); }
+  .app-emblem.nisa { background: linear-gradient(135deg, rgba(94,140,122,0.2), rgba(196,149,63,0.16)); }
+  .app-info { flex: 1; min-width: 0; }
+  .app-info h2 {
+    font-family: "Shippori Mincho", serif;
+    font-size: 1.08rem;
+    margin: 0 0 4px;
+  }
+  .app-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: rgb(var(--ink-soft));
+  }
+  .app-arrow { flex: 0 0 auto; color: rgb(var(--ink-soft)); font-size: 1.2rem; }
+  footer {
+    text-align: center;
+    margin-top: 34px;
+    font-size: 0.72rem;
+    color: rgb(var(--ink-soft));
+    opacity: 0.75;
+  }
+</style>
 </head>
 <body>
-
-<!-- 動く水彩背景 -->
-<div class="washi-bg" aria-hidden="true">
-  <div class="ink-blob blob-a"></div>
-  <div class="ink-blob blob-b"></div>
-  <div class="ink-blob blob-c"></div>
-  <div class="paper-texture"></div>
-</div>
-<canvas id="petals" aria-hidden="true"></canvas>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-<div class="app-shell">
-
-  <!-- ヘッダー -->
-  <header class="app-header">
-    <div class="brand">
-      <span class="brand-emblem" aria-hidden="true">
-        <svg viewBox="0 0 64 64" width="30" height="30">
-          <path d="M32 10c-7 8-16 12-16 24a16 16 0 0 0 32 0c0-12-9-16-16-24z" fill="currentColor" opacity="0.9"/>
-          <rect x="26" y="44" width="12" height="10" rx="1.5" fill="currentColor"/>
-        </svg>
-      </span>
-      <div class="brand-text">
-        <h1>つみたての庭</h1>
-        <span class="brand-sub">新NISAシミュレーター</span>
-      </div>
-    </div>
-    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
-    </button>
+<div class="wrap">
+  <header>
+    <h1>和風アプリ集</h1>
+    <p>使いたいアプリを選んでください</p>
   </header>
 
-  <nav id="menuPanel" class="menu-panel" hidden>
-    <button data-action="help" class="menu-item">📖 使い方・用語集</button>
-    <button data-action="reset" class="menu-item">🔄 入力を初期値にもどす</button>
-    <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
-  </nav>
+  <div class="apps">
+    <a class="app-card" href="./kakeibo/">
+      <span class="app-emblem kakeibo" aria-hidden="true">💰</span>
+      <span class="app-info">
+        <h2>京の家計帖</h2>
+        <p>水彩画風・京都風デザインの、ワンタッチで使える無料の家計簿アプリ。</p>
+      </span>
+      <span class="app-arrow" aria-hidden="true">→</span>
+    </a>
 
-  <main class="entry-area">
-
-    <!-- 育つ盆栽ビジュアライザ -->
-    <section class="card tree-card">
-      <div class="tree-canvas-wrap">
-        <canvas id="treeCanvas" width="600" height="420" aria-label="積立資産の成長を表す盆栽アニメーション"></canvas>
-        <div class="tree-year-badge"><span id="treeYearLabel">20</span>年後</div>
-      </div>
-      <div class="result-headline">
-        <span class="result-label">最終評価額（見込み）</span>
-        <span class="result-value"><span id="finalValue">0</span><span class="yen">円</span></span>
-      </div>
-      <div class="result-sub-grid">
-        <div class="result-sub">
-          <span class="sub-dot principal-dot" aria-hidden="true"></span>
-          <span class="sub-label">積立元本</span>
-          <span class="sub-value"><span id="principalValue">0</span>円</span>
-        </div>
-        <div class="result-sub">
-          <span class="sub-dot profit-dot" aria-hidden="true"></span>
-          <span class="sub-label">運用益</span>
-          <span class="sub-value profit"><span id="profitValue">0</span>円</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 入力スライダー -->
-    <section class="card sliders-card">
-      <h2 class="section-title">積立の条件</h2>
-
-      <div class="slider-field">
-        <div class="slider-head">
-          <span class="slider-label">毎月の積立額</span>
-          <span class="slider-value"><span id="monthlyOut">30,000</span>円</span>
-        </div>
-        <input type="range" id="monthlySlider" min="1000" max="300000" step="1000" value="30000" />
-      </div>
-
-      <div class="slider-field">
-        <div class="slider-head">
-          <span class="slider-label">想定利回り（年率）</span>
-          <span class="slider-value"><span id="rateOut">5.0</span>%</span>
-        </div>
-        <div class="preset-row" id="ratePresets">
-          <button type="button" class="preset-chip" data-rate="3">堅実 3%</button>
-          <button type="button" class="preset-chip active" data-rate="5">標準 5%</button>
-          <button type="button" class="preset-chip" data-rate="7">積極 7%</button>
-        </div>
-        <input type="range" id="rateSlider" min="0.1" max="15" step="0.1" value="5" />
-      </div>
-
-      <div class="slider-field">
-        <div class="slider-head">
-          <span class="slider-label">積立期間</span>
-          <span class="slider-value"><span id="yearsOut">20</span>年</span>
-        </div>
-        <input type="range" id="yearsSlider" min="1" max="40" step="1" value="20" />
-      </div>
-
-      <button type="button" id="lumpToggle" class="btn btn-ghost full small-btn">＋ はじめに一括投資額を追加する</button>
-      <div class="slider-field lump-field" id="lumpField" hidden>
-        <div class="slider-head">
-          <span class="slider-label">はじめの一括投資額</span>
-          <span class="slider-value"><span id="lumpOut">0</span>円</span>
-        </div>
-        <input type="range" id="lumpSlider" min="0" max="5000000" step="50000" value="0" />
-      </div>
-    </section>
-
-    <!-- 成長グラフ -->
-    <section class="card chart-card">
-      <h2 class="section-title">資産の推移</h2>
-      <canvas id="growthChart" width="600" height="280"></canvas>
-      <div class="chart-legend">
-        <span><i class="legend-dot principal-dot"></i>積立元本</span>
-        <span><i class="legend-dot profit-line"></i>評価額（元本＋運用益）</span>
-      </div>
-    </section>
-
-    <!-- 非課税メリット比較 -->
-    <section class="card tax-card">
-      <h2 class="section-title">非課税のチカラ</h2>
-      <p class="tax-lead">同じ運用成績でも、課税口座なら運用益に約20.315%の税金がかかります。新NISAならその分がまるごと手元に残ります。</p>
-      <div class="tax-compare">
-        <div class="tax-bar-row">
-          <span class="tax-bar-label">課税口座の場合</span>
-          <div class="tax-bar-track"><div class="tax-bar-fill taxed" id="taxedBar"></div></div>
-          <span class="tax-bar-value"><span id="taxedValue">0</span>円</span>
-        </div>
-        <div class="tax-bar-row">
-          <span class="tax-bar-label">新NISAの場合</span>
-          <div class="tax-bar-track"><div class="tax-bar-fill nisa" id="nisaBar"></div></div>
-          <span class="tax-bar-value"><span id="nisaValue">0</span>円</span>
-        </div>
-      </div>
-      <div class="tax-savings-badge">
-        🎉 新NISAなら約<span id="savingsValue">0</span>円おトク
-      </div>
-    </section>
-
-    <p class="disclaimer">
-      ※このシミュレーションは入力条件にもとづく複利計算の目安であり、将来の運用成果や元本を保証するものではありません。実際の投資は各金融機関の情報をご確認のうえ、ご自身の判断で行ってください。データは端末内でのみ計算され、サーバーには送信されません。
-    </p>
-  </main>
-</div>
-
-<!-- ヘルプ・用語集モーダル -->
-<div id="helpModal" class="modal-overlay" hidden>
-  <div class="modal ink-modal help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-    <div class="modal-header">
-      <span class="modal-emblem" aria-hidden="true">📖</span>
-      <h2 id="helpTitle">使い方・用語集</h2>
-    </div>
-
-    <div class="modal-body help-body">
-      <div class="glossary-item">
-        <strong>複利（ふくり）</strong>
-        <p>運用で得た利益を元本に加えて再投資すること。利益が利益を生み、雪だるま式に資産が育っていきます。</p>
-      </div>
-      <div class="glossary-item">
-        <strong>つみたて投資枠</strong>
-        <p>年間120万円まで利用できる非課税枠。長期・積立・分散投資に適した一部の投資信託が対象です。</p>
-      </div>
-      <div class="glossary-item">
-        <strong>成長投資枠</strong>
-        <p>年間240万円まで利用できる非課税枠。上場株式や幅広い投資信託が対象です。つみたて投資枠と併用できます。</p>
-      </div>
-      <div class="glossary-item">
-        <strong>非課税保有限度額</strong>
-        <p>生涯にわたって非課税で保有できる上限は合計1,800万円（うち成長投資枠は1,200万円まで）。売却すれば枠は翌年以降に復活します。</p>
-      </div>
-      <div class="glossary-item">
-        <strong>想定利回り</strong>
-        <p>1年間でどれくらい資産が増えるかの見込み値。株式や投資信託の値動きは一定ではなく、あくまで試算のための仮定です。</p>
-      </div>
-      <div class="glossary-item">
-        <strong>ドルコスト平均法</strong>
-        <p>毎月一定額をコツコツ買い続ける方法。価格が高い時は少なく、安い時は多く買うことになり、平均購入価格をならす効果があります。</p>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button id="helpCloseBtn" class="btn btn-secondary full">とじる</button>
-    </div>
+    <a class="app-card" href="./nisa/">
+      <span class="app-emblem nisa" aria-hidden="true">🌱</span>
+      <span class="app-info">
+        <h2>つみたての庭</h2>
+        <p>盆栽が育つように資産の成長を体感できる、初心者向け新NISAシミュレーター。</p>
+      </span>
+      <span class="app-arrow" aria-hidden="true">→</span>
+    </a>
   </div>
-</div>
 
-<!-- インストール促し バナー -->
-<div id="installBanner" class="install-banner" hidden>
-  <span class="install-emblem" aria-hidden="true">🎋</span>
-  <div class="install-text">
-    <strong>ホーム画面に追加できます</strong>
-    <span>アプリのようにワンタッチで開けます</span>
-  </div>
-  <button id="installBtn" class="btn btn-primary small">インストール</button>
-  <button id="installDismiss" class="icon-btn small" aria-label="閉じる">✕</button>
+  <footer>各アプリは端末内でのみデータを扱い、サーバーには送信されません。</footer>
 </div>
-
-<script src="js/app.js"></script>
 </body>
 </html>
