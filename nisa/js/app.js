@@ -579,12 +579,44 @@
     ctx.globalAlpha = 1;
   }
 
+  // 満開が近づくと、枝の隙間を覆うように大きな花のかたまりを重ねて描く
+  // （枝先の小さな花房だけでは隙間が目立つため、面で覆って画面いっぱいの満開感を出す）
+  const BLOOM_BLOBS = [
+    [0, -0.06, 1.0], [-0.66, 0.05, 0.76], [0.64, 0.02, 0.78],
+    [-0.36, -0.52, 0.7], [0.4, -0.5, 0.72], [-0.6, -0.32, 0.6], [0.58, -0.3, 0.62],
+    [-0.1, -0.55, 0.66], [0.14, 0.32, 0.6], [-0.42, 0.28, 0.56], [0.44, 0.3, 0.58],
+  ];
+  function drawBloomCanopy(ctx, now, params) {
+    const bloom = clamp(params.bloomRatio, 0, 1);
+    if (bloom <= 0.02) return;
+    const cx = TREE_W / 2;
+    const canopyR = Math.min(128 * params.scale, TREE_W * 0.46); // 横にはみ出さない範囲でスケール
+    const centerY = Math.max(
+      GROUND_Y - BASE_LEN * params.scale * 3.6,
+      canopyR * 0.72 + 6 // 上にはみ出さない範囲に収める
+    );
+    ctx.globalAlpha = 0.94 * bloom;
+    BLOOM_BLOBS.forEach(([ox, oy, s], i) => {
+      const sway = REDUCED ? 0 : Math.sin(now / 1400 + i * 1.7) * canopyR * 0.015;
+      const bx = cx + ox * canopyR + sway;
+      const by = centerY + oy * canopyR;
+      const br = canopyR * s * 0.6;
+      const mix = lerpColorArr(SAKURA, SAKURA_DEEP, clamp((Math.abs(ox) + Math.abs(oy)) * 0.32, 0, 1));
+      ctx.fillStyle = toRgb(mix);
+      ctx.beginPath();
+      ctx.arc(bx, by, br, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
   let treeCtx = null;
   function drawTree(now) {
     if (!treeCtx) return;
     treeCtx.clearRect(0, 0, TREE_W, TREE_H);
     drawGround(treeCtx);
     walk(treeCtx, treeSkeleton, TREE_W / 2, GROUND_Y, -Math.PI / 2, BASE_LEN * treeCurrent.scale, treeCurrent, now);
+    drawBloomCanopy(treeCtx, now, treeCurrent);
     updateSparkles(treeCtx, now);
   }
 
