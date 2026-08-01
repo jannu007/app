@@ -448,7 +448,8 @@ button {
   display: inline-block;
   margin: 0 0 10px;
   padding: 12px 18px;
-  max-width: 260px;
+  max-width: 100%;
+  white-space: nowrap;
   background: rgb(var(--card-bg));
   border: 1.5px solid rgba(var(--momoiro), 0.45);
   border-radius: 18px;
