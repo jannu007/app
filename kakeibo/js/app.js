@@ -381,7 +381,7 @@
 
   /* ---------------- グラフモーダル ---------------- */
   const graphModal = $("#graphModal");
-  const PALETTE = ["#b3203a", "#c79b40", "#5e8c7a", "#2b141a", "#e8a8b0", "#7a6650", "#8fa3b0", "#c77b45"];
+  const PALETTE = ["#b03a2e", "#3a5282", "#5e8c7a", "#c4953f", "#e8a8b0", "#7a6650", "#8fa3b0", "#c77b45"];
 
   function openGraphModal() {
     graphModal.hidden = false;
@@ -493,7 +493,7 @@
         const barW = groupW * 0.28;
         const eH = (d.expense / maxVal) * h * eased;
         const iH = (d.income / maxVal) * h * eased;
-        ctx.fillStyle = "#b3203a";
+        ctx.fillStyle = "#b03a2e";
         ctx.fillRect(gx, padT + h - eH, barW, eH);
         ctx.fillStyle = "#5e8c7a";
         ctx.fillRect(gx + barW + 4, padT + h - iH, barW, iH);
@@ -574,25 +574,26 @@
     resize();
     window.addEventListener("resize", resize);
 
-    // 雅（みやび）を意識し、控えめで邪魔にならない花びらに調整
-    // (帳面カード類より背面に描画され、隙間にだけ淡く見える)
-    const PETAL_COLORS = ["#e8a8b0", "#d7b98f"]; // 桜色・淡い金
+    // 桜色の花びらが、ひらひらと舞い散るように
+    // (帳面カード類より背面に描画され、文字とは重ならない)
+    const PETAL_COLORS = ["#e8a8b0", "#f0c4cc", "#dc98a5"]; // 桜色のバリエーション
     function makePetal() {
       return {
         x: Math.random() * w,
         y: -20 - Math.random() * h * 0.3,
-        size: (4 + Math.random() * 5) * devicePixelRatio,
-        speedY: (0.16 + Math.random() * 0.22) * devicePixelRatio,
-        speedX: (Math.random() - 0.5) * 0.3 * devicePixelRatio,
+        size: (6 + Math.random() * 8) * devicePixelRatio,
+        speedY: (0.35 + Math.random() * 0.5) * devicePixelRatio,
+        speedX: (Math.random() - 0.5) * 0.6 * devicePixelRatio,
         rot: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.015,
+        rotSpeed: (Math.random() - 0.5) * 0.035,
         sway: Math.random() * Math.PI * 2,
-        opacity: 0.18 + Math.random() * 0.2,
+        swaySpeed: 0.018 + Math.random() * 0.015,
+        opacity: 0.4 + Math.random() * 0.35,
         color: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)],
       };
     }
 
-    const COUNT = reduced ? 0 : (window.innerWidth < 480 ? 5 : 8);
+    const COUNT = reduced ? 0 : (window.innerWidth < 480 ? 11 : 18);
     for (let i = 0; i < COUNT; i++) {
       const p = makePetal();
       p.y = Math.random() * h;
@@ -603,6 +604,8 @@
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
+      // 回転にあわせて幅を変化させ、ひらひらと裏表が返るような揺らめきを表現
+      ctx.scale(0.55 + 0.45 * Math.abs(Math.sin(p.rot * 1.6)), 1);
       ctx.globalAlpha = p.opacity;
       ctx.fillStyle = p.color;
       ctx.beginPath();
@@ -615,8 +618,8 @@
       ctx.clearRect(0, 0, w, h);
       petalsArr.forEach((p) => {
         p.y += p.speedY;
-        p.sway += 0.012;
-        p.x += p.speedX + Math.sin(p.sway) * 0.25 * devicePixelRatio;
+        p.sway += p.swaySpeed;
+        p.x += p.speedX + Math.sin(p.sway) * 0.6 * devicePixelRatio;
         p.rot += p.rotSpeed;
         if (p.y > h + 20) {
           Object.assign(p, makePetal());
