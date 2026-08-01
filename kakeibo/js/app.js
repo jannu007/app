@@ -530,22 +530,10 @@
     const btn = e.target.closest(".menu-item");
     if (!btn) return;
     const action = btn.dataset.action;
-    if (action === "export") exportData();
     if (action === "reset") resetData();
     if (action === "install") triggerInstall();
     setMenuOpen(false);
   });
-
-  function exportData() {
-    const blob = new Blob([JSON.stringify(Store.data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `kyo-kakeicho_${toKey(new Date())}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast("書き出しました");
-  }
 
   function resetData() {
     if (!confirm("すべての家計簿データを削除します。よろしいですか？")) return;
