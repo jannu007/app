@@ -429,12 +429,10 @@ button {
   justify-content: center;
   align-self: flex-end;
   overflow: hidden;
-  width: 76px;
-  height: 76px;
+  width: 84px;
+  height: 84px;
   margin-top: 18px;
   margin-right: 12%;
-  background: radial-gradient(circle at 35% 30%, rgba(var(--card-bg), 1), rgba(var(--sakura), 0.55));
-  border: 1.5px solid rgba(var(--momoiro), 0.5);
   border-radius: 50%;
   box-shadow: 0 4px 12px -6px rgba(var(--shadow), 0.3);
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
@@ -443,7 +441,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 42%;
+  object-position: 50% 50%;
 }
 .maiko-bubble {
   align-self: center;
