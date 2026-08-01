@@ -444,9 +444,10 @@ button {
   object-position: 50% 50%;
 }
 .maiko-bubble {
+  position: relative;
   align-self: center;
   display: inline-block;
-  margin: 0 0 10px;
+  margin: 0 0 22px;
   padding: 12px 18px;
   max-width: 100%;
   white-space: nowrap;
@@ -457,6 +458,18 @@ button {
   color: rgb(var(--ink));
   font-size: 0.88rem;
   line-height: 1.7;
+}
+.maiko-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  right: 34px;
+  width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+  background: rgb(var(--card-bg));
+  border-right: 1.5px solid rgba(var(--momoiro), 0.45);
+  border-bottom: 1.5px solid rgba(var(--momoiro), 0.45);
 }
 
 /* ---------------- 合計・下部バー ---------------- */
