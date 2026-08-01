@@ -1,4 +1,4 @@
-const CACHE_NAME = "kyo-kakeicho-v3";
+const CACHE_NAME = "kyo-kakeicho-v4";
 const ASSETS = [
   "./",
   "./index.html",

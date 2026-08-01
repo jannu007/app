@@ -531,7 +531,6 @@
     if (!btn) return;
     const action = btn.dataset.action;
     if (action === "export") exportData();
-    if (action === "import") $("#importFile").click();
     if (action === "reset") resetData();
     if (action === "install") triggerInstall();
     setMenuOpen(false);
@@ -547,23 +546,6 @@
     URL.revokeObjectURL(url);
     toast("書き出しました");
   }
-
-  $("#importFile").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      if (!parsed.entries) throw new Error("invalid");
-      Store.data = { entries: parsed.entries || {}, history: parsed.history || [] };
-      Store.save();
-      renderEntries();
-      toast("読み込みました");
-    } catch (err) {
-      toast("読み込みに失敗しました");
-    }
-    e.target.value = "";
-  });
 
   function resetData() {
     if (!confirm("すべての家計簿データを削除します。よろしいですか？")) return;
@@ -695,7 +677,17 @@
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch((err) => console.warn("SW登録失敗", err));
+      // updateViaCache:"none" でsw.js自体もブラウザのHTTPキャッシュを経由させない
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
+        .then((reg) => {
+          reg.update();
+          // アプリをホーム画面から開き直した際（ページ遷移を伴わない復帰）にも
+          // 更新チェックを行う
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") reg.update();
+          });
+        })
+        .catch((err) => console.warn("SW登録失敗", err));
     });
     // 新しいバージョンが有効化されたら、最新のコードを確実に反映するため自動で1度だけ再読み込みする
     let swRefreshed = false;
