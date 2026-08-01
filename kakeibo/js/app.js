@@ -597,12 +597,14 @@
       };
     }
 
-    // 出費が多い日ほど、舞う花びらが増える。1日の支出が1万円に近づくほど
-    // 基準枚数の最大10倍まで、なめらかに増えていく
+    // 出費が多い日ほど、舞う花びらが増え・速く舞う。1日の支出が1万円に
+    // 近づくほど、枚数は基準の最大10倍、速さは最大3倍までなめらかに変化する
     const isMobile = window.innerWidth < 480;
     const BASE_COUNT = reduced ? 0 : (isMobile ? 4 : 6);
-    const MAX_MULTIPLIER = 10;
-    const YEN_AT_MAX = 10000; // この金額で10倍に達する
+    const MAX_COUNT_MULTIPLIER = 10;
+    const MAX_SPEED_MULTIPLIER = 3;
+    const YEN_AT_MAX = 10000; // この金額で最大値に達する
+    let speedMultiplier = 1;
 
     for (let i = 0; i < BASE_COUNT; i++) {
       const p = makePetal();
@@ -613,8 +615,8 @@
     setPetalIntensity = (expenseTotal) => {
       if (reduced) return;
       const progress = Math.min(1, Math.max(0, expenseTotal) / YEN_AT_MAX);
-      const multiplier = 1 + (MAX_MULTIPLIER - 1) * progress;
-      const target = Math.round(BASE_COUNT * multiplier);
+      const target = Math.round(BASE_COUNT * (1 + (MAX_COUNT_MULTIPLIER - 1) * progress));
+      speedMultiplier = 1 + (MAX_SPEED_MULTIPLIER - 1) * progress;
       while (petalsArr.length < target) {
         const p = makePetal();
         p.y = Math.random() * h; // 追加分は画面内にすでに舞っている状態で登場させる
@@ -642,10 +644,10 @@
     function tick() {
       ctx.clearRect(0, 0, w, h);
       petalsArr.forEach((p) => {
-        p.y += p.speedY;
-        p.sway += p.swaySpeed;
-        p.x += p.speedX + Math.sin(p.sway) * 0.6 * devicePixelRatio;
-        p.rot += p.rotSpeed;
+        p.y += p.speedY * speedMultiplier;
+        p.sway += p.swaySpeed * speedMultiplier;
+        p.x += (p.speedX + Math.sin(p.sway) * 0.6 * devicePixelRatio) * speedMultiplier;
+        p.rot += p.rotSpeed * speedMultiplier;
         if (p.y > h + 20) {
           Object.assign(p, makePetal());
           p.y = -20;
