@@ -422,10 +422,20 @@ button {
 @keyframes sway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-/* かわいい舞妓さんが京都弁で話しかけてくるふきだし */
+/* かわいい舞妓さんの女の子が京都弁で話しかけてくるふきだし */
 .maiko-avatar {
   display: inline-flex;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  font-size: 1.8rem;
+  line-height: 1;
+  background: radial-gradient(circle at 35% 30%, rgba(var(--card-bg), 1), rgba(var(--sakura), 0.55));
+  border: 1.5px solid rgba(var(--momoiro), 0.5);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px -6px rgba(var(--shadow), 0.3);
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
   transform-origin: 50% 20%;
   animation: kanzashi-sway 4.5s ease-in-out infinite;
 }
