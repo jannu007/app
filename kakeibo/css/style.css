@@ -15,6 +15,7 @@
   --gold: 196 149 63;          /* 金箔 */
   --gold-soft: 214 178 108;
   --sakura: 232 168 176;       /* 桜色 */
+  --momoiro: 224 108 140;      /* 桃色 — 舞妓の簪や鹿の子絞りを思わせる、かわいい差し色 */
   --card-bg: 255 253 248;
   --shadow: 58 46 40;
 
@@ -248,30 +249,30 @@ button {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* 青海波（せいがいは）文様 — 波が幾重にも重なる、京の帯地をイメージした装飾ライン */
+/* 青海波（せいがいは）文様 — 舞妓さんの鹿の子絞りを思わせる、桃色と金のかわいい波紋 */
 .wave-divider {
   height: 20px;
   margin: 2px 0 4px;
-  opacity: 0.85;
+  opacity: 0.9;
   background-image:
     radial-gradient(circle at 20px 100%,
-      transparent 0 3px,
-      rgb(var(--vermillion)) 3px 5px,
+      rgb(var(--card-bg)) 0 1.5px,
+      rgb(var(--momoiro)) 1.5px 5px,
       transparent 5px 8px,
       rgb(var(--gold)) 8px 10px,
       transparent 10px 13px,
-      rgb(var(--vermillion)) 13px 15px,
+      rgb(var(--momoiro)) 13px 15px,
       transparent 15px 18px,
       rgb(var(--gold)) 18px 20px,
       transparent 20px
     ),
     radial-gradient(circle at 0 100%,
-      transparent 0 3px,
-      rgb(var(--vermillion)) 3px 5px,
+      rgb(var(--card-bg)) 0 1.5px,
+      rgb(var(--momoiro)) 1.5px 5px,
       transparent 5px 8px,
       rgb(var(--gold)) 8px 10px,
       transparent 10px 13px,
-      rgb(var(--vermillion)) 13px 15px,
+      rgb(var(--momoiro)) 13px 15px,
       transparent 15px 18px,
       rgb(var(--gold)) 18px 20px,
       transparent 20px

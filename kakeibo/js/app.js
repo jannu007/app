@@ -597,11 +597,12 @@
       };
     }
 
-    // 出費が多い日ほど、舞う花びらが増える
+    // 出費が多い日ほど、舞う花びらが増える。1日の支出が1万円に近づくほど
+    // 基準枚数の最大10倍まで、なめらかに増えていく
     const isMobile = window.innerWidth < 480;
     const BASE_COUNT = reduced ? 0 : (isMobile ? 4 : 6);
-    const MAX_EXTRA = isMobile ? 18 : 26;
-    const YEN_PER_PETAL = 250; // この金額ごとに花びらが1枚増える
+    const MAX_MULTIPLIER = 10;
+    const YEN_AT_MAX = 10000; // この金額で10倍に達する
 
     for (let i = 0; i < BASE_COUNT; i++) {
       const p = makePetal();
@@ -611,8 +612,9 @@
 
     setPetalIntensity = (expenseTotal) => {
       if (reduced) return;
-      const extra = Math.min(MAX_EXTRA, Math.floor(Math.max(0, expenseTotal) / YEN_PER_PETAL));
-      const target = BASE_COUNT + extra;
+      const progress = Math.min(1, Math.max(0, expenseTotal) / YEN_AT_MAX);
+      const multiplier = 1 + (MAX_MULTIPLIER - 1) * progress;
+      const target = Math.round(BASE_COUNT * multiplier);
       while (petalsArr.length < target) {
         const p = makePetal();
         p.y = Math.random() * h; // 追加分は画面内にすでに舞っている状態で登場させる
