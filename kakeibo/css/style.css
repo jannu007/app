@@ -248,16 +248,37 @@ button {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* 青海波（せいがいは）風の装飾ライン — 帯地をイメージした雅なアクセント */
+/* 青海波（せいがいは）文様 — 波が幾重にも重なる、京の帯地をイメージした装飾ライン */
 .wave-divider {
-  height: 9px;
-  margin: 2px 2px 4px;
-  opacity: 0.55;
+  height: 20px;
+  margin: 2px 0 4px;
+  opacity: 0.85;
   background-image:
-    radial-gradient(circle at 10px 0, transparent 7px, rgb(var(--gold)) 8px, rgb(var(--gold)) 9px, transparent 10px),
-    radial-gradient(circle at 30px 0, transparent 7px, rgb(var(--gold)) 8px, rgb(var(--gold)) 9px, transparent 10px);
-  background-size: 40px 9px;
+    radial-gradient(circle at 20px 100%,
+      transparent 0 3px,
+      rgb(var(--vermillion)) 3px 5px,
+      transparent 5px 8px,
+      rgb(var(--gold)) 8px 10px,
+      transparent 10px 13px,
+      rgb(var(--vermillion)) 13px 15px,
+      transparent 15px 18px,
+      rgb(var(--gold)) 18px 20px,
+      transparent 20px
+    ),
+    radial-gradient(circle at 0 100%,
+      transparent 0 3px,
+      rgb(var(--vermillion)) 3px 5px,
+      transparent 5px 8px,
+      rgb(var(--gold)) 8px 10px,
+      transparent 10px 13px,
+      rgb(var(--vermillion)) 13px 15px,
+      transparent 15px 18px,
+      rgb(var(--gold)) 18px 20px,
+      transparent 20px
+    );
+  background-size: 40px 20px;
   background-repeat: repeat-x;
+  background-position: bottom;
 }
 
 /* ---------------- 日付ナビ ---------------- */
