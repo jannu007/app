@@ -694,6 +694,11 @@
   }
 
   if ("serviceWorker" in navigator) {
+    // 初回訪問（まだどのSWにも制御されていない状態）かどうかを先に記録しておく。
+    // clients.claim()は初回の有効化でもcontrollerchangeを発火させるため、
+    // これを見ずに無条件でリロードすると初回訪問時に無限リロードしてしまう。
+    const hadController = !!navigator.serviceWorker.controller;
+
     window.addEventListener("load", () => {
       // updateViaCache:"none" でsw.js自体もブラウザのHTTPキャッシュを経由させない
       navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
@@ -707,9 +712,11 @@
         })
         .catch((err) => console.warn("SW登録失敗", err));
     });
-    // 新しいバージョンが有効化されたら、最新のコードを確実に反映するため自動で1度だけ再読み込みする
+    // 新しいバージョンが「既存のSWを置き換えて」有効化された場合のみ、
+    // 最新のコードを確実に反映するため自動で1度だけ再読み込みする
     let swRefreshed = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController) return;
       if (swRefreshed) return;
       swRefreshed = true;
       window.location.reload();

@@ -407,6 +407,9 @@ button {
 .entry-delete:active { transform: scale(0.85); background: rgba(var(--vermillion), 0.15); opacity: 1; }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   color: rgb(var(--ink-soft));
   padding: 40px 20px;
@@ -418,6 +421,40 @@ button {
 .empty-emblem { font-size: 2rem; display: block; margin-bottom: 8px; animation: sway 3.4s ease-in-out infinite; }
 @keyframes sway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* かわいい舞妓さんが京都弁で話しかけてくるふきだし */
+.maiko-avatar {
+  display: inline-flex;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
+  transform-origin: 50% 20%;
+  animation: kanzashi-sway 4.5s ease-in-out infinite;
+}
+.maiko-bubble {
+  position: relative;
+  display: inline-block;
+  margin: 10px 0 0;
+  padding: 12px 18px;
+  max-width: 260px;
+  background: rgb(var(--card-bg));
+  border: 1.5px solid rgba(var(--momoiro), 0.45);
+  border-radius: 18px;
+  box-shadow: 0 6px 16px -8px rgba(var(--shadow), 0.25);
+  color: rgb(var(--ink));
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.maiko-bubble::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: rgb(var(--card-bg));
+  border-left: 1.5px solid rgba(var(--momoiro), 0.45);
+  border-top: 1.5px solid rgba(var(--momoiro), 0.45);
+}
 
 /* ---------------- 合計・下部バー ---------------- */
 .bottom-bar {

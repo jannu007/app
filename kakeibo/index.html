@@ -92,11 +92,28 @@
   <!-- 支出リスト -->
   <main class="entry-area">
     <ul id="entryList" class="entry-list" aria-live="polite"></ul>
-    <p id="emptyState" class="empty-state" hidden>
-      <span class="empty-emblem">🌸</span>
-      この日の記録はまだありません<br />
-      「追加」から書き込んでみましょう
-    </p>
+    <div id="emptyState" class="empty-state" hidden>
+      <span class="maiko-avatar" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="38" height="38">
+          <line x1="27" y1="23" x2="23" y2="53" stroke="rgb(199,155,64)" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
+          <line x1="37" y1="23" x2="41" y2="53" stroke="rgb(199,155,64)" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
+          <circle cx="23" cy="55" r="2.6" fill="rgb(199,155,64)"/>
+          <circle cx="41" cy="55" r="2.6" fill="rgb(199,155,64)"/>
+          <g fill="rgb(232,168,176)">
+            <circle cx="32" cy="13" r="7.5"/>
+            <circle cx="19" cy="20" r="7.5"/>
+            <circle cx="45" cy="20" r="7.5"/>
+            <circle cx="22" cy="31" r="7.5"/>
+            <circle cx="42" cy="31" r="7.5"/>
+          </g>
+          <circle cx="32" cy="22" r="4.2" fill="rgb(199,155,64)"/>
+        </svg>
+      </span>
+      <p class="maiko-bubble">
+        この日の記録、まだあらしまへんえ〜<br />
+        「追加」からきばって書いとくれやす♪
+      </p>
+    </div>
   </main>
 
   <!-- 合計・操作バー -->
