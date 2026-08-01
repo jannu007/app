@@ -113,6 +113,7 @@
   let currentDate = new Date();
   currentDate.setHours(0, 0, 0, 0);
   let selectedKind = "expense";
+  let setPetalIntensity = () => {}; // 桜の花びらモジュールが後で実体を割り当てる
 
   /* ---------------- トースト ---------------- */
   let toastTimer = null;
@@ -193,6 +194,9 @@
     }
 
     renderTotal(list);
+
+    const expenseTotal = list.reduce((sum, e) => sum + (e.kind === "expense" ? e.price : 0), 0);
+    setPetalIntensity(expenseTotal);
   }
 
   function deleteEntry(dateKey, id, li) {
@@ -593,12 +597,31 @@
       };
     }
 
-    const COUNT = reduced ? 0 : (window.innerWidth < 480 ? 11 : 18);
-    for (let i = 0; i < COUNT; i++) {
+    // 出費が多い日ほど、舞う花びらが増える
+    const isMobile = window.innerWidth < 480;
+    const BASE_COUNT = reduced ? 0 : (isMobile ? 4 : 6);
+    const MAX_EXTRA = isMobile ? 18 : 26;
+    const YEN_PER_PETAL = 250; // この金額ごとに花びらが1枚増える
+
+    for (let i = 0; i < BASE_COUNT; i++) {
       const p = makePetal();
       p.y = Math.random() * h;
       petalsArr.push(p);
     }
+
+    setPetalIntensity = (expenseTotal) => {
+      if (reduced) return;
+      const extra = Math.min(MAX_EXTRA, Math.floor(Math.max(0, expenseTotal) / YEN_PER_PETAL));
+      const target = BASE_COUNT + extra;
+      while (petalsArr.length < target) {
+        const p = makePetal();
+        p.y = Math.random() * h; // 追加分は画面内にすでに舞っている状態で登場させる
+        petalsArr.push(p);
+      }
+      if (petalsArr.length > target) {
+        petalsArr.length = target;
+      }
+    };
 
     function drawPetal(p) {
       ctx.save();
