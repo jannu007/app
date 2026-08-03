@@ -1,0 +1,20 @@
+{
+  "name": "栞PDF - 無料のPDFページ編集",
+  "short_name": "栞PDF",
+  "description": "PDFの結合・並べ替え・削除・回転・分割・透かし追加が全部無料でできる編集アプリ。PDFは端末内だけで処理されます。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6efe1",
+  "theme_color": "#f6efe1",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
