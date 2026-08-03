@@ -183,6 +183,7 @@
       actions.className = "page-mini-actions";
       actions.innerHTML = `
         <button type="button" class="page-mini-btn" data-act="left" aria-label="前へ移動">◀</button>
+        <button type="button" class="page-mini-btn" data-act="edit" aria-label="テキストを編集">✎</button>
         <button type="button" class="page-mini-btn" data-act="rotate" aria-label="回転">⟳</button>
         <button type="button" class="page-mini-btn" data-act="right" aria-label="後ろへ移動">▶</button>
         <button type="button" class="page-mini-btn danger" data-act="delete" aria-label="削除">🗑</button>
@@ -265,6 +266,7 @@
         afterMutate();
       } else if (act === "left") movePage(id, -1);
       else if (act === "right") movePage(id, 1);
+      else if (act === "edit") openTextEditor(entry);
       return;
     }
     toggleSelect(id);
@@ -615,6 +617,235 @@
       toast("追加に失敗しました");
     } finally {
       hideLoading();
+    }
+  });
+
+  /* ---------------- テキスト編集（自由な位置にテキスト追加） ---------------- */
+  let editorState = null; // { entry, viewport, boxes: [{id, el, fontSize, color}], selectedId, nextBoxId }
+
+  async function openTextEditor(entry) {
+    const doc = state.docs[entry.docIndex];
+    const pjsPage = await getPjsPage(doc, entry.pageIndex);
+    // pdf-lib の座標系（回転前の生の座標）とそのまま対応させるため、
+    // ここでは常に rotation:0 でレンダリングする（ページ自体に回転がかかっていても
+    // エディタ上の見た目と実際のPDF座標がずれないようにするため）。
+    const unscaled = pjsPage.getViewport({ scale: 1, rotation: 0 });
+    const maxW = Math.min(window.innerWidth - 80, 520);
+    const scale = Math.min(maxW / unscaled.width, 1.6);
+    const viewport = pjsPage.getViewport({ scale, rotation: 0 });
+
+    const wrap = $("#editorCanvasWrap");
+    wrap.innerHTML = "";
+    wrap.style.width = viewport.width + "px";
+    wrap.style.height = viewport.height + "px";
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "editor-page-canvas";
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext("2d");
+    await pjsPage.render({ canvasContext: ctx, viewport }).promise;
+    wrap.appendChild(canvas);
+
+    editorState = { entry, viewport, boxes: [], selectedId: null, nextBoxId: 1 };
+
+    const hint = $(".editor-help");
+    if (entry.rotation !== 0 || pjsPage.rotate) {
+      hint.textContent = "※このページは回転が設定されているため、編集画面の向きが一覧の表示と異なる場合があります。";
+    } else {
+      hint.textContent = "ページの好きな場所をタップするとテキストを追加できます。⠿をドラッグで移動、×で削除。";
+    }
+
+    $("#textEditModal").hidden = false;
+  }
+
+  function closeTextEditor() {
+    $("#textEditModal").hidden = true;
+    $("#editorCanvasWrap").innerHTML = "";
+    editorState = null;
+  }
+
+  function selectBox(id) {
+    if (!editorState) return;
+    editorState.selectedId = id;
+    editorState.boxes.forEach((b) => b.el.classList.toggle("selected", b.id === id));
+    const box = editorState.boxes.find((b) => b.id === id);
+    if (box) {
+      $("#editorFontSize").value = box.fontSize;
+      $("#editorColor").value = box.color;
+    }
+  }
+
+  function makeBoxDraggable(box) {
+    const handle = box.el.querySelector(".editor-textbox-handle");
+    let dragging = false;
+    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+    handle.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      selectBox(box.id);
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      origLeft = parseFloat(box.el.style.left) || 0;
+      origTop = parseFloat(box.el.style.top) || 0;
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      box.el.style.left = (origLeft + dx) + "px";
+      box.el.style.top = (origTop + dy) + "px";
+    });
+    handle.addEventListener("pointerup", (e) => {
+      dragging = false;
+      try { handle.releasePointerCapture(e.pointerId); } catch (err) { /* noop */ }
+    });
+  }
+
+  function addTextBox(x, y) {
+    if (!editorState) return;
+    const id = "b" + (editorState.nextBoxId++);
+    const fontSize = Number($("#editorFontSize").value);
+    const color = $("#editorColor").value;
+
+    const el = document.createElement("div");
+    el.className = "editor-textbox";
+    el.style.left = Math.max(0, x) + "px";
+    el.style.top = Math.max(0, y) + "px";
+
+    const inner = document.createElement("div");
+    inner.className = "editor-textbox-inner";
+    inner.contentEditable = "true";
+    inner.style.fontSize = fontSize + "px";
+    inner.style.color = color;
+    inner.textContent = "テキスト";
+
+    const handle = document.createElement("span");
+    handle.className = "editor-textbox-handle";
+    handle.textContent = "⠿";
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "editor-textbox-del";
+    del.textContent = "×";
+    del.setAttribute("aria-label", "このテキストを削除");
+
+    el.appendChild(inner);
+    el.appendChild(handle);
+    el.appendChild(del);
+    $("#editorCanvasWrap").appendChild(el);
+
+    const box = { id, el, fontSize, color };
+    editorState.boxes.push(box);
+
+    inner.addEventListener("pointerdown", (e) => { e.stopPropagation(); });
+    inner.addEventListener("focus", () => selectBox(id));
+    inner.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") e.preventDefault();
+    });
+    del.addEventListener("click", (e) => {
+      e.stopPropagation();
+      el.remove();
+      editorState.boxes = editorState.boxes.filter((b) => b.id !== id);
+      if (editorState.selectedId === id) editorState.selectedId = null;
+    });
+    makeBoxDraggable(box);
+
+    selectBox(id);
+    inner.focus();
+    const range = document.createRange();
+    range.selectNodeContents(inner);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  $("#editorCanvasWrap").addEventListener("click", (e) => {
+    if (!editorState) return;
+    if (e.target.closest(".editor-textbox")) return;
+    const rect = $("#editorCanvasWrap").getBoundingClientRect();
+    addTextBox(e.clientX - rect.left, e.clientY - rect.top);
+  });
+
+  $("#editorAddTextBtn").addEventListener("click", () => {
+    if (!editorState) return;
+    const wrap = $("#editorCanvasWrap");
+    addTextBox(wrap.clientWidth / 2 - 30, wrap.clientHeight / 2 - 12);
+  });
+
+  $("#editorFontSize").addEventListener("input", (e) => {
+    if (!editorState || !editorState.selectedId) return;
+    const box = editorState.boxes.find((b) => b.id === editorState.selectedId);
+    if (!box) return;
+    box.fontSize = Number(e.target.value);
+    box.el.querySelector(".editor-textbox-inner").style.fontSize = box.fontSize + "px";
+  });
+
+  $("#editorColor").addEventListener("input", (e) => {
+    if (!editorState || !editorState.selectedId) return;
+    const box = editorState.boxes.find((b) => b.id === editorState.selectedId);
+    if (!box) return;
+    box.color = e.target.value;
+    box.el.querySelector(".editor-textbox-inner").style.color = box.color;
+  });
+
+  $("#editorDeleteBoxBtn").addEventListener("click", () => {
+    if (!editorState || !editorState.selectedId) return;
+    const box = editorState.boxes.find((b) => b.id === editorState.selectedId);
+    if (!box) return;
+    box.el.remove();
+    editorState.boxes = editorState.boxes.filter((b) => b.id !== box.id);
+    editorState.selectedId = null;
+  });
+
+  $("#editorCancelBtn").addEventListener("click", closeTextEditor);
+  $("#textEditModal").addEventListener("click", (e) => {
+    if (e.target.id === "textEditModal") closeTextEditor();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && editorState && !$("#textEditModal").hidden) closeTextEditor();
+  });
+
+  $("#editorSaveBtn").addEventListener("click", async () => {
+    if (!editorState) return;
+    const { entry, viewport, boxes } = editorState;
+    const validBoxes = boxes.filter((b) => b.el.querySelector(".editor-textbox-inner").textContent.trim());
+    if (!validBoxes.length) { closeTextEditor(); return; }
+
+    showLoading("反映しています…");
+    try {
+      const doc = state.docs[entry.docIndex];
+      const pdfDoc = doc.pdfDoc;
+      const page = pdfDoc.getPages()[entry.pageIndex];
+      const wrapRect = $("#editorCanvasWrap").getBoundingClientRect();
+
+      for (const box of validBoxes) {
+        const inner = box.el.querySelector(".editor-textbox-inner");
+        const text = inner.textContent.trim();
+        const boxRect = box.el.getBoundingClientRect();
+        const leftPx = boxRect.left - wrapRect.left;
+        const bottomPx = boxRect.bottom - wrapRect.top;
+        const [pdfX, pdfY] = viewport.convertToPdfPoint(leftPx, bottomPx);
+        const fontSizePdf = Math.max(6, Math.round(box.fontSize / viewport.scale));
+
+        const { dataUrl, width, height } = makeTextImage({
+          text, fontSize: fontSizePdf, color: box.color, diagonal: false,
+        });
+        const bytes = dataUrlToBytes(dataUrl);
+        const embedded = await pdfDoc.embedPng(bytes);
+        page.drawImage(embedded, { x: pdfX, y: pdfY, width, height, opacity: 1 });
+      }
+      entry.stamped = true;
+      renderGrid();
+      toast("テキストを追加しました");
+    } catch (err) {
+      console.error(err);
+      toast("反映に失敗しました");
+    } finally {
+      hideLoading();
+      closeTextEditor();
     }
   });
 
