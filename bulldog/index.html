@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>ブル手帖 - ブルドッグと暮らす毎日の記録アプリ</title>
+<meta name="description" content="体重・お散歩・熱中症リスク・お手入れ記録をまとめて管理できる、ブルドッグと暮らす人のための完全無料アプリ。インストールしてオフラインでも使えます。" />
+<meta name="theme-color" content="#faf1e3" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1c1611" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="ブル手帖" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="paw-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <div class="paper-texture"></div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="34" height="34">
+          <ellipse cx="14" cy="24" rx="8" ry="11" fill="rgb(191,120,66)" transform="rotate(-18 14 24)"/>
+          <ellipse cx="50" cy="24" rx="8" ry="11" fill="rgb(191,120,66)" transform="rotate(18 50 24)"/>
+          <ellipse cx="32" cy="36" rx="23" ry="19" fill="rgb(224,182,132)"/>
+          <path d="M16 30c-2 8 2 16 16 16s18-8 16-16" fill="none" stroke="rgb(150,100,58)" stroke-width="1.6" opacity="0.5"/>
+          <ellipse cx="22" cy="33" rx="4.4" ry="5.2" fill="#2b201a"/>
+          <ellipse cx="42" cy="33" rx="4.4" ry="5.2" fill="#2b201a"/>
+          <ellipse cx="32" cy="42" rx="7" ry="5" fill="#3a2a20"/>
+          <path d="M25 47c2 3 5 4 7 4s5-1 7-4" fill="none" stroke="#3a2a20" stroke-width="2" stroke-linecap="round"/>
+          <ellipse cx="32" cy="40" rx="3.6" ry="2.6" fill="#1c1410"/>
+        </svg>
+      </span>
+      <h1>ブル手帖</h1>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <button data-action="profile" class="menu-item">🐾 プロフィール設定</button>
+      <button data-action="export" class="menu-item">💾 データを書き出す</button>
+      <button data-action="import" class="menu-item">📂 データを読み込む</button>
+      <button data-action="reset" class="menu-item danger">🗑 全データを削除</button>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+    </nav>
+  </header>
+
+  <div class="collar-divider" aria-hidden="true"></div>
+
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+  <input type="file" id="importFile" accept="application/json" hidden />
+
+  <main class="tab-content">
+
+    <!-- ホーム -->
+    <section id="tab-home" class="tab-pane">
+      <div class="card profile-card">
+        <span class="profile-avatar" aria-hidden="true">🐾</span>
+        <div class="profile-info">
+          <h2 id="dogNameDisplay">わんこの名前</h2>
+          <p id="dogSubDisplay">プロフィールを設定してください</p>
+        </div>
+        <button id="editProfileBtn" class="icon-btn small" aria-label="プロフィール編集">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <span class="stat-label">最新体重</span>
+          <span class="stat-value" id="statWeight">--</span>
+          <span class="stat-sub" id="statWeightDelta"></span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">直近7日の散歩</span>
+          <span class="stat-value" id="statWalk">0回</span>
+          <span class="stat-sub" id="statWalkSub"></span>
+        </div>
+        <div class="card stat-card wide">
+          <span class="stat-label">次の予定</span>
+          <span class="stat-value" id="statNext">予定はありません</span>
+        </div>
+      </div>
+
+      <div class="card heat-card">
+        <h3>🌡️ 今すぐ熱中症リスクを確認</h3>
+        <p class="hint">ブルドッグは短頭種で、パンティング（口呼吸）による体温調節が苦手です。お散歩前にチェックしましょう。</p>
+        <div class="heat-inputs">
+          <label class="field small">
+            <span class="field-label">気温(℃)</span>
+            <input type="number" id="homeTemp" inputmode="decimal" placeholder="例）28" />
+          </label>
+          <label class="field small">
+            <span class="field-label">湿度(%)</span>
+            <input type="number" id="homeHumidity" inputmode="numeric" placeholder="例）60" />
+          </label>
+        </div>
+        <div id="homeRiskResult" class="risk-badge" hidden></div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="btn btn-primary" data-open="weightModal">⚖️ 体重を記録</button>
+        <button class="btn btn-primary" data-open="walkModal">🚶 散歩を記録</button>
+        <button class="btn btn-secondary" data-open="recordModal">📋 記録を追加</button>
+      </div>
+    </section>
+
+    <!-- 体重 -->
+    <section id="tab-weight" class="tab-pane" hidden>
+      <div class="card">
+        <div class="section-head">
+          <h2>体重の推移</h2>
+          <button class="btn btn-primary small" data-open="weightModal">+ 記録</button>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="weightChart" width="320" height="180"></canvas>
+          <p id="weightEmpty" class="empty-state small" hidden>まだ記録がありません</p>
+        </div>
+        <p id="idealStatus" class="ideal-status" hidden></p>
+      </div>
+      <h3 class="list-title">記録一覧</h3>
+      <ul id="weightList" class="record-list"></ul>
+    </section>
+
+    <!-- お散歩 -->
+    <section id="tab-walk" class="tab-pane" hidden>
+      <div class="card walk-summary">
+        <div class="walk-summary-item">
+          <span class="stat-label">直近7日の回数</span>
+          <span class="stat-value" id="walkWeekCount">0回</span>
+        </div>
+        <div class="walk-summary-item">
+          <span class="stat-label">直近7日の合計</span>
+          <span class="stat-value" id="walkWeekMin">0分</span>
+        </div>
+      </div>
+      <div class="section-head no-card">
+        <h2>お散歩の記録</h2>
+        <button class="btn btn-primary small" data-open="walkModal">+ 記録</button>
+      </div>
+      <ul id="walkList" class="record-list"></ul>
+      <p id="walkEmpty" class="empty-state small" hidden>まだ記録がありません。気温・湿度を入れると熱中症リスクを自動判定します。</p>
+    </section>
+
+    <!-- 記録 -->
+    <section id="tab-record" class="tab-pane" hidden>
+      <div class="section-head no-card">
+        <h2>健康・お手入れ記録</h2>
+        <button class="btn btn-primary small" data-open="recordModal">+ 記録</button>
+      </div>
+
+      <h3 class="list-title">次の予定</h3>
+      <ul id="upcomingList" class="record-list"></ul>
+      <p id="upcomingEmpty" class="empty-state small" hidden>予定はありません</p>
+
+      <h3 class="list-title">これまでの記録</h3>
+      <ul id="recordList" class="record-list"></ul>
+      <p id="recordEmpty" class="empty-state small" hidden>まだ記録がありません</p>
+    </section>
+
+  </main>
+
+  <nav class="tab-bar" role="tablist">
+    <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true"><span class="tab-icon">🏠</span><span>ホーム</span></button>
+    <button class="tab-btn" data-tab="weight" role="tab" aria-selected="false"><span class="tab-icon">⚖️</span><span>体重</span></button>
+    <button class="tab-btn" data-tab="walk" role="tab" aria-selected="false"><span class="tab-icon">🚶</span><span>散歩</span></button>
+    <button class="tab-btn" data-tab="record" role="tab" aria-selected="false"><span class="tab-icon">📋</span><span>記録</span></button>
+  </nav>
+</div>
+
+<!-- 体重 追加モーダル -->
+<div id="weightModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="weightModalTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">⚖️</span>
+      <h2 id="weightModalTitle">体重を記録</h2>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">日付</span>
+        <input id="weightDate" type="date" />
+      </label>
+      <label class="field">
+        <span class="field-label">体重（kg）</span>
+        <input id="weightKg" type="number" inputmode="decimal" step="0.1" min="0" placeholder="例）24.5" />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button id="weightSubmitBtn" class="btn btn-primary full">記録する</button>
+      <button class="btn btn-secondary full" data-close="weightModal">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- お散歩 追加モーダル -->
+<div id="walkModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="walkModalTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">🚶</span>
+      <h2 id="walkModalTitle">お散歩を記録</h2>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">日付</span>
+        <input id="walkDate" type="date" />
+      </label>
+      <label class="field">
+        <span class="field-label">時間（分）</span>
+        <input id="walkDuration" type="number" inputmode="numeric" min="0" placeholder="例）15" />
+      </label>
+      <div class="two-col">
+        <label class="field">
+          <span class="field-label">気温（℃・任意）</span>
+          <input id="walkTemp" type="number" inputmode="decimal" placeholder="例）28" />
+        </label>
+        <label class="field">
+          <span class="field-label">湿度（%・任意）</span>
+          <input id="walkHumidity" type="number" inputmode="numeric" placeholder="例）60" />
+        </label>
+      </div>
+      <div id="walkRiskPreview" class="risk-badge" hidden></div>
+      <label class="field">
+        <span class="field-label">メモ（任意）</span>
+        <input id="walkMemo" type="text" placeholder="例）公園まで散歩" autocomplete="off" />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button id="walkSubmitBtn" class="btn btn-primary full">記録する</button>
+      <button class="btn btn-secondary full" data-close="walkModal">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- 健康記録 追加モーダル -->
+<div id="recordModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">📋</span>
+      <h2 id="recordModalTitle">記録を追加</h2>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">種類</span>
+        <select id="recordType">
+          <option value="hospital">🏥 通院</option>
+          <option value="medicine">💊 投薬</option>
+          <option value="vaccine">💉 ワクチン・フィラリア予防</option>
+          <option value="bath">🛁 シャンプー</option>
+          <option value="skinfold">🧴 しわ・皮膚のお手入れ</option>
+          <option value="ear">👂 耳そうじ</option>
+          <option value="nail">💅 爪切り</option>
+          <option value="other">📝 その他</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">日付</span>
+        <input id="recordDate" type="date" />
+      </label>
+      <label class="field">
+        <span class="field-label">メモ（任意）</span>
+        <input id="recordMemo" type="text" placeholder="例）耳の赤みを確認" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span class="field-label">次回の予定日（任意）</span>
+        <input id="recordNextDate" type="date" />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button id="recordSubmitBtn" class="btn btn-primary full">記録する</button>
+      <button class="btn btn-secondary full" data-close="recordModal">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- プロフィール モーダル -->
+<div id="profileModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">🐾</span>
+      <h2 id="profileModalTitle">プロフィール設定</h2>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">名前</span>
+        <input id="profileName" type="text" placeholder="例）ブル太郎" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span class="field-label">犬種</span>
+        <select id="profileBreed">
+          <option value="english">イングリッシュ・ブルドッグ</option>
+          <option value="french">フレンチ・ブルドッグ</option>
+          <option value="american">アメリカン・ブルドッグ</option>
+          <option value="other">その他のブルドッグ系</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">誕生日（任意）</span>
+        <input id="profileBirthday" type="date" />
+      </label>
+      <div class="two-col">
+        <label class="field">
+          <span class="field-label">適正体重 下限(kg・任意)</span>
+          <input id="profileIdealMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="例）22" />
+        </label>
+        <label class="field">
+          <span class="field-label">適正体重 上限(kg・任意)</span>
+          <input id="profileIdealMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="例）25" />
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="profileSubmitBtn" class="btn btn-primary full">保存する</button>
+      <button class="btn btn-secondary full" data-close="profileModal">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- インストール促し バナー -->
+<div id="installBanner" class="install-banner" hidden>
+  <span class="install-emblem" aria-hidden="true">🐶</span>
+  <div class="install-text">
+    <strong>ホーム画面に追加できます</strong>
+    <span>アプリのようにワンタッチで開けます</span>
+  </div>
+  <button id="installBtn" class="btn btn-primary small">インストール</button>
+  <button id="installDismiss" class="icon-btn small" aria-label="閉じる">✕</button>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
