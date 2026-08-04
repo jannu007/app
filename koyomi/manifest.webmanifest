@@ -1,0 +1,20 @@
+{
+  "name": "こよみ手帖 - 無料のスケジュール管理アプリ",
+  "short_name": "こよみ手帖",
+  "description": "月間カレンダーに予定とタスクをまとめて書き込める、完全無料のスケジュール帳アプリ。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f3e9",
+  "theme_color": "#f7f3e9",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["productivity", "lifestyle", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
