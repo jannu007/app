@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>星の羅針盤 - 株価予測シミュレータ</title>
+<meta name="description" content="eMAXIS Slim 米国株式(S&P500) と eMAXIS Slim オールカントリーの過去の傾向と将来の資産推移をモンテカルロ・シミュレーションで予測できる無料アプリ。" />
+<meta name="theme-color" content="#f1effa" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0e101e" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="星の羅針盤" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="sky-bg" aria-hidden="true"></div>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="30" height="30">
+          <circle cx="32" cy="32" r="21" fill="none" stroke="currentColor" stroke-width="2.4" opacity="0.9"/>
+          <path d="M32 14 L36 28 L50 32 L36 36 L32 50 L28 36 L14 32 L28 28 Z" fill="currentColor"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <h1>星の羅針盤</h1>
+        <span class="brand-sub">株価予測シミュレータ</span>
+      </div>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
+    </button>
+  </header>
+
+  <nav id="menuPanel" class="menu-panel" hidden>
+    <button data-action="help" class="menu-item">📖 使い方・用語集</button>
+    <button data-action="reset" class="menu-item">🔄 入力を初期値にもどす</button>
+    <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+  </nav>
+
+  <main class="entry-area">
+
+    <!-- 銘柄の現在の傾向 -->
+    <section class="card">
+      <div class="fund-status-head">
+        <h2 class="section-title">今の傾向</h2>
+        <button type="button" id="refreshBtn" class="icon-btn small" aria-label="最新データを再取得">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>
+        </button>
+      </div>
+      <p class="section-lead">直近の年率リターンとブレ幅（ボラティリティ）の目安です。通信できない環境では長期の歴史的平均（参考値）を表示します。</p>
+      <div class="fund-status-grid">
+        <div class="fund-status-item sp500" data-fund="sp500">
+          <span class="fs-name">eMAXIS Slim<br>米国株式(S&amp;P500)</span>
+          <span class="fs-rate" id="sp500Rate">--</span>
+          <span class="fs-vol" id="sp500Vol">ブレ幅 --</span>
+          <span class="fs-meta" id="sp500Meta">取得中…</span>
+        </div>
+        <div class="fund-status-item acwi" data-fund="acwi">
+          <span class="fs-name">eMAXIS Slim<br>オールカントリー</span>
+          <span class="fs-rate" id="acwiRate">--</span>
+          <span class="fs-vol" id="acwiVol">ブレ幅 --</span>
+          <span class="fs-meta" id="acwiMeta">取得中…</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 過去の推移比較 -->
+    <section class="card">
+      <h2 class="section-title">過去の値動き比較</h2>
+      <p class="section-lead">開始時点を100として指数化した推移です。値動きの大きさ（ブレ）や下落局面の深さを見比べられます。</p>
+      <div class="chart-wrap">
+        <canvas id="histChart" width="600" height="240" aria-label="S&P500とオールカントリーの過去の値動き比較"></canvas>
+      </div>
+      <div class="chart-legend">
+        <span><i class="legend-line sp500"></i>S&amp;P500</span>
+        <span><i class="legend-line acwi"></i>オールカントリー</span>
+      </div>
+      <p class="field-hint" id="histHint"></p>
+    </section>
+
+    <!-- 将来予測（モンテカルロ・シミュレーション） -->
+    <section class="card">
+      <h2 class="section-title">将来の予測</h2>
+      <p class="section-lead">過去の値動きの平均とブレ幅をもとに、未来の値動きを何百通りも乱数でシミュレーションし（モンテカルロ・シミュレーション）、起こりうる資産額の範囲を帯で示します。</p>
+
+      <div class="mode-chips" id="modeChips">
+        <button type="button" class="mode-chip" data-mode="sp500">S&amp;P500</button>
+        <button type="button" class="mode-chip" data-mode="acwi">オールカントリー</button>
+        <button type="button" class="mode-chip active" data-mode="compare">2つを比較</button>
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">はじめの投資額</span>
+          <span class="slider-value"><span id="lumpOut">1,000,000</span>円</span>
+        </div>
+        <input type="range" id="lumpSlider" min="0" max="5000000" step="50000" value="1000000" />
+      </div>
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">毎月の積立額</span>
+          <span class="slider-value"><span id="monthlyOut">30,000</span>円</span>
+        </div>
+        <input type="range" id="monthlySlider" min="0" max="100000" step="1000" value="30000" />
+      </div>
+      <div class="slider-field">
+        <div class="slider-head">
+          <span class="slider-label">予測期間</span>
+          <span class="slider-value"><span id="yearsOut">20</span>年</span>
+        </div>
+        <input type="range" id="yearsSlider" min="1" max="30" step="1" value="20" />
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="forecastChart" width="600" height="280" aria-label="将来の資産額の予測レンジ"></canvas>
+      </div>
+      <div class="chart-legend" id="forecastLegend"></div>
+
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <button type="button" id="rerollBtn" class="btn btn-ghost full small-btn">🎲 シミュレーションを振りなおす</button>
+    </section>
+
+    <!-- 比較表 -->
+    <section class="card">
+      <h2 class="section-title">2つのファンドの比較</h2>
+      <p class="section-lead">同じ投資条件で計算した場合の比較です（中央値＝シミュレーションの真ん中の結果、元本割れ確率＝投資した金額を下回る確率）。</p>
+      <div class="compare-table-wrap">
+        <table class="compare-table" id="compareTable">
+          <thead>
+            <tr>
+              <th>ファンド</th>
+              <th>想定年率</th>
+              <th>ブレ幅</th>
+              <th>中央値</th>
+              <th>楽観的</th>
+              <th>悲観的</th>
+              <th>元本割れ確率</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="disclaimer">
+      ※このシミュレーションは、S&amp;P500指数およびMAXIS全世界株式(オール・カントリー)上場投信(2559)の実績（取得できない場合は長期の歴史的平均）をもとにした、モンテカルロ法による試算です。実際のeMAXIS Slimファンドの基準価額の値動きとは、為替の影響や信託報酬などにより差が生じます。将来の運用成果や元本を保証するものではありません。実際の投資は各金融機関の情報をご確認のうえ、ご自身の判断で行ってください。データは端末内でのみ計算され、入力条件はブラウザのローカルストレージに保存されます。
+    </p>
+  </main>
+</div>
+
+<!-- ヘルプ・用語集モーダル -->
+<div id="helpModal" class="modal-overlay" hidden>
+  <div class="modal ink-modal help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">📖</span>
+      <h2 id="helpTitle">使い方・用語集</h2>
+    </div>
+
+    <div class="modal-body help-body">
+      <div class="glossary-item">
+        <strong>使い方</strong>
+        <p>「はじめの投資額」「毎月の積立額」「予測期間」を動かすと、下のグラフと表がすぐに再計算されます。上の切り替えチップで、S&P500だけ／オールカントリーだけ／2つを比較、を選べます。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>モンテカルロ・シミュレーション</strong>
+        <p>未来の値動きは誰にも分かりません。そこで、過去の平均リターンとブレ幅（ボラティリティ）をもとに、乱数を使って「もし将来もこのくらいの値動きが続いたら」という展開を何百通りも計算し、その結果のばらつきをグラフの帯で表しています。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>想定年率（CAGR）</strong>
+        <p>1年あたり平均でどれくらい値上がりしてきたかを示す指標です。過去の実績であり、将来を保証するものではありません。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>ブレ幅（ボラティリティ）</strong>
+        <p>値動きの大きさを示す指標です。数値が大きいほど、良い年・悪い年の差が激しくなる（ハイリスク・ハイリターン）傾向があります。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>中央値・楽観的・悲観的</strong>
+        <p>シミュレーションした何百通りの結果を小さい順に並べたとき、ちょうど真ん中にくる結果が「中央値」です。「楽観的」は上位10%、「悲観的」は下位10%に入る結果の目安です。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>元本割れ確率</strong>
+        <p>シミュレーションの結果、最終的な評価額が積み立てた元本（投資した金額の合計）を下回った割合です。</p>
+      </div>
+      <div class="glossary-item">
+        <strong>最大ドローダウン</strong>
+        <p>過去のデータの中で、値動きの天井から底値まで、最大でどれくらい下落したかを示す指標です。</p>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="helpCloseBtn" class="btn btn-secondary full">とじる</button>
+    </div>
+  </div>
+</div>
+
+<!-- インストール促し バナー -->
+<div id="installBanner" class="install-banner" hidden>
+  <span class="install-emblem" aria-hidden="true">✨</span>
+  <div class="install-text">
+    <strong>ホーム画面に追加できます</strong>
+    <span>アプリのようにワンタッチで開けます</span>
+  </div>
+  <button id="installBtn" class="btn btn-primary small">インストール</button>
+  <button id="installDismiss" class="icon-btn small" aria-label="閉じる">✕</button>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
