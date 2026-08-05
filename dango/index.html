@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>つるん団子 - 揃えて消す無料の落ち物パズルゲーム</title>
+<meta name="description" content="同じ色の団子を4つ以上つなげて消す、無料の落ち物パズルゲーム。広告なし・登録不要・オフラインでも遊べます。連鎖を決めて高得点を目指そう。" />
+<meta name="theme-color" content="#fbf3e4" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#201a14" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="つるん団子" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="paw-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <div class="paper-texture"></div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="chainToast" class="chain-toast" aria-hidden="true"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="30" height="30">
+          <rect x="30.5" y="8" width="3" height="50" rx="1.5" fill="rgb(196,149,82)"/>
+          <circle cx="32" cy="16" r="10" fill="rgb(242,160,182)"/>
+          <circle cx="32" cy="32" r="10" fill="rgb(251,246,234)" stroke="rgba(58,42,34,0.15)" stroke-width="1"/>
+          <circle cx="32" cy="48" r="10" fill="rgb(143,174,110)"/>
+        </svg>
+      </span>
+      <h1>つるん団子</h1>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <button data-action="howto" class="menu-item">📖 遊び方</button>
+      <button data-action="restart" class="menu-item">🔁 最初から遊び直す</button>
+      <button data-action="resetscore" class="menu-item danger">🗑 ハイスコアをリセット</button>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+    </nav>
+  </header>
+
+  <div class="collar-divider" aria-hidden="true"></div>
+
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+
+  <main class="game-main">
+
+    <div class="hud">
+      <div class="hud-card">
+        <span class="hud-label">スコア</span>
+        <span class="hud-value" id="scoreValue">0</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">ハイスコア</span>
+        <span class="hud-value" id="bestValue">0</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">レベル</span>
+        <span class="hud-value" id="levelValue">1</span>
+      </div>
+    </div>
+
+    <div class="board-row">
+      <div class="board-wrap">
+        <canvas id="board" width="288" height="576" aria-label="ゲーム盤面"></canvas>
+
+        <div id="startOverlay" class="board-overlay">
+          <p class="overlay-emblem" aria-hidden="true">🍡</p>
+          <h2>つるん団子</h2>
+          <p class="overlay-text">同じ色の団子を4つ以上つなげて消そう。<br>連鎖でスコアが跳ね上がります。</p>
+          <button id="startBtn" class="btn btn-primary full">はじめる</button>
+          <button id="howtoBtn" class="btn btn-secondary full">遊び方を見る</button>
+        </div>
+
+        <div id="pauseOverlay" class="board-overlay" hidden>
+          <p class="overlay-emblem" aria-hidden="true">⏸</p>
+          <h2>一時停止中</h2>
+          <button id="resumeBtn" class="btn btn-primary full">再開する</button>
+          <button id="pauseRestartBtn" class="btn btn-secondary full">最初から</button>
+        </div>
+
+        <div id="gameOverOverlay" class="board-overlay" hidden>
+          <p class="overlay-emblem" aria-hidden="true">😵</p>
+          <h2>ゲームオーバー</h2>
+          <p class="overlay-text">
+            スコア <strong id="finalScore">0</strong><br>
+            最大連鎖 <strong id="finalChain">0</strong>連鎖
+          </p>
+          <p id="newRecordText" class="new-record" hidden>🎉 ハイスコア更新！</p>
+          <button id="retryBtn" class="btn btn-primary full">もう一度遊ぶ</button>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div class="next-card">
+          <span class="hud-label">つぎ</span>
+          <canvas id="nextCanvas" width="88" height="88" aria-label="次の団子"></canvas>
+        </div>
+        <button id="pauseBtn" class="btn btn-secondary small full" aria-label="一時停止">⏸ 一時停止</button>
+        <button id="howtoBtn2" class="btn btn-secondary small full">📖 遊び方</button>
+      </div>
+    </div>
+
+    <div class="touch-controls" aria-label="操作ボタン">
+      <div class="tc-row">
+        <button class="tc-btn" data-action="left" aria-label="左へ移動">◀</button>
+        <button class="tc-btn" data-action="rotateccw" aria-label="左回転">↺</button>
+        <button class="tc-btn" data-action="rotatecw" aria-label="右回転">↻</button>
+        <button class="tc-btn" data-action="right" aria-label="右へ移動">▶</button>
+      </div>
+      <div class="tc-row">
+        <button class="tc-btn wide" data-action="softdrop" aria-label="ソフトドロップ">▼ 落とす</button>
+        <button class="tc-btn wide" data-action="harddrop" aria-label="ハードドロップ">⏬ 一気に落とす</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- 遊び方モーダル -->
+<div id="howtoModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">📖</span>
+      <h2 id="howtoTitle">遊び方</h2>
+    </div>
+    <div class="modal-body howto-body">
+      <p>上から2つ1組の団子が落ちてきます。同じ色を<strong>4つ以上</strong>タテヨコにつなげると消えて得点になります。</p>
+      <p>消えた後に団子が落ちて連続で揃うと「連鎖」になり、スコアが大きく増えます。</p>
+      <h3>操作方法</h3>
+      <ul>
+        <li><strong>左右移動</strong>：矢印キー / ◀▶ボタン / 盤面を左右にスワイプ</li>
+        <li><strong>回転</strong>：↑キー・Xキー(右回転) / Zキー(左回転) / ↺↻ボタン / 盤面をタップ</li>
+        <li><strong>ソフトドロップ</strong>：↓キー / ▼ボタン</li>
+        <li><strong>ハードドロップ</strong>：スペースキー / ⏬ボタン / 盤面を下にスワイプ</li>
+        <li><strong>一時停止</strong>：Pキー / ⏸ボタン</li>
+      </ul>
+      <p class="hint">団子が盤面の上まで積み上がるとゲームオーバーです。レベルが上がるほど落下速度が速くなります。</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary full" data-close="howtoModal">わかった</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
