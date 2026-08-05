@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>志野手帖 - 志野焼のうつわを育てる暮らしの記録帳</title>
+<meta name="description" content="志野焼をはじめとする、うつわの登録・お手入れ管理・使用記録ができる完全無料アプリ。目止めの記録、貫入(景色)の育ち、季節の器提案までまとめて管理。インストールしてオフラインでも使えます。" />
+<meta name="theme-color" content="#faf3e5" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1e1712" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="志野手帖" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="paper-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <div class="paper-texture"></div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="34" height="34">
+          <path d="M14 30 C14 30 16 46 32 46 C48 46 50 30 50 30 Z" fill="rgb(238,222,193)"/>
+          <ellipse cx="32" cy="46.5" rx="6" ry="2.6" fill="rgb(191,120,66)"/>
+          <path d="M14 30 C20 28 44 28 50 30" fill="none" stroke="rgb(255,252,244)" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M22 32 L25 37 L23 41" fill="none" stroke="rgb(150,108,74)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M31 31 L33 36 L30 40" fill="none" stroke="rgb(150,108,74)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M40 32 L38 37 L41 40" fill="none" stroke="rgb(150,108,74)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M15 29 C13 27 14 22 18 21" fill="none" stroke="rgb(150,150,150)" stroke-opacity="0.55" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M22 27 C20 25 21 20 25 19" fill="none" stroke="rgb(150,150,150)" stroke-opacity="0.55" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <h1>志野手帖</h1>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <button data-action="export" class="menu-item">💾 データを書き出す</button>
+      <button data-action="import" class="menu-item">📂 データを読み込む</button>
+      <button data-action="reset" class="menu-item danger">🗑 全データを削除</button>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+    </nav>
+  </header>
+
+  <div class="collar-divider" aria-hidden="true"></div>
+
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+  <input type="file" id="importFile" accept="application/json" hidden />
+
+  <main class="tab-content">
+
+    <!-- ホーム -->
+    <section id="tab-home" class="tab-pane">
+      <div class="card season-card">
+        <span class="season-emblem" id="seasonEmblem" aria-hidden="true">🍁</span>
+        <div class="season-info">
+          <h3 id="seasonTitle">季節のご提案</h3>
+          <p id="seasonText">読み込み中…</p>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <span class="stat-label">登録した器</span>
+          <span class="stat-value" id="statPieces">0点</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">目止め待ち</span>
+          <span class="stat-value" id="statMizudome">0点</span>
+        </div>
+        <div class="card stat-card wide">
+          <span class="stat-label">最近使った器</span>
+          <span class="stat-value" id="statRecent">記録はまだありません</span>
+        </div>
+      </div>
+
+      <div class="card rest-card" id="restCard" hidden>
+        <h3>🌙 そろそろ使ってあげませんか？</h3>
+        <p class="hint">しばらく出番のない器です。うつわは使うほどに、貫入へ景色が育ちます。</p>
+        <ul id="restList" class="rest-list"></ul>
+      </div>
+
+      <div class="quick-actions">
+        <button class="btn btn-primary" data-open="pieceModal">🏺 器を登録</button>
+        <button class="btn btn-primary" data-open="logModal">🍵 使った記録をつける</button>
+      </div>
+    </section>
+
+    <!-- 器コレクション -->
+    <section id="tab-pieces" class="tab-pane" hidden>
+      <div class="section-head no-card">
+        <h2>器のコレクション</h2>
+        <button class="btn btn-primary small" data-open="pieceModal">+ 登録</button>
+      </div>
+      <ul id="pieceList" class="record-list"></ul>
+      <p id="pieceEmpty" class="empty-state small" hidden>まだ器が登録されていません。お気に入りの志野焼を登録してみましょう。</p>
+    </section>
+
+    <!-- お手入れガイド -->
+    <section id="tab-care" class="tab-pane" hidden>
+      <div class="section-head no-card">
+        <h2>志野焼のお手入れガイド</h2>
+      </div>
+
+      <details class="card care-card" open>
+        <summary>① 使いはじめの「目止め」</summary>
+        <p>志野焼は柔らかく焼き締まった土に厚い長石釉をかけているため、貫入（表面の細かいひび）から水分が染み込みやすい性質があります。使いはじめる前に、米のとぎ汁や小麦粉を溶いた水で10〜20分ほど煮る「目止め」をしておくと、シミになりにくくなります。</p>
+        <p class="hint">目止めをした器は「器」タブの登録内容から「目止め済み」に切り替えられます。</p>
+      </details>
+
+      <details class="card care-card">
+        <summary>② 使う前後のお手入れ</summary>
+        <p>使う前にさっと水にくぐらせておくと、汁物や色の濃い料理のシミ移りを抑えられます。使ったあとは中性洗剤で優しく手洗いし、長時間の浸け置きは避けましょう。食洗機・電子レンジ・オーブンの使用は、貫入から割れや貫入拡大の原因になるため基本的に避けるのがおすすめです。</p>
+      </details>
+
+      <details class="card care-card">
+        <summary>③ 貫入と「景色」を楽しむ</summary>
+        <p>使い込むうちに貫入へお茶や料理の色がゆっくりと染み込み、「雨漏り」と呼ばれる景色が生まれます。これは志野焼ならではの経年変化で、欠点ではなく育てる楽しみです。同じ器でも、使う人によって景色の育ち方は変わっていきます。</p>
+      </details>
+
+      <details class="card care-card">
+        <summary>④ 収納のコツ</summary>
+        <p>重ねるときは器の間に布や和紙を挟むと、口縁の欠けを防げます。しっかり乾かしてから収納し、湿気がこもらない場所を選びましょう。使ったあとすぐにしまい込まず、風通しの良い場所で一晩乾かすと長持ちします。</p>
+      </details>
+
+      <details class="card care-card">
+        <summary>⑤ 使ってこそ育つ</summary>
+        <p>志野焼は棚に飾るだけでなく、日々の食卓で使うことで表情が育っていく器です。「記録」タブで使った記録をつけておくと、お気に入りの一枚がどんな景色に育ってきたか、あとから振り返ることができます。</p>
+      </details>
+    </section>
+
+    <!-- 記録 -->
+    <section id="tab-log" class="tab-pane" hidden>
+      <div class="section-head no-card">
+        <h2>使用記録</h2>
+        <button class="btn btn-primary small" data-open="logModal">+ 記録</button>
+      </div>
+      <ul id="logList" class="record-list"></ul>
+      <p id="logEmpty" class="empty-state small" hidden>まだ記録がありません。器を使ったら記録してみましょう。</p>
+    </section>
+
+  </main>
+
+  <nav class="tab-bar" role="tablist">
+    <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true"><span class="tab-icon">🏠</span><span>ホーム</span></button>
+    <button class="tab-btn" data-tab="pieces" role="tab" aria-selected="false"><span class="tab-icon">🏺</span><span>器</span></button>
+    <button class="tab-btn" data-tab="care" role="tab" aria-selected="false"><span class="tab-icon">📖</span><span>お手入れ</span></button>
+    <button class="tab-btn" data-tab="log" role="tab" aria-selected="false"><span class="tab-icon">🍵</span><span>記録</span></button>
+  </nav>
+</div>
+
+<!-- 器 登録・編集モーダル -->
+<div id="pieceModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="pieceModalTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">🏺</span>
+      <h2 id="pieceModalTitle">器を登録</h2>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">名前</span>
+        <input id="pieceName" type="text" placeholder="例）志野の茶碗" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span class="field-label">種類</span>
+        <select id="pieceType">
+          <option value="chawan">🍵 茶碗・抹茶碗</option>
+          <option value="yunomi">☕ 湯呑み・カップ</option>
+          <option value="guinomi">🍶 ぐい呑み・盃</option>
+          <option value="sara">🍽 皿・小皿</option>
+          <option value="hachi">🥣 鉢・小鉢</option>
+          <option value="kaki">🌸 花器</option>
+          <option value="other">📦 その他</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">窯元・作家（任意）</span>
+        <input id="pieceKiln" type="text" placeholder="例）美濃・◯◯窯" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span class="field-label">購入日・入手日（任意）</span>
+        <input id="pieceDate" type="date" />
+      </label>
+      <label class="field checkbox-field">
+        <input id="pieceMizudome" type="checkbox" />
+        <span>目止めをした</span>
+      </label>
+      <label class="field">
+        <span class="field-label">メモ（任意）</span>
+        <input id="pieceNote" type="text" placeholder="例）緋色が美しい一枚" autocomplete="off" />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button id="pieceSubmitBtn" class="btn btn-primary full">登録する</button>
+      <button id="pieceDeleteBtn" class="btn btn-danger full" hidden>この器を削除</button>
+      <button class="btn btn-secondary full" data-close="pieceModal">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- 使用記録 追加モーダル -->
+<div id="logModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="logModalTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">🍵</span>
+      <h2 id="logModalTitle">使った記録をつける</h2>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label">日付</span>
+        <input id="logDate" type="date" />
+      </label>
+      <label class="field">
+        <span class="field-label">使った器</span>
+        <select id="logPiece">
+          <option value="">選択してください</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">料理・用途（任意）</span>
+        <input id="logDish" type="text" placeholder="例）栗ご飯、秋刀魚の塩焼き" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span class="field-label">メモ（任意）</span>
+        <input id="logMemo" type="text" placeholder="例）貫入に少し色が入ってきた" autocomplete="off" />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button id="logSubmitBtn" class="btn btn-primary full">記録する</button>
+      <button class="btn btn-secondary full" data-close="logModal">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- インストール促し バナー -->
+<div id="installBanner" class="install-banner" hidden>
+  <span class="install-emblem" aria-hidden="true">🏺</span>
+  <div class="install-text">
+    <strong>ホーム画面に追加できます</strong>
+    <span>アプリのようにワンタッチで開けます</span>
+  </div>
+  <button id="installBtn" class="btn btn-primary small">インストール</button>
+  <button id="installDismiss" class="icon-btn small" aria-label="閉じる">✕</button>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

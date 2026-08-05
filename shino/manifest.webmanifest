@@ -1,0 +1,20 @@
+{
+  "name": "志野手帖 - 志野焼のうつわを育てる暮らしの記録帳",
+  "short_name": "志野手帖",
+  "description": "志野焼をはじめとする、うつわの登録・お手入れ管理・使用記録ができる完全無料アプリ。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#faf3e5",
+  "theme_color": "#faf3e5",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["lifestyle", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
