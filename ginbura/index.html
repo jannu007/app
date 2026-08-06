@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>銀ぶらIQテスト - 銀ぶらして、IQを測ってみよう。（無料）</title>
+<meta name="description" content="銀座の実在トリビアとひっかけ問題（IQテスト形式）が混ざった10問クイズ。無料・広告なし・登録不要、オフラインでも遊べる銀ぶらIQテスト。" />
+<meta name="theme-color" content="#f3ece0" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#221a14" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="銀ぶらIQテスト" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="paw-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <div class="paper-texture"></div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="30" height="30">
+          <rect x="10" y="28" width="44" height="30" fill="rgb(168,74,58)"/>
+          <rect x="10" y="28" width="44" height="4" fill="rgb(196,149,82)"/>
+          <rect x="27" y="10" width="10" height="20" fill="rgb(168,74,58)"/>
+          <circle cx="32" cy="16" r="7" fill="rgb(243,236,224)" stroke="rgb(196,149,82)" stroke-width="1.6"/>
+          <path d="M32 12v4l3 2" fill="none" stroke="rgb(168,74,58)" stroke-width="1.4" stroke-linecap="round"/>
+          <rect x="16" y="36" width="8" height="10" fill="rgb(243,236,224)"/>
+          <rect x="28" y="36" width="8" height="10" fill="rgb(243,236,224)"/>
+          <rect x="40" y="36" width="8" height="10" fill="rgb(243,236,224)"/>
+        </svg>
+      </span>
+      <h1>銀ぶらIQテスト</h1>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <button data-action="howto" class="menu-item">📖 遊び方</button>
+      <button data-action="restart" class="menu-item">🔁 最初から</button>
+      <button data-action="resetscore" class="menu-item danger">🗑 記録をリセット</button>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+    </nav>
+  </header>
+
+  <div class="collar-divider" aria-hidden="true"></div>
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+
+  <main class="quiz-main">
+
+    <!-- スタート画面 -->
+    <section id="startScreen" class="screen">
+      <div class="card start-card">
+        <p class="start-emblem" aria-hidden="true">🏙️</p>
+        <h2>銀ぶらIQテスト</h2>
+        <p class="catchphrase">銀ぶらして、IQを測ってみよう。</p>
+        <p class="start-text">銀座の実在トリビアと、ひっかけ問題（IQテスト形式）が混ざった全10問。<br>あなたの「銀座通(つう)」度とひらめき力を試してみましょう。</p>
+        <div class="best-row">
+          <div class="best-box">
+            <span class="hud-label">自己ベスト</span>
+            <span class="hud-value" id="bestScoreValue">--</span>
+          </div>
+          <div class="best-box">
+            <span class="hud-label">プレイ回数</span>
+            <span class="hud-value" id="playCountValue">0</span>
+          </div>
+        </div>
+        <button id="startBtn" class="btn btn-primary full">検定をはじめる</button>
+        <button id="howtoBtn" class="btn btn-secondary full">遊び方を見る</button>
+      </div>
+    </section>
+
+    <!-- クイズ画面 -->
+    <section id="quizScreen" class="screen" hidden>
+      <div class="quiz-progress">
+        <span id="progressText">第1問 / 10問</span>
+        <span id="quizScoreText">正解 0</span>
+      </div>
+      <div class="timer-track"><div id="timerBar" class="timer-bar"></div></div>
+
+      <div class="card question-card">
+        <span class="q-category" id="qCategory">歴史</span>
+        <h2 id="qText" class="q-text">問題文がここに入ります</h2>
+      </div>
+
+      <div id="choicesList" class="choices-list"></div>
+
+      <div id="feedbackCard" class="card feedback-card" hidden>
+        <p id="feedbackHead" class="feedback-head"></p>
+        <p id="feedbackExplain" class="feedback-explain"></p>
+        <button id="nextBtn" class="btn btn-primary full">つぎへ</button>
+      </div>
+    </section>
+
+    <!-- 結果画面 -->
+    <section id="resultScreen" class="screen" hidden>
+      <div class="card result-card">
+        <p class="result-emblem" id="resultEmblem" aria-hidden="true">🏆</p>
+        <h2 id="resultRank">銀座マイスター</h2>
+        <p class="result-score"><span id="resultScoreValue">10</span> / 10 問正解</p>
+        <div class="iq-box">
+          <span class="hud-label">あなたの銀ぶらIQ</span>
+          <span class="iq-value" id="resultIqValue">100</span>
+        </div>
+        <p class="iq-disclaimer">※エンタメ目的の非公式な数値です</p>
+        <p id="resultNewBest" class="new-record" hidden>🎉 自己ベスト更新！</p>
+        <p id="resultComment" class="result-comment"></p>
+        <button id="retryBtn" class="btn btn-primary full">もう一度挑戦</button>
+        <button id="reviewBtn" class="btn btn-secondary full">今回の問題を振り返る</button>
+      </div>
+      <div id="reviewList" class="review-list" hidden></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- 遊び方モーダル -->
+<div id="howtoModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">📖</span>
+      <h2 id="howtoTitle">遊び方</h2>
+    </div>
+    <div class="modal-body howto-body">
+      <p>銀座の実在トリビアと、ひっかけ問題（IQテスト形式）が混ざった4択クイズです。全問の中からランダムで10問出題されます。</p>
+      <p>制限時間は1問あたり20秒。時間内に選択肢をタップして回答すると、正解・不正解とかんたんな解説が表示されます。</p>
+      <p>10問終了後、正解数に応じて「銀座通(つう)度」のランクと、遊び心たっぷりの「銀ぶらIQ」が表示されます。何度でも挑戦して、自己ベストの更新を目指しましょう。</p>
+      <p class="hint">出題される問題は毎回ランダムなので、遊ぶたびに違った組み合わせが楽しめます。「銀ぶらIQ」はエンターテインメント目的の数値で、医学的・心理学的なIQ測定ではありません。</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary full" data-close="howtoModal">わかった</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/questions.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

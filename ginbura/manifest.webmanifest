@@ -1,0 +1,20 @@
+{
+  "name": "銀ぶらIQテスト - 銀ぶらして、IQを測ってみよう。",
+  "short_name": "銀ぶらIQテスト",
+  "description": "銀座の実在トリビアとひっかけ問題（IQテスト形式）が混ざった10問クイズ。無料・広告なし・登録不要。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3ece0",
+  "theme_color": "#f3ece0",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["trivia", "education", "games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
