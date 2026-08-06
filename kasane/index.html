@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>かさね札 - 無料のクロンダイク・ソリティア</title>
+<meta name="description" content="トランプを1枚ずつ重ねて揃える、無料のクロンダイク・ソリティア。広告なし・登録不要・オフラインでも遊べます。" />
+<meta name="theme-color" content="#f5f0e2" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1c1a22" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="かさね札" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="paw-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <div class="paper-texture"></div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="winBanner" class="win-banner" hidden>
+  <p class="win-emblem" aria-hidden="true">🎉</p>
+  <h2>あがり！</h2>
+  <p id="winStats" class="win-stats"></p>
+  <button id="winNewGameBtn" class="btn btn-primary full">もう一度遊ぶ</button>
+</div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="28" height="28">
+          <rect x="14" y="22" width="26" height="36" rx="4" fill="rgb(250,246,236)" stroke="rgb(58,46,60)" stroke-width="2" transform="rotate(-8 27 40)"/>
+          <rect x="22" y="14" width="26" height="36" rx="4" fill="rgb(250,246,236)" stroke="rgb(58,46,60)" stroke-width="2"/>
+          <path d="M31 24 L35 32 L31 40 L27 32 Z" fill="rgb(191,58,58)"/>
+        </svg>
+      </span>
+      <h1>かさね札</h1>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <button data-action="newgame" class="menu-item">🔁 新しく配る</button>
+      <button data-action="draw1" class="menu-item">🂡 1枚めくり</button>
+      <button data-action="draw3" class="menu-item">🂣 3枚めくり</button>
+      <button data-action="howto" class="menu-item">📖 遊び方</button>
+      <button data-action="resetstats" class="menu-item danger">🗑 記録をリセット</button>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+    </nav>
+  </header>
+
+  <div class="collar-divider" aria-hidden="true"></div>
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+
+  <main class="game-main">
+
+    <div class="hud">
+      <div class="hud-card"><span class="hud-label">スコア</span><span class="hud-value" id="scoreValue">0</span></div>
+      <div class="hud-card"><span class="hud-label">タイム</span><span class="hud-value" id="timeValue">00:00</span></div>
+      <div class="hud-card"><span class="hud-label">手数</span><span class="hud-value" id="movesValue">0</span></div>
+      <button id="undoBtn" class="hud-card hud-btn" aria-label="ひとつ戻す">
+        <span class="hud-label">戻す</span>
+        <span class="hud-value">↩</span>
+      </button>
+    </div>
+
+    <div id="board" class="board">
+      <div class="board-row top-row">
+        <div class="zone stock" id="zone-stock" data-zone="stock" aria-label="山札"></div>
+        <div class="zone waste" id="zone-waste" data-zone="waste" aria-label="捨て札"></div>
+        <div class="zone spacer" aria-hidden="true"></div>
+        <div class="zone foundation" id="zone-f-spade" data-zone="foundation" data-suit="S" data-suit-glyph="♠" aria-label="組札 スペード"></div>
+        <div class="zone foundation" id="zone-f-heart" data-zone="foundation" data-suit="H" data-suit-glyph="♥" aria-label="組札 ハート"></div>
+        <div class="zone foundation" id="zone-f-club" data-zone="foundation" data-suit="C" data-suit-glyph="♣" aria-label="組札 クラブ"></div>
+        <div class="zone foundation" id="zone-f-diamond" data-zone="foundation" data-suit="D" data-suit-glyph="♦" aria-label="組札 ダイヤ"></div>
+      </div>
+      <div class="board-row tableau-row">
+        <div class="zone tableau" id="zone-t0" data-zone="tableau" data-col="0" aria-label="場札1"></div>
+        <div class="zone tableau" id="zone-t1" data-zone="tableau" data-col="1" aria-label="場札2"></div>
+        <div class="zone tableau" id="zone-t2" data-zone="tableau" data-col="2" aria-label="場札3"></div>
+        <div class="zone tableau" id="zone-t3" data-zone="tableau" data-col="3" aria-label="場札4"></div>
+        <div class="zone tableau" id="zone-t4" data-zone="tableau" data-col="4" aria-label="場札5"></div>
+        <div class="zone tableau" id="zone-t5" data-zone="tableau" data-col="5" aria-label="場札6"></div>
+        <div class="zone tableau" id="zone-t6" data-zone="tableau" data-col="6" aria-label="場札7"></div>
+      </div>
+      <div id="cardLayer" class="card-layer"></div>
+    </div>
+
+    <div class="board-actions">
+      <button id="autoBtn" class="btn btn-primary small" hidden>✨ 自動で仕上げる</button>
+    </div>
+
+  </main>
+</div>
+
+<!-- 遊び方モーダル -->
+<div id="howtoModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">📖</span>
+      <h2 id="howtoTitle">遊び方（クロンダイク）</h2>
+    </div>
+    <div class="modal-body howto-body">
+      <p>場札は7列に1〜7枚ずつ、一番上だけ表向きで並んでいます。同じ色が続かないように、1つ小さい数字を重ねていきます（例：黒の8の上に赤の7）。</p>
+      <p>スート（マーク）ごとの組札に、Aから順番に重ねて4種類すべて揃えればあがりです。</p>
+      <h3>操作方法</h3>
+      <ul>
+        <li><strong>移動</strong>：カードをドラッグして別の場所へ</li>
+        <li><strong>自動移動</strong>：カードをダブルタップ（ダブルクリック）すると、組札に置けるときは自動で送ります</li>
+        <li><strong>山札</strong>：タップでめくる。山札が空なら捨て札をタップで戻す</li>
+        <li><strong>戻す</strong>：ひとつ前の手に戻せます</li>
+        <li><strong>空いた列</strong>：Kのカード（またはKから始まる続き）だけ置けます</li>
+      </ul>
+      <p class="hint">メニューから「1枚めくり」「3枚めくり」を切り替えられます。場札がすべて表向きになると「自動で仕上げる」ボタンが使えます。</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary full" data-close="howtoModal">わかった</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
