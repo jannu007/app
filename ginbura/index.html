@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-<title>銀ぶら検定 - 銀座トリビアクイズ（無料）</title>
-<meta name="description" content="銀座の歴史・老舗・地理・豆知識を10問クイズで腕試し。無料・広告なし・登録不要、オフラインでも遊べる銀座トリビア検定アプリ。" />
+<title>銀ぶらIQテスト - 銀ぶらして、IQを測ってみよう。（無料）</title>
+<meta name="description" content="銀座の実在トリビアとひっかけ問題（IQテスト形式）が混ざった10問クイズ。無料・広告なし・登録不要、オフラインでも遊べる銀ぶらIQテスト。" />
 <meta name="theme-color" content="#f3ece0" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#221a14" media="(prefers-color-scheme: dark)" />
 
@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="銀ぶら検定" />
+<meta name="apple-mobile-web-app-title" content="銀ぶらIQテスト" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -49,7 +49,7 @@
           <rect x="40" y="36" width="8" height="10" fill="rgb(243,236,224)"/>
         </svg>
       </span>
-      <h1>銀ぶら検定</h1>
+      <h1>銀ぶらIQテスト</h1>
     </div>
     <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
       <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
@@ -72,8 +72,9 @@
     <section id="startScreen" class="screen">
       <div class="card start-card">
         <p class="start-emblem" aria-hidden="true">🏙️</p>
-        <h2>銀ぶら検定</h2>
-        <p class="start-text">銀座の歴史・老舗・地理・豆知識、ぜんぶで10問。<br>あなたの「銀座通(つう)」度を試してみましょう。</p>
+        <h2>銀ぶらIQテスト</h2>
+        <p class="catchphrase">銀ぶらして、IQを測ってみよう。</p>
+        <p class="start-text">銀座の実在トリビアと、ひっかけ問題（IQテスト形式）が混ざった全10問。<br>あなたの「銀座通(つう)」度とひらめき力を試してみましょう。</p>
         <div class="best-row">
           <div class="best-box">
             <span class="hud-label">自己ベスト</span>
@@ -117,6 +118,11 @@
         <p class="result-emblem" id="resultEmblem" aria-hidden="true">🏆</p>
         <h2 id="resultRank">銀座マイスター</h2>
         <p class="result-score"><span id="resultScoreValue">10</span> / 10 問正解</p>
+        <div class="iq-box">
+          <span class="hud-label">あなたの銀ぶらIQ</span>
+          <span class="iq-value" id="resultIqValue">100</span>
+        </div>
+        <p class="iq-disclaimer">※エンタメ目的の非公式な数値です</p>
         <p id="resultNewBest" class="new-record" hidden>🎉 自己ベスト更新！</p>
         <p id="resultComment" class="result-comment"></p>
         <button id="retryBtn" class="btn btn-primary full">もう一度挑戦</button>
@@ -136,10 +142,10 @@
       <h2 id="howtoTitle">遊び方</h2>
     </div>
     <div class="modal-body howto-body">
-      <p>銀座にまつわる4択クイズが、全24問の中からランダムで10問出題されます。</p>
+      <p>銀座の実在トリビアと、ひっかけ問題（IQテスト形式）が混ざった4択クイズです。全問の中からランダムで10問出題されます。</p>
       <p>制限時間は1問あたり20秒。時間内に選択肢をタップして回答すると、正解・不正解とかんたんな解説が表示されます。</p>
-      <p>10問終了後、正解数に応じて「銀座通(つう)度」のランクが決まります。何度でも挑戦して、自己ベストの更新を目指しましょう。</p>
-      <p class="hint">出題される問題は毎回ランダムなので、遊ぶたびに違った組み合わせが楽しめます。</p>
+      <p>10問終了後、正解数に応じて「銀座通(つう)度」のランクと、遊び心たっぷりの「銀ぶらIQ」が表示されます。何度でも挑戦して、自己ベストの更新を目指しましょう。</p>
+      <p class="hint">出題される問題は毎回ランダムなので、遊ぶたびに違った組み合わせが楽しめます。「銀ぶらIQ」はエンターテインメント目的の数値で、医学的・心理学的なIQ測定ではありません。</p>
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary full" data-close="howtoModal">わかった</button>

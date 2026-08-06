@@ -69,7 +69,9 @@
     const q = quizQuestions[currentIndex];
     $("#progressText").textContent = `第${currentIndex + 1}問 / ${quizQuestions.length}問`;
     $("#quizScoreText").textContent = `正解 ${score}`;
-    $("#qCategory").textContent = q.category;
+    const catEl = $("#qCategory");
+    catEl.textContent = q.category;
+    catEl.classList.toggle("is-iq", q.category === "IQ");
     $("#qText").textContent = q.q;
     $("#feedbackCard").hidden = true;
 
@@ -147,12 +149,17 @@
     return { title: "銀座ビギナー", emblem: "🔰", comment: "これから銀座通を目指しましょう！" };
   }
 
+  function iqFor(score) {
+    return 85 + score * 6;
+  }
+
   function showResult() {
     stopTimer();
     const rank = rankFor(score);
     $("#resultEmblem").textContent = rank.emblem;
     $("#resultRank").textContent = rank.title;
     $("#resultScoreValue").textContent = String(score);
+    $("#resultIqValue").textContent = String(iqFor(score));
     $("#resultComment").textContent = rank.comment;
 
     const stats = loadStats();

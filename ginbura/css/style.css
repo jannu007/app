@@ -153,6 +153,13 @@ button, select { font-family: inherit; cursor: pointer; }
 .start-card { padding: 26px 22px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
 .start-emblem { font-size: 2.4rem; margin: 0; }
 .start-card h2 { font-size: 1.4rem; }
+.catchphrase {
+  margin: 0;
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: rgb(var(--brick));
+}
 .start-text { margin: 0 0 6px; font-size: 0.88rem; line-height: 1.7; color: rgb(var(--ink-soft)); }
 .best-row { display: flex; gap: 10px; width: 100%; margin-bottom: 8px; }
 .best-box {
@@ -182,7 +189,11 @@ button, select { font-family: inherit; cursor: pointer; }
   background: rgba(var(--brick), 0.14);
   color: rgb(var(--brick));
 }
-.q-text { font-size: 1.12rem; line-height: 1.6; text-wrap: balance; }
+.q-category.is-iq {
+  background: rgba(var(--willow), 0.18);
+  color: rgb(var(--willow));
+}
+.q-text { font-size: 1.12rem; line-height: 1.6; text-wrap: balance; white-space: pre-line; }
 
 .choices-list { display: flex; flex-direction: column; gap: 10px; }
 .choice-btn {
@@ -229,6 +240,16 @@ button, select { font-family: inherit; cursor: pointer; }
 .result-emblem { font-size: 2.6rem; margin: 0; }
 .result-card h2 { font-size: 1.35rem; }
 .result-score { margin: 0; font-size: 1rem; color: rgb(var(--ink-soft)); font-variant-numeric: tabular-nums; }
+.iq-box {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: rgba(var(--gold), 0.14);
+  border: 1px solid rgba(var(--gold), 0.35);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  margin-top: 4px;
+}
+.iq-value { font-family: "Shippori Mincho", serif; font-size: 1.8rem; font-weight: 700; color: rgb(var(--brick)); font-variant-numeric: tabular-nums; }
+.iq-disclaimer { margin: 0; font-size: 0.68rem; color: rgb(var(--ink-soft)); opacity: 0.8; }
 .new-record { margin: 0; font-weight: 700; color: rgb(var(--brick)); font-size: 0.9rem; }
 .result-comment { margin: 0 0 8px; font-size: 0.86rem; line-height: 1.7; color: rgb(var(--ink-soft)); }
 .result-card .btn { width: 100%; }

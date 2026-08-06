@@ -1,4 +1,4 @@
-const CACHE_NAME = "ginbura-kentei-v1";
+const CACHE_NAME = "ginbura-iq-test-v2";
 const ASSETS = [
   "./",
   "./index.html",
