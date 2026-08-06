@@ -1,7 +1,7 @@
 {
-  "name": "志野手帖 - 志野焼のうつわを育てる暮らしの記録帳",
-  "short_name": "志野手帖",
-  "description": "志野焼をはじめとする、うつわの登録・お手入れ管理・使用記録ができる完全無料アプリ。",
+  "name": "志野図鑑 - 志野焼の歴史・種類・名品がわかる図鑑アプリ",
+  "short_name": "志野図鑑",
+  "description": "志野焼の歴史・土と釉薬・種類・名品を、イラストとともに解説する完全無料アプリ。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -10,7 +10,7 @@
   "theme_color": "#faf3e5",
   "lang": "ja",
   "dir": "ltr",
-  "categories": ["lifestyle", "productivity"],
+  "categories": ["education", "lifestyle", "reference"],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

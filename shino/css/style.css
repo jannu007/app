@@ -1,5 +1,5 @@
 /* ===========================================================
-   志野手帖 — 志野焼のうつわを育てる暮らしの記録帳
+   志野図鑑 — 志野焼の歴史・種類・名品がわかる図鑑アプリ
    =========================================================== */
 
 :root {
@@ -283,53 +283,49 @@ button, select {
 .tab-btn.active { color: rgb(var(--rust)); background: rgba(var(--gold), 0.14); }
 .tab-btn:active { transform: scale(0.92); }
 
-/* ---------------- 季節カード ---------------- */
-.season-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-}
-.season-emblem {
-  flex: 0 0 auto;
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 1.6rem;
-  background: linear-gradient(135deg, rgba(var(--rust-soft),0.26), rgba(var(--gold),0.2));
-}
-.season-info { flex: 1; min-width: 0; }
-.season-info h3 { font-family: "Shippori Mincho", serif; font-size: 0.95rem; margin: 0 0 3px; }
-.season-info p { margin: 0; font-size: 0.82rem; line-height: 1.6; color: rgb(var(--ink-soft)); }
+/* ---------------- ヒーローカード ---------------- */
+.hero-card { overflow: hidden; padding: 0; }
+.hero-img { display: block; width: 100%; height: auto; aspect-ratio: 2 / 1; object-fit: cover; }
+.hero-body { padding: 16px; }
+.hero-body h2 { font-size: 1.15rem; margin-bottom: 6px; }
+.hero-body p { margin: 0; font-size: 0.85rem; line-height: 1.7; color: rgb(var(--ink-soft)); }
 
-/* ---------------- 統計カード ---------------- */
-.stat-grid {
+/* ---------------- 豆知識カード ---------------- */
+.trivia-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.trivia-head { display: flex; align-items: center; gap: 8px; }
+.trivia-head h3 { font-size: 0.98rem; font-family: "Shippori Mincho", serif; }
+.trivia-emblem { font-size: 1.2rem; }
+.trivia-card p { margin: 0; font-size: 0.85rem; line-height: 1.7; color: rgb(var(--ink-soft)); min-height: 3.4em; }
+.trivia-card .btn { align-self: flex-start; }
+
+/* ---------------- ナビグリッド ---------------- */
+.nav-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
-.stat-card {
-  padding: 14px;
+.nav-tile {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-.stat-card.wide { grid-column: 1 / -1; }
-.stat-label { font-size: 0.74rem; color: rgb(var(--ink-soft)); font-weight: 700; }
-.stat-value {
-  font-family: "Shippori Mincho", serif;
-  font-size: 1.3rem;
-  font-weight: 700;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border: 1px solid rgba(var(--gold), 0.28);
+  background: rgba(var(--card-bg), 0.92);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px -10px rgba(var(--shadow), 0.2);
   color: rgb(var(--ink));
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: transform .18s var(--ease-brush);
 }
-.stat-sub { font-size: 0.72rem; color: rgb(var(--ink-soft)); min-height: 1.1em; }
+.nav-tile:active { transform: scale(0.95); }
+.nav-tile-icon { font-size: 1.6rem; }
 
-/* ---------------- 休ませるカード ---------------- */
-.rest-card { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-.rest-card h3 { font-size: 0.98rem; font-family: "Shippori Mincho", serif; }
-.rest-card .hint { margin: 0; font-size: 0.78rem; line-height: 1.6; color: rgb(var(--ink-soft)); }
-.rest-list {
+/* ---------------- お気に入りカード ---------------- */
+.favorite-card { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.favorite-card h3 { font-size: 0.98rem; font-family: "Shippori Mincho", serif; }
+.favorite-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -337,20 +333,18 @@ button, select {
   flex-direction: column;
   gap: 6px;
 }
-.rest-list li {
+.favorite-list li {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 0.84rem;
+  font-size: 0.85rem;
+  font-weight: 700;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
   background: rgba(var(--gold), 0.1);
+  cursor: pointer;
 }
-.rest-list .rest-name { font-weight: 700; }
-.rest-list .rest-days { color: rgb(var(--ink-soft)); font-size: 0.76rem; white-space: nowrap; }
-
-/* ---------------- クイックアクション ---------------- */
-.quick-actions { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---------------- セクション見出し ---------------- */
 .section-head {
@@ -370,116 +364,165 @@ button, select {
   margin: 4px 2px 0;
 }
 
-/* ---------------- お手入れガイド（アコーディオン） ---------------- */
-.care-card {
-  padding: 14px 16px;
-}
-.care-card summary {
+/* ---------------- 汎用カード見出し（もぐさ土・志野釉のカード専用） ---------------- */
+.info-card > h3 {
   font-family: "Shippori Mincho", serif;
   font-size: 0.98rem;
-  font-weight: 700;
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin: 0 0 8px;
+  padding: 14px 16px 0;
 }
-.care-card summary::-webkit-details-marker { display: none; }
-.care-card summary::before {
-  content: "▸";
-  color: rgb(var(--rust));
-  transition: transform .2s var(--ease-brush);
-  flex: 0 0 auto;
-}
-.care-card[open] summary::before { transform: rotate(90deg); }
-.care-card p {
-  margin: 10px 0 0;
+.info-card > p {
+  margin: 0;
+  padding: 0 16px 16px;
   font-size: 0.85rem;
-  line-height: 1.75;
+  line-height: 1.8;
   color: rgb(var(--ink-soft));
 }
-.care-card p.hint { font-size: 0.78rem; margin-top: 8px; }
 
-/* ---------------- 記録リスト ---------------- */
-.record-list {
+/* ---------------- 歴史タイムライン ---------------- */
+.timeline {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
+  gap: 4px;
+}
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  padding-bottom: 18px;
+}
+.timeline-item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 32px;
+  bottom: 0;
+  width: 2px;
+  background: rgba(var(--gold), 0.35);
+}
+.timeline-dot {
+  flex: 0 0 auto;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: "Shippori Mincho", serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff8ee;
+  background: linear-gradient(135deg, rgb(var(--rust)), rgb(216 138 92));
+  box-shadow: 0 4px 12px -4px rgba(191,90,53,0.55);
+}
+.timeline-body {
+  flex: 1;
+  min-width: 0;
+  background: rgba(var(--card-bg), 0.92);
+  border: 1px solid rgba(var(--gold), 0.24);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: 0 4px 14px -8px rgba(var(--shadow), 0.18);
+}
+.timeline-body h3 {
+  font-family: "Shippori Mincho", serif;
+  font-size: 0.94rem;
+  margin: 0 0 6px;
+}
+.timeline-body p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: rgb(var(--ink-soft));
+}
+
+/* ---------------- 窯カード ---------------- */
+.kiln-card { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.kiln-card h3 { font-size: 0.98rem; font-family: "Shippori Mincho", serif; }
+.kiln-card .hint { margin: 0; font-size: 0.8rem; color: rgb(var(--ink-soft)); }
+.kiln-list {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.85rem;
+  line-height: 1.9;
+  color: rgb(var(--ink-soft));
+}
+
+/* ---------------- 図鑑カード（種類・名品） ---------------- */
+.gallery-card {
+  padding: 0;
+  overflow: hidden;
+}
+.gallery-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.gallery-body { padding: 14px 16px 16px; }
+.gallery-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
-.record-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: rgba(var(--card-bg), 0.85);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(var(--gold), 0.18);
-  box-shadow: 0 4px 14px -8px rgba(var(--shadow), 0.2);
-  animation: entry-in .38s var(--ease-brush) both;
-  position: relative;
+.gallery-title-row h3 {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1rem;
+  margin: 0;
 }
-.record-item.removing { animation: entry-out .26s var(--ease-brush) forwards; }
-@keyframes entry-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes entry-out {
-  to { opacity: 0; transform: translateX(-30px) scale(0.9); max-height: 0; margin: 0; padding-top: 0; padding-bottom: 0; }
+.gallery-body > p {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: rgb(var(--ink-soft));
 }
 
-.record-icon {
+.fav-btn {
   flex: 0 0 auto;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  font-size: 1.05rem;
-  background: rgba(var(--gold), 0.16);
-}
-.record-info { flex: 1; min-width: 0; }
-.record-title { font-weight: 700; font-size: 0.92rem; }
-.record-sub { font-size: 0.72rem; color: rgb(var(--ink-soft)); margin-top: 1px; }
-.record-side { flex: 0 0 auto; text-align: right; font-size: 0.78rem; color: rgb(var(--ink-soft)); }
-
-.record-delete {
   border: none;
   background: transparent;
-  color: rgb(var(--ink-soft));
-  opacity: 0.5;
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  flex: 0 0 auto;
-  transition: opacity .2s, background .2s, transform .2s;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: rgb(var(--gold));
+  padding: 4px;
+  transition: transform .18s var(--ease-brush);
 }
-.record-delete:active { transform: scale(0.85); background: rgba(var(--danger), 0.15); opacity: 1; }
+.fav-btn:active { transform: scale(0.8); }
+.fav-btn.active { color: rgb(var(--rust)); }
 
-.mizudome-chip {
+.piece-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.meta-chip {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  background: rgba(108,122,68,0.16);
-  color: rgb(78,92,48);
+  background: rgba(var(--gold), 0.18);
+  color: rgb(130,94,20);
 }
-.mizudome-chip.pending { background: rgba(214,168,88,0.22); color: rgb(130,94,20); }
-@media (prefers-color-scheme: dark) {
-  .mizudome-chip { color: rgb(180,196,140); }
-  .mizudome-chip.pending { color: rgb(232,196,120); }
-}
+@media (prefers-color-scheme: dark) { .meta-chip { color: rgb(232,196,120); } }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+.piece-dl {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.9;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+}
+.piece-dl dt { color: rgb(var(--ink-soft)); font-weight: 700; white-space: nowrap; }
+.piece-dl dd { margin: 0; }
+
+.disclaimer, .sources {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 0.74rem;
+  line-height: 1.7;
   color: rgb(var(--ink-soft));
-  padding: 24px 12px;
-  line-height: 1.8;
-  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
 /* ---------------- ボタン ---------------- */
@@ -511,11 +554,6 @@ button, select {
   background: rgba(var(--gold), 0.16);
   border: 1px solid rgba(var(--gold), 0.4);
 }
-.btn-danger {
-  color: rgb(var(--danger));
-  background: rgba(176,58,46,0.1);
-  border: 1px solid rgba(176,58,46,0.35);
-}
 
 .btn .ripple {
   position: absolute;
@@ -526,120 +564,6 @@ button, select {
   pointer-events: none;
 }
 @keyframes ripple-anim { to { transform: scale(3.2); opacity: 0; } }
-
-/* ---------------- モーダル ---------------- */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(20, 16, 12, 0.42);
-  backdrop-filter: blur(3px);
-  z-index: 80;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  animation: overlay-in .25s ease;
-}
-@media (min-width: 560px) {
-  .modal-overlay { align-items: center; }
-}
-@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
-
-.modal-overlay--top {
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: max(10px, env(safe-area-inset-top));
-}
-@media (min-width: 560px) {
-  .modal-overlay--top { align-items: center; padding-top: 0; }
-}
-
-.modal {
-  width: 100%;
-  max-width: 460px;
-  max-height: 88vh;
-  overflow-y: auto;
-  background: rgb(var(--card-bg));
-  border-radius: 26px 26px 0 0;
-  padding: 20px 20px calc(18px + env(safe-area-inset-bottom));
-  box-shadow: 0 -10px 40px -12px rgba(var(--shadow), 0.4);
-  border: 1px solid rgba(var(--gold), 0.3);
-  border-bottom: none;
-  position: relative;
-}
-@media (min-width: 560px) {
-  .modal { border-radius: 24px; border-bottom: 1px solid rgba(var(--gold), 0.3); }
-}
-
-.modal--top {
-  border-radius: var(--radius-lg);
-  border-bottom: 1px solid rgba(var(--gold), 0.3);
-  max-height: 86vh;
-  padding-bottom: 18px;
-}
-
-.ink-modal { animation: modal-drop .34s var(--ease-brush); }
-@media (min-width: 560px) {
-  .ink-modal { animation: modal-pop .3s var(--ease-brush); }
-}
-@keyframes modal-drop {
-  from { transform: translateY(-24px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes modal-pop {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.modal-emblem { font-size: 1.4rem; }
-.modal-header h2 { font-size: 1.1rem; }
-
-.modal-body { display: flex; flex-direction: column; gap: 10px; }
-
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field-label { font-size: 0.8rem; color: rgb(var(--ink-soft)); font-weight: 700; }
-.field input[type="text"], .field input[type="number"], .field input[type="date"], .field select {
-  border: 1.5px solid rgba(var(--gold), 0.4);
-  background: rgba(var(--paper), 0.6);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  font-size: 0.98rem;
-  color: rgb(var(--ink));
-  outline: none;
-  transition: border-color .2s, box-shadow .2s;
-  width: 100%;
-}
-.field select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, rgb(var(--ink-soft)) 50%), linear-gradient(135deg, rgb(var(--ink-soft)) 50%, transparent 50%); background-position: calc(100% - 16px) center, calc(100% - 11px) center; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 30px; }
-.field input:focus, .field select:focus {
-  border-color: rgb(var(--rust));
-  box-shadow: 0 0 0 4px rgba(191,90,53,0.14);
-}
-.field.small { gap: 3px; }
-
-.checkbox-field {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-.checkbox-field input[type="checkbox"] {
-  width: 20px; height: 20px;
-  accent-color: rgb(var(--rust));
-}
-.checkbox-field span { font-size: 0.92rem; }
-
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-.modal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 14px;
-}
 
 /* ---------------- インストールバナー ---------------- */
 .install-banner {
