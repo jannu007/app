@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-<title>志野手帖 - 志野焼のうつわを育てる暮らしの記録帳</title>
-<meta name="description" content="志野焼をはじめとする、うつわの登録・お手入れ管理・使用記録ができる完全無料アプリ。目止めの記録、貫入(景色)の育ち、季節の器提案までまとめて管理。インストールしてオフラインでも使えます。" />
+<title>志野図鑑 - 志野焼の歴史・種類・名品がわかる無料図鑑アプリ</title>
+<meta name="description" content="志野焼の歴史、土と釉薬、種類(無地志野・絵志野・鼠志野・紅志野・練上手)、国宝「卯花墻」などの名品を、イラストとともに解説する完全無料の図鑑アプリ。インストールしてオフラインでも読めます。" />
 <meta name="theme-color" content="#faf3e5" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#1e1712" media="(prefers-color-scheme: dark)" />
 
@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="志野手帖" />
+<meta name="apple-mobile-web-app-title" content="志野図鑑" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -49,16 +49,16 @@
           <path d="M22 27 C20 25 21 20 25 19" fill="none" stroke="rgb(150,150,150)" stroke-opacity="0.55" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
       </span>
-      <h1>志野手帖</h1>
+      <h1>志野図鑑</h1>
     </div>
     <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
       <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
     </button>
 
     <nav id="menuPanel" class="menu-panel" hidden>
-      <button data-action="export" class="menu-item">💾 データを書き出す</button>
-      <button data-action="import" class="menu-item">📂 データを読み込む</button>
-      <button data-action="reset" class="menu-item danger">🗑 全データを削除</button>
+      <button data-action="export" class="menu-item">💾 お気に入りを書き出す</button>
+      <button data-action="import" class="menu-item">📂 お気に入りを読み込む</button>
+      <button data-action="reset" class="menu-item danger">🗑 お気に入りを全削除</button>
       <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
     </nav>
   </header>
@@ -72,185 +72,223 @@
 
     <!-- ホーム -->
     <section id="tab-home" class="tab-pane">
-      <div class="card season-card">
-        <span class="season-emblem" id="seasonEmblem" aria-hidden="true">🍁</span>
-        <div class="season-info">
-          <h3 id="seasonTitle">季節のご提案</h3>
-          <p id="seasonText">読み込み中…</p>
+      <div class="hero-card card">
+        <img class="hero-img" src="img/hero-shino.png" alt="美濃の山あいに築かれた登り窯のイメージイラスト" />
+        <div class="hero-body">
+          <h2>志野図鑑</h2>
+          <p>安土桃山時代、美濃（岐阜県）で生まれた白い焼きもの「志野焼」。その歴史・土と釉薬・種類・名品を、イラストとともにやさしく紹介します。</p>
         </div>
       </div>
 
-      <div class="stat-grid">
-        <div class="card stat-card">
-          <span class="stat-label">登録した器</span>
-          <span class="stat-value" id="statPieces">0点</span>
+      <div class="card trivia-card">
+        <div class="trivia-head">
+          <span class="trivia-emblem" aria-hidden="true">💡</span>
+          <h3>志野焼 豆知識</h3>
         </div>
-        <div class="card stat-card">
-          <span class="stat-label">目止め待ち</span>
-          <span class="stat-value" id="statMizudome">0点</span>
-        </div>
-        <div class="card stat-card wide">
-          <span class="stat-label">最近使った器</span>
-          <span class="stat-value" id="statRecent">記録はまだありません</span>
-        </div>
+        <p id="triviaText">読み込み中…</p>
+        <button id="triviaNextBtn" class="btn btn-secondary small">つぎの豆知識</button>
       </div>
 
-      <div class="card rest-card" id="restCard" hidden>
-        <h3>🌙 そろそろ使ってあげませんか？</h3>
-        <p class="hint">しばらく出番のない器です。うつわは使うほどに、貫入へ景色が育ちます。</p>
-        <ul id="restList" class="rest-list"></ul>
+      <div class="nav-grid">
+        <button class="nav-tile" data-tab="history">
+          <span class="nav-tile-icon" aria-hidden="true">🏔️</span>
+          <span class="nav-tile-label">歴史</span>
+        </button>
+        <button class="nav-tile" data-tab="feature">
+          <span class="nav-tile-icon" aria-hidden="true">🎨</span>
+          <span class="nav-tile-label">特徴・種類</span>
+        </button>
+        <button class="nav-tile" data-tab="gallery">
+          <span class="nav-tile-icon" aria-hidden="true">🏺</span>
+          <span class="nav-tile-label">名品ギャラリー</span>
+        </button>
       </div>
 
-      <div class="quick-actions">
-        <button class="btn btn-primary" data-open="pieceModal">🏺 器を登録</button>
-        <button class="btn btn-primary" data-open="logModal">🍵 使った記録をつける</button>
+      <div class="card favorite-card" id="favoriteCard" hidden>
+        <h3>⭐ お気に入り</h3>
+        <ul id="favoriteList" class="favorite-list"></ul>
       </div>
     </section>
 
-    <!-- 器コレクション -->
-    <section id="tab-pieces" class="tab-pane" hidden>
+    <!-- 歴史 -->
+    <section id="tab-history" class="tab-pane" hidden>
       <div class="section-head no-card">
-        <h2>器のコレクション</h2>
-        <button class="btn btn-primary small" data-open="pieceModal">+ 登録</button>
+        <h2>志野焼の歴史</h2>
       </div>
-      <ul id="pieceList" class="record-list"></ul>
-      <p id="pieceEmpty" class="empty-state small" hidden>まだ器が登録されていません。お気に入りの志野焼を登録してみましょう。</p>
+
+      <ol class="timeline">
+        <li class="timeline-item">
+          <span class="timeline-dot" aria-hidden="true">1</span>
+          <div class="timeline-body">
+            <h3>室町時代 — はじまりの伝承</h3>
+            <p>茶人・志野宗信（しの そうしん）が美濃の陶工に命じて焼かせたのが名前の由来と伝えられています（諸説あり、史料による裏づけは限定的です）。</p>
+          </div>
+        </li>
+        <li class="timeline-item">
+          <span class="timeline-dot" aria-hidden="true">2</span>
+          <div class="timeline-body">
+            <h3>天正年間（1573〜1592年）— 桃山陶の最盛期</h3>
+            <p>安土桃山時代、美濃・大萱（おおがや、現在の岐阜県可児市）の牟田洞窯などで、志野焼は最盛期を迎えます。わび茶の広がりとともに、茶碗・花入・水指・香合などに使われ、日本で初めて白い釉薬を全面にかけ、絵付けをほどこした陶器として和様の雅陶を生み出しました。国宝「卯花墻」もこの時期に焼かれたと考えられています。</p>
+          </div>
+        </li>
+        <li class="timeline-item">
+          <span class="timeline-dot" aria-hidden="true">3</span>
+          <div class="timeline-body">
+            <h3>江戸時代以降 — 「瀬戸焼」との混同</h3>
+            <p>桃山陶の作風は次第に廃れ、志野をはじめとする美濃桃山陶は、長らく隣接する瀬戸で焼かれたものと考えられていました。</p>
+          </div>
+        </li>
+        <li class="timeline-item">
+          <span class="timeline-dot" aria-hidden="true">4</span>
+          <div class="timeline-body">
+            <h3>1930年（昭和5年）— 荒川豊蔵による発見</h3>
+            <p>陶芸家・荒川豊蔵が、岐阜県可児市久々利（くくり）の古窯跡で志野の陶片を発見。これにより、志野焼が瀬戸ではなく美濃で焼かれていたことが明らかになりました。この発見をきっかけに、美濃桃山陶は近代以降の陶芸家たちによって研究・再現され、現代に受け継がれています。</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="card kiln-card">
+        <h3>📍 主な古窯跡</h3>
+        <p class="hint">志野焼は美濃（岐阜県）の以下のような窯で焼かれました。</p>
+        <ul class="kiln-list">
+          <li><strong>可児市大萱</strong> — 牟田洞窯（むたぼらがま）・窯下窯</li>
+          <li><strong>土岐市</strong> — 久尻元屋敷窯・大富窯・定林寺窯・高根窯</li>
+        </ul>
+      </div>
     </section>
 
-    <!-- お手入れガイド -->
-    <section id="tab-care" class="tab-pane" hidden>
+    <!-- 特徴・種類 -->
+    <section id="tab-feature" class="tab-pane" hidden>
       <div class="section-head no-card">
-        <h2>志野焼のお手入れガイド</h2>
+        <h2>土と釉薬</h2>
+      </div>
+      <div class="card info-card">
+        <h3>🪨 もぐさ土</h3>
+        <p>岐阜県可児市久々利から土岐市泉町久尻にかけて産出する、鉄分の少ない、やや紫がかった白土です。もぐさ（艾）のようにざんぐりとした柔らかい風合いを持ち、志野特有の温かみのある質感を生み出します。</p>
+      </div>
+      <div class="card info-card">
+        <h3>💧 志野釉（長石釉）</h3>
+        <p>長石を主原料とした白い釉薬を、厚くかけて焼成します。日本で初めて焼き物の全面に白い釉薬をかけた例とされ、釉のかかり方のムラや窯の中の火の当たり方によって、赤みを帯びた「火色（緋色）」や、表面に細かくひび割れる「貫入」が生まれます。これらは欠点ではなく、志野ならではの「景色」として愛でられてきました。</p>
       </div>
 
-      <details class="card care-card" open>
-        <summary>① 使いはじめの「目止め」</summary>
-        <p>志野焼は柔らかく焼き締まった土に厚い長石釉をかけているため、貫入（表面の細かいひび）から水分が染み込みやすい性質があります。使いはじめる前に、米のとぎ汁や小麦粉を溶いた水で10〜20分ほど煮る「目止め」をしておくと、シミになりにくくなります。</p>
-        <p class="hint">目止めをした器は「器」タブの登録内容から「目止め済み」に切り替えられます。</p>
-      </details>
+      <div class="section-head no-card">
+        <h2>志野の種類</h2>
+      </div>
 
-      <details class="card care-card">
-        <summary>② 使う前後のお手入れ</summary>
-        <p>使う前にさっと水にくぐらせておくと、汁物や色の濃い料理のシミ移りを抑えられます。使ったあとは中性洗剤で優しく手洗いし、長時間の浸け置きは避けましょう。食洗機・電子レンジ・オーブンの使用は、貫入から割れや貫入拡大の原因になるため基本的に避けるのがおすすめです。</p>
-      </details>
+      <article class="gallery-card card" data-fav-id="type-mujishino">
+        <img src="img/type-mujishino.png" alt="無地志野のイメージイラスト。文様のない白い志野釉のみの茶碗" loading="lazy" />
+        <div class="gallery-body">
+          <div class="gallery-title-row">
+            <h3>無地志野</h3>
+            <button class="fav-btn" data-fav-id="type-mujishino" aria-label="お気に入りに追加">☆</button>
+          </div>
+          <p>絵や彫り文様のない、白釉のみの素朴な作行き。様式の変遷から見て、文様のない素直な作りは比較的早い時期のものと考えられています。</p>
+        </div>
+      </article>
 
-      <details class="card care-card">
-        <summary>③ 貫入と「景色」を楽しむ</summary>
-        <p>使い込むうちに貫入へお茶や料理の色がゆっくりと染み込み、「雨漏り」と呼ばれる景色が生まれます。これは志野焼ならではの経年変化で、欠点ではなく育てる楽しみです。同じ器でも、使う人によって景色の育ち方は変わっていきます。</p>
-      </details>
+      <article class="gallery-card card" data-fav-id="type-eshino">
+        <img src="img/type-eshino.png" alt="絵志野のイメージイラスト。鉄絵で草花文様が描かれた茶碗" loading="lazy" />
+        <div class="gallery-body">
+          <div class="gallery-title-row">
+            <h3>絵志野</h3>
+            <button class="fav-btn" data-fav-id="type-eshino" aria-label="お気に入りに追加">☆</button>
+          </div>
+          <p>もっとも一般的な志野。鬼板と呼ばれる鉄絵具で草花などの文様を描いてから、その上に白い長石釉をかけて焼きます。釉の下に淡く浮かぶ鉄絵が特徴です。</p>
+        </div>
+      </article>
 
-      <details class="card care-card">
-        <summary>④ 収納のコツ</summary>
-        <p>重ねるときは器の間に布や和紙を挟むと、口縁の欠けを防げます。しっかり乾かしてから収納し、湿気がこもらない場所を選びましょう。使ったあとすぐにしまい込まず、風通しの良い場所で一晩乾かすと長持ちします。</p>
-      </details>
+      <article class="gallery-card card" data-fav-id="type-nezumishino">
+        <img src="img/type-nezumishino.png" alt="鼠志野のイメージイラスト。灰色の化粧土に白い文様が浮かぶ茶碗" loading="lazy" />
+        <div class="gallery-body">
+          <div class="gallery-title-row">
+            <h3>鼠志野</h3>
+            <button class="fav-btn" data-fav-id="type-nezumishino" aria-label="お気に入りに追加">☆</button>
+          </div>
+          <p>素地に鬼板を化粧がけし、文様を掻き落としてから白釉をかけたもの。掻き落とした部分が白い文様として浮かび上がり、鼠色の落ち着いた地色が生まれます。</p>
+        </div>
+      </article>
 
-      <details class="card care-card">
-        <summary>⑤ 使ってこそ育つ</summary>
-        <p>志野焼は棚に飾るだけでなく、日々の食卓で使うことで表情が育っていく器です。「記録」タブで使った記録をつけておくと、お気に入りの一枚がどんな景色に育ってきたか、あとから振り返ることができます。</p>
-      </details>
+      <article class="gallery-card card" data-fav-id="type-benishino">
+        <img src="img/type-benishino.png" alt="紅志野・赤志野のイメージイラスト。赤みを帯びた志野の茶碗" loading="lazy" />
+        <div class="gallery-body">
+          <div class="gallery-title-row">
+            <h3>紅志野・赤志野</h3>
+            <button class="fav-btn" data-fav-id="type-benishino" aria-label="お気に入りに追加">☆</button>
+          </div>
+          <p>酸化第二鉄を含む赤ラク（黄土）を掛け、鉄絵文様を描いたうえに志野釉をかけて焼いたもの。温かみのある赤い発色が特徴です。</p>
+        </div>
+      </article>
+
+      <article class="gallery-card card" data-fav-id="type-neriage">
+        <img src="img/type-neriage.png" alt="練上手のイメージイラスト。白土と赤土を練り混ぜたしましま模様の茶碗" loading="lazy" />
+        <div class="gallery-body">
+          <div class="gallery-title-row">
+            <h3>練上手（練込志野）</h3>
+            <button class="fav-btn" data-fav-id="type-neriage" aria-label="お気に入りに追加">☆</button>
+          </div>
+          <p>白土と赤土を練り混ぜて成形し、志野釉をかけたもの。断面や表面に、二つの土がつくる自然な縞模様や渦模様が現れます。</p>
+        </div>
+      </article>
     </section>
 
-    <!-- 記録 -->
-    <section id="tab-log" class="tab-pane" hidden>
+    <!-- 名品ギャラリー -->
+    <section id="tab-gallery" class="tab-pane" hidden>
       <div class="section-head no-card">
-        <h2>使用記録</h2>
-        <button class="btn btn-primary small" data-open="logModal">+ 記録</button>
+        <h2>名品ギャラリー</h2>
       </div>
-      <ul id="logList" class="record-list"></ul>
-      <p id="logEmpty" class="empty-state small" hidden>まだ記録がありません。器を使ったら記録してみましょう。</p>
+      <p class="disclaimer">※掲載画像はいずれも本アプリのために描き起こしたオリジナルのイメージイラストです。実際の文化財の写真ではありません。</p>
+
+      <article class="gallery-card card piece-card" data-fav-id="piece-unohanagaki">
+        <img src="img/piece-unohanagaki.png" alt="志野茶碗 銘 卯花墻のイメージイラスト" loading="lazy" />
+        <div class="gallery-body">
+          <div class="gallery-title-row">
+            <h3>志野茶碗 銘 卯花墻（うのはながき）</h3>
+            <button class="fav-btn" data-fav-id="piece-unohanagaki" aria-label="お気に入りに追加">☆</button>
+          </div>
+          <div class="piece-meta">
+            <span class="meta-chip">国宝</span>
+            <span class="meta-chip">桃山時代</span>
+            <span class="meta-chip">作者不詳</span>
+          </div>
+          <dl class="piece-dl">
+            <dt>産地・窯</dt><dd>美濃・大萱 牟田洞窯（岐阜県可児市）と伝わる</dd>
+            <dt>寸法</dt><dd>高さ約9.5cm・口径約11.8cm</dd>
+            <dt>所蔵</dt><dd>三井記念美術館（東京都）</dd>
+          </dl>
+          <p>日本で焼かれた茶碗のうち、国宝に指定されているのは本阿弥光悦の白楽茶碗「不二山」とこの「卯花墻」の2碗のみといわれる、志野焼を代表する名碗です。轆轤で成形したのち篦（へら）で大胆に削って形をゆがませ、厚い白釉と縁の火色（緋色）が景色をつくっています。名前は、表面の鉄絵文様を卯の花（ウツギ）が咲く垣根に見立てたことに由来すると伝えられています。</p>
+        </div>
+      </article>
+
+      <article class="gallery-card card piece-card" data-fav-id="piece-hirosawa">
+        <img src="img/piece-hirosawa.png" alt="志野茶碗 銘 広沢のイメージイラスト" loading="lazy" />
+        <div class="gallery-body">
+          <div class="gallery-title-row">
+            <h3>志野茶碗 銘 広沢（ひろさわ）</h3>
+            <button class="fav-btn" data-fav-id="piece-hirosawa" aria-label="お気に入りに追加">☆</button>
+          </div>
+          <div class="piece-meta">
+            <span class="meta-chip">重要文化財</span>
+            <span class="meta-chip">桃山時代</span>
+          </div>
+          <dl class="piece-dl">
+            <dt>産地</dt><dd>美濃</dd>
+            <dt>所蔵</dt><dd>湯木美術館（大阪府）</dd>
+          </dl>
+          <p>ざんぐりとした温かみのあるもぐさ土に、雪のように白い釉と赤みの発色が調和した名碗。「卯花墻」「羽衣」と並び称されることがあり、志野茶碗の格付けでは第三位に挙げられることもあります。</p>
+        </div>
+      </article>
+
+      <p class="sources">参考: 文化遺産オンライン、三井記念美術館、岐阜県公式サイト、美濃焼伝統工芸品協同組合 ほか公開情報を基に作成しています。歴史的な逸話には諸説あるものを含みます。</p>
     </section>
 
   </main>
 
   <nav class="tab-bar" role="tablist">
     <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true"><span class="tab-icon">🏠</span><span>ホーム</span></button>
-    <button class="tab-btn" data-tab="pieces" role="tab" aria-selected="false"><span class="tab-icon">🏺</span><span>器</span></button>
-    <button class="tab-btn" data-tab="care" role="tab" aria-selected="false"><span class="tab-icon">📖</span><span>お手入れ</span></button>
-    <button class="tab-btn" data-tab="log" role="tab" aria-selected="false"><span class="tab-icon">🍵</span><span>記録</span></button>
+    <button class="tab-btn" data-tab="history" role="tab" aria-selected="false"><span class="tab-icon">🏔️</span><span>歴史</span></button>
+    <button class="tab-btn" data-tab="feature" role="tab" aria-selected="false"><span class="tab-icon">🎨</span><span>特徴</span></button>
+    <button class="tab-btn" data-tab="gallery" role="tab" aria-selected="false"><span class="tab-icon">🏺</span><span>名品</span></button>
   </nav>
-</div>
-
-<!-- 器 登録・編集モーダル -->
-<div id="pieceModal" class="modal-overlay modal-overlay--top" hidden>
-  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="pieceModalTitle">
-    <div class="modal-header">
-      <span class="modal-emblem" aria-hidden="true">🏺</span>
-      <h2 id="pieceModalTitle">器を登録</h2>
-    </div>
-    <div class="modal-body">
-      <label class="field">
-        <span class="field-label">名前</span>
-        <input id="pieceName" type="text" placeholder="例）志野の茶碗" autocomplete="off" />
-      </label>
-      <label class="field">
-        <span class="field-label">種類</span>
-        <select id="pieceType">
-          <option value="chawan">🍵 茶碗・抹茶碗</option>
-          <option value="yunomi">☕ 湯呑み・カップ</option>
-          <option value="guinomi">🍶 ぐい呑み・盃</option>
-          <option value="sara">🍽 皿・小皿</option>
-          <option value="hachi">🥣 鉢・小鉢</option>
-          <option value="kaki">🌸 花器</option>
-          <option value="other">📦 その他</option>
-        </select>
-      </label>
-      <label class="field">
-        <span class="field-label">窯元・作家（任意）</span>
-        <input id="pieceKiln" type="text" placeholder="例）美濃・◯◯窯" autocomplete="off" />
-      </label>
-      <label class="field">
-        <span class="field-label">購入日・入手日（任意）</span>
-        <input id="pieceDate" type="date" />
-      </label>
-      <label class="field checkbox-field">
-        <input id="pieceMizudome" type="checkbox" />
-        <span>目止めをした</span>
-      </label>
-      <label class="field">
-        <span class="field-label">メモ（任意）</span>
-        <input id="pieceNote" type="text" placeholder="例）緋色が美しい一枚" autocomplete="off" />
-      </label>
-    </div>
-    <div class="modal-actions">
-      <button id="pieceSubmitBtn" class="btn btn-primary full">登録する</button>
-      <button id="pieceDeleteBtn" class="btn btn-danger full" hidden>この器を削除</button>
-      <button class="btn btn-secondary full" data-close="pieceModal">キャンセル</button>
-    </div>
-  </div>
-</div>
-
-<!-- 使用記録 追加モーダル -->
-<div id="logModal" class="modal-overlay modal-overlay--top" hidden>
-  <div class="modal ink-modal modal--top compact-modal" role="dialog" aria-modal="true" aria-labelledby="logModalTitle">
-    <div class="modal-header">
-      <span class="modal-emblem" aria-hidden="true">🍵</span>
-      <h2 id="logModalTitle">使った記録をつける</h2>
-    </div>
-    <div class="modal-body">
-      <label class="field">
-        <span class="field-label">日付</span>
-        <input id="logDate" type="date" />
-      </label>
-      <label class="field">
-        <span class="field-label">使った器</span>
-        <select id="logPiece">
-          <option value="">選択してください</option>
-        </select>
-      </label>
-      <label class="field">
-        <span class="field-label">料理・用途（任意）</span>
-        <input id="logDish" type="text" placeholder="例）栗ご飯、秋刀魚の塩焼き" autocomplete="off" />
-      </label>
-      <label class="field">
-        <span class="field-label">メモ（任意）</span>
-        <input id="logMemo" type="text" placeholder="例）貫入に少し色が入ってきた" autocomplete="off" />
-      </label>
-    </div>
-    <div class="modal-actions">
-      <button id="logSubmitBtn" class="btn btn-primary full">記録する</button>
-      <button class="btn btn-secondary full" data-close="logModal">キャンセル</button>
-    </div>
-  </div>
 </div>
 
 <!-- インストール促し バナー -->

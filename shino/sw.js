@@ -1,4 +1,4 @@
-const CACHE_NAME = "shino-techo-v1";
+const CACHE_NAME = "shino-zukan-v1";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,6 +8,14 @@ const ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
+  "./img/hero-shino.png",
+  "./img/type-mujishino.png",
+  "./img/type-eshino.png",
+  "./img/type-nezumishino.png",
+  "./img/type-benishino.png",
+  "./img/type-neriage.png",
+  "./img/piece-unohanagaki.png",
+  "./img/piece-hirosawa.png",
 ];
 
 self.addEventListener("install", (event) => {
