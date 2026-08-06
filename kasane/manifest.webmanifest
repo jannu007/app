@@ -1,0 +1,20 @@
+{
+  "name": "かさね札 - 無料のクロンダイク・ソリティア",
+  "short_name": "かさね札",
+  "description": "トランプを1枚ずつ重ねて揃える、無料のクロンダイク・ソリティア。広告なし・登録不要・オフラインでも遊べます。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f0e2",
+  "theme_color": "#f5f0e2",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["games", "card", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
