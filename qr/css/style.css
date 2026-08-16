@@ -1,0 +1,533 @@
+/* ===========================================================
+   QR早見帖 — 和紙・墨・朱色（判子）をテーマにした無料QRスキャナー
+   =========================================================== */
+
+:root {
+  --paper: 246 239 225;        /* 生成り・和紙 */
+  --ink: 58 46 40;             /* 墨色 */
+  --ink-soft: 96 82 72;
+  --stamp: 176 58 46;          /* 朱色（判子・メインカラー） */
+  --stamp-soft: 200 92 78;
+  --indigo: 58 82 130;         /* 藍色（サブアクセント） */
+  --gold: 196 149 63;          /* 金箔 */
+  --card-bg: 255 253 248;
+  --shadow: 58 46 40;
+
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+
+  --ease-brush: cubic-bezier(.22,.9,.32,1);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: 33 29 25;
+    --ink: 236 227 214;
+    --ink-soft: 196 184 168;
+    --card-bg: 45 39 34;
+    --shadow: 0 0 0;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  color: rgb(var(--ink));
+  background: rgb(var(--paper));
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2 { font-family: "Shippori Mincho", serif; margin: 0; }
+button { font-family: inherit; cursor: pointer; }
+textarea { font-family: inherit; }
+
+/* ---------------- 背景 ---------------- */
+.washi-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(176,58,46,0.13), transparent 45%),
+    radial-gradient(circle at 90% 18%, rgba(196,149,63,0.14), transparent 40%),
+    radial-gradient(circle at 75% 90%, rgba(58,82,130,0.10), transparent 45%),
+    rgb(var(--paper));
+}
+
+/* ---------------- レイアウト ---------------- */
+.app-shell {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: max(14px, env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+  gap: 14px;
+}
+
+.card {
+  background: rgba(var(--card-bg), 0.92);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px -10px rgba(var(--shadow), 0.25), 0 1px 0 rgba(255,255,255,0.4) inset;
+  border: 1px solid rgba(var(--gold), 0.25);
+  backdrop-filter: blur(6px);
+  padding: 18px;
+}
+
+.section-title {
+  font-size: 1.02rem;
+  margin: 0 0 12px;
+}
+
+/* ---------------- ヘッダー ---------------- */
+.app-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 2px;
+  z-index: 61;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-emblem { font-size: 1.5rem; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.18)); }
+.brand h1 {
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  color: rgb(var(--ink));
+}
+
+.icon-btn {
+  background: rgba(var(--card-bg), 0.7);
+  border: 1px solid rgba(var(--gold), 0.3);
+  color: rgb(var(--ink-soft));
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  transition: transform .25s var(--ease-brush), background .25s;
+}
+.icon-btn:active { transform: scale(0.88); }
+.icon-btn.small { width: 30px; height: 30px; }
+
+.menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(20, 16, 12, 0.18);
+}
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 65;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  width: max-content;
+  min-width: 210px;
+  max-width: min(78vw, 300px);
+  background: rgb(var(--card-bg));
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(var(--gold), 0.35);
+  box-shadow: 0 16px 36px -10px rgba(var(--shadow), 0.45);
+  animation: pop-in .22s var(--ease-brush);
+  text-decoration: none;
+}
+.menu-item {
+  background: rgb(var(--card-bg));
+  border: none;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: rgb(var(--ink));
+  font-size: 0.92rem;
+  line-height: 1.4;
+  text-decoration: none;
+  display: block;
+  width: 100%;
+}
+.menu-item:hover, .menu-item:active { background: rgba(var(--gold), 0.14); }
+.menu-item.danger { color: rgb(var(--stamp)); }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.wave-divider {
+  height: 3px;
+  margin: 2px 0 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, rgba(var(--gold),0.55), rgba(var(--stamp),0.35), transparent);
+}
+
+/* ---------------- タブ ---------------- */
+.tab-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 5px;
+  background: rgba(var(--gold), 0.12);
+  border-radius: var(--radius-md);
+}
+.tab-btn {
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 4px;
+  border-radius: var(--radius-sm);
+  color: rgb(var(--ink-soft));
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: background .2s var(--ease-brush), color .2s;
+}
+.tab-btn.active {
+  background: rgb(var(--card-bg));
+  color: rgb(var(--stamp));
+  box-shadow: 0 4px 14px -6px rgba(var(--shadow), 0.35);
+}
+
+/* ---------------- メイン ---------------- */
+.main-area { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.tab-panel { display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------------- スキャンカード ---------------- */
+.scan-card { display: flex; flex-direction: column; align-items: center; }
+.scan-idle { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 14px 4px 4px; }
+.scan-icon { font-size: 2.6rem; margin-bottom: 4px; }
+.scan-title { font-family: "Shippori Mincho", serif; font-size: 1.1rem; margin: 0; }
+.scan-sub { margin: 0; font-size: 0.85rem; color: rgb(var(--ink-soft)); }
+.scan-idle .btn { margin-top: 10px; }
+
+.scan-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/4;
+  max-height: 62vh;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+}
+.scan-viewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.scan-frame {
+  position: absolute;
+  inset: 12% 14%;
+  pointer-events: none;
+}
+.corner {
+  position: absolute;
+  width: 30px; height: 30px;
+  border-color: rgba(250, 244, 231, 0.92);
+  border-style: solid;
+  border-width: 0;
+}
+.corner.tl { top: 0; left: 0; border-top-width: 4px; border-left-width: 4px; border-radius: 8px 0 0 0; }
+.corner.tr { top: 0; right: 0; border-top-width: 4px; border-right-width: 4px; border-radius: 0 8px 0 0; }
+.corner.bl { bottom: 0; left: 0; border-bottom-width: 4px; border-left-width: 4px; border-radius: 0 0 0 8px; }
+.corner.br { bottom: 0; right: 0; border-bottom-width: 4px; border-right-width: 4px; border-radius: 0 0 8px 0; }
+.scan-laser {
+  position: absolute;
+  left: 4%; right: 4%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(200,92,78,0.95), transparent);
+  box-shadow: 0 0 10px 1px rgba(200,92,78,0.8);
+  animation: laser-sweep 2.1s ease-in-out infinite;
+}
+@keyframes laser-sweep {
+  0%, 100% { top: 6%; opacity: 0.9; }
+  50% { top: 92%; opacity: 0.9; }
+}
+.scan-controls {
+  position: absolute;
+  left: 0; right: 0; bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 14px;
+}
+.ghost-on-video {
+  background: rgba(20,16,12,0.5);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+}
+.scan-status {
+  position: absolute;
+  top: 10px; left: 0; right: 0;
+  text-align: center;
+  margin: 0;
+  color: #fbf3e4;
+  font-size: 0.78rem;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+/* ---------------- アップロードカード ---------------- */
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 20px;
+  gap: 8px;
+  border: 1.5px dashed rgba(var(--stamp), 0.35);
+  border-radius: var(--radius-md);
+}
+.drop-zone.drag-over {
+  border-color: rgb(var(--stamp));
+  background: rgba(var(--stamp), 0.08);
+}
+.drop-icon { font-size: 2.4rem; margin-bottom: 4px; }
+.drop-title { font-family: "Shippori Mincho", serif; font-size: 1.05rem; margin: 0; }
+.drop-sub { margin: 0; font-size: 0.85rem; color: rgb(var(--ink-soft)); }
+.drop-zone .btn { margin-top: 10px; }
+.drop-note { margin: 14px 0 0; font-size: 0.75rem; color: rgb(var(--ink-soft)); opacity: 0.85; text-align: center; }
+
+/* ---------------- 結果カード ---------------- */
+.result-card { animation: modal-pop .28s var(--ease-brush); }
+.result-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(var(--stamp), 0.14);
+  color: rgb(var(--stamp));
+}
+.result-body {
+  background: rgba(var(--paper), 0.55);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+}
+.result-body dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 0.88rem; }
+.result-body dt { color: rgb(var(--ink-soft)); font-weight: 700; }
+.result-body dd { margin: 0; word-break: break-all; }
+.result-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.result-actions .btn { flex: 1; min-width: 120px; }
+
+/* ---------------- 履歴 ---------------- */
+.history-card { padding: 16px 14px; }
+.history-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(var(--paper), 0.55);
+  border: 1px solid rgba(var(--gold), 0.2);
+}
+.history-icon {
+  flex: 0 0 auto;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 1rem;
+  background: rgba(var(--indigo), 0.14);
+}
+.history-main { flex: 1; min-width: 0; }
+.history-text {
+  margin: 0;
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-meta { margin: 2px 0 0; font-size: 0.68rem; color: rgb(var(--ink-soft)); }
+.history-actions { flex: 0 0 auto; display: flex; gap: 4px; }
+.history-mini-btn {
+  border: none;
+  background: rgba(var(--gold), 0.14);
+  color: rgb(var(--ink));
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: grid; place-items: center;
+  font-size: 0.85rem;
+  transition: transform .15s, background .2s;
+}
+.history-mini-btn:active { transform: scale(0.88); }
+.history-mini-btn.danger { color: rgb(var(--stamp)); }
+
+.empty-state { text-align: center; padding: 26px 10px; color: rgb(var(--ink-soft)); }
+.empty-icon { font-size: 2.2rem; margin-bottom: 8px; }
+.empty-state p { margin: 0; font-size: 0.85rem; }
+
+/* ---------------- 作成タブ ---------------- */
+.create-card { display: flex; flex-direction: column; gap: 14px; }
+.create-card .field { margin: 0; }
+.create-card textarea {
+  border: 1.5px solid rgba(var(--gold), 0.4);
+  background: rgba(var(--paper), 0.6);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  color: rgb(var(--ink));
+  outline: none;
+  resize: vertical;
+  transition: border-color .2s, box-shadow .2s;
+}
+.create-card textarea:focus { border-color: rgb(var(--stamp)); box-shadow: 0 0 0 4px rgba(176,58,46,0.12); }
+
+.create-result { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 4px; }
+.create-canvas-wrap {
+  padding: 14px;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 20px -10px rgba(var(--shadow), 0.35);
+  display: inline-flex;
+}
+.create-canvas-wrap canvas { display: block; max-width: 100%; height: auto; }
+.create-actions { display: flex; gap: 10px; }
+
+/* ---------------- ボタン ---------------- */
+.btn {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 13px 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform .18s var(--ease-brush), box-shadow .2s, opacity .2s;
+}
+.btn:active { transform: scale(0.96); }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+.btn.full { width: 100%; }
+.btn.small { padding: 9px 14px; font-size: 0.82rem; }
+
+.btn-primary {
+  color: #fff8ee;
+  background: linear-gradient(135deg, rgb(var(--stamp)), rgb(var(--stamp-soft)));
+  box-shadow: 0 6px 16px -6px rgba(176,58,46,0.55);
+}
+.btn-secondary {
+  color: rgb(var(--ink));
+  background: rgba(var(--gold), 0.16);
+  border: 1px solid rgba(var(--gold), 0.4);
+}
+.btn-ghost {
+  background: transparent;
+  color: rgb(var(--stamp));
+  border: 1px dashed rgba(var(--stamp), 0.4);
+}
+
+.icon-action {
+  border: 1px solid rgba(var(--gold), 0.35);
+  background: rgba(var(--gold), 0.1);
+  color: rgb(var(--ink));
+  width: 38px; height: 38px;
+  border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  transition: transform .18s var(--ease-brush), background .2s, opacity .2s;
+}
+.icon-action:active { transform: scale(0.9); }
+
+/* ---------------- フッター ---------------- */
+.app-footer { text-align: center; padding: 6px 10px 2px; }
+.app-footer p { margin: 0; font-size: 0.72rem; color: rgb(var(--ink-soft)); opacity: 0.8; }
+
+/* ---------------- インストールバナー ---------------- */
+.install-banner {
+  position: fixed;
+  left: 14px; right: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 70;
+  max-width: 452px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
+  background: rgb(var(--card-bg));
+  border: 1px solid rgba(var(--gold), 0.4);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 34px -12px rgba(var(--shadow), 0.4);
+  animation: banner-in .4s var(--ease-brush);
+}
+@keyframes banner-in { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.install-emblem { font-size: 1.6rem; }
+.install-text { flex: 1; display: flex; flex-direction: column; font-size: 0.78rem; color: rgb(var(--ink-soft)); }
+.install-text strong { font-size: 0.9rem; color: rgb(var(--ink)); }
+
+/* ---------------- 共通フォーム部品 ---------------- */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 0.82rem; color: rgb(var(--ink-soft)); font-weight: 700; }
+.field select {
+  border: 1.5px solid rgba(var(--gold), 0.4);
+  background: rgba(var(--paper), 0.6);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  color: rgb(var(--ink));
+}
+.field input[type="color"] {
+  width: 100%;
+  height: 42px;
+  border: 1.5px solid rgba(var(--gold), 0.4);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  background: rgba(var(--paper), 0.6);
+}
+.field input[type="range"] { width: 100%; accent-color: rgb(var(--stamp)); }
+.field-row { display: flex; gap: 12px; }
+.field.half { flex: 1; min-width: 0; }
+
+/* ---------------- トースト ---------------- */
+.toast {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%) translateY(-140%);
+  background: rgba(40, 32, 26, 0.92);
+  color: #fbf3e4;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  z-index: 100;
+  opacity: 0;
+  transition: transform .35s var(--ease-brush), opacity .35s;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(var(--gold), 0.4); border-radius: 8px; }
