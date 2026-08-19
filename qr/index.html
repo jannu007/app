@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>QR早見帖 - 無料のQRコードスキャナー</title>
+<meta name="description" content="カメラでかざす、または画像を読み込むだけでQRコードを瞬時に読み取れる完全無料のスキャナーアプリ。URL・Wi-Fi・連絡先などを自動判定し、履歴も端末内に保存。オリジナルQRコードの作成機能つき。アカウント登録不要、サーバーには一切送信されません。" />
+<meta name="theme-color" content="#f6efe1" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#211d19" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="QR早見帖" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="washi-bg" aria-hidden="true"></div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">🔳</span>
+      <h1>QR早見帖</h1>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
+    </button>
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <a class="menu-item" href="../">🏠 アプリ一覧へ</a>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+      <button data-action="clear" class="menu-item danger">🗑 履歴をすべて削除</button>
+    </nav>
+  </header>
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+
+  <div class="wave-divider" aria-hidden="true"></div>
+
+  <nav class="tab-bar" role="tablist">
+    <button class="tab-btn active" data-tab="scan" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 4v-4h2v6h-6v-2h4zM8 8h8v8H8V8zm2 2v4h4v-4h-4z"/></svg>
+      <span>スキャン</span>
+    </button>
+    <button class="tab-btn" data-tab="history" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v4l5-5-5-5v4zm-1 5h1.5v4.2l3.6 2.14-.75 1.23L11 13.5V8z"/></svg>
+      <span>履歴</span>
+    </button>
+    <button class="tab-btn" data-tab="create" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>
+      <span>作成</span>
+    </button>
+  </nav>
+
+  <main class="main-area">
+
+    <!-- ===================== スキャンタブ ===================== -->
+    <section id="panel-scan" class="tab-panel" data-panel="scan">
+
+      <section id="scanCard" class="card scan-card">
+        <div id="scanIdle" class="scan-idle">
+          <div class="scan-icon" aria-hidden="true">📷</div>
+          <p class="scan-title">カメラでQRコードを読み取り</p>
+          <p class="scan-sub">ボタンを押してカメラを起動し、QRコードを枠内に収めてください</p>
+          <button id="startCameraBtn" type="button" class="btn btn-primary">カメラを起動</button>
+        </div>
+
+        <div id="scanViewport" class="scan-viewport" hidden>
+          <video id="scanVideo" playsinline muted></video>
+          <canvas id="scanCanvas" hidden></canvas>
+          <div class="scan-frame" aria-hidden="true">
+            <span class="corner tl"></span><span class="corner tr"></span>
+            <span class="corner bl"></span><span class="corner br"></span>
+            <div class="scan-laser"></div>
+          </div>
+          <div class="scan-controls">
+            <button id="switchCameraBtn" type="button" class="icon-action ghost-on-video" title="カメラを切り替え" hidden>
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 5V2L8 6l4 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
+            </button>
+            <button id="stopCameraBtn" type="button" class="btn btn-secondary small">カメラを停止</button>
+          </div>
+          <p id="scanStatus" class="scan-status" aria-live="polite">QRコードを枠内に収めてください</p>
+        </div>
+
+        <p class="drop-note">🔒 映像は端末内だけで解析されます。サーバーには一切送信されません。</p>
+      </section>
+
+      <section id="uploadCard" class="card upload-card">
+        <h2 class="section-title">画像から読み取る</h2>
+        <div id="dropZone" class="drop-zone">
+          <div class="drop-icon" aria-hidden="true">🖼️</div>
+          <p class="drop-title">画像をドラッグ&amp;ドロップ</p>
+          <p class="drop-sub">またはタップして画像を選択</p>
+          <button id="pickFileBtn" type="button" class="btn btn-secondary">画像を選択</button>
+          <input type="file" id="fileInput" accept="image/*" hidden />
+        </div>
+      </section>
+
+      <section id="resultCard" class="card result-card" hidden>
+        <div class="result-head">
+          <span class="result-badge" id="resultTypeBadge">URL</span>
+          <button id="resultCloseBtn" type="button" class="icon-btn small" aria-label="閉じる">✕</button>
+        </div>
+        <div id="resultBody" class="result-body"></div>
+        <div id="resultActions" class="result-actions"></div>
+        <button id="scanAgainBtn" type="button" class="btn btn-primary full">続けてスキャンする</button>
+      </section>
+
+    </section>
+
+    <!-- ===================== 履歴タブ ===================== -->
+    <section id="panel-history" class="tab-panel" data-panel="history" hidden>
+      <section class="card history-card">
+        <div class="history-head">
+          <h2 class="section-title">読み取り履歴</h2>
+          <button id="clearHistoryBtn" type="button" class="btn btn-ghost small">すべて削除</button>
+        </div>
+        <ul id="historyList" class="history-list"></ul>
+        <div id="historyEmpty" class="empty-state" hidden>
+          <div class="empty-icon" aria-hidden="true">📜</div>
+          <p>まだ読み取り履歴がありません</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===================== 作成タブ ===================== -->
+    <section id="panel-create" class="tab-panel" data-panel="create" hidden>
+      <section class="card create-card">
+        <h2 class="section-title">オリジナルQRコードを作成</h2>
+
+        <label class="field">
+          <span class="field-label">テキスト・URL</span>
+          <textarea id="createText" rows="3" placeholder="例）https://example.com　や、自由なテキスト"></textarea>
+        </label>
+
+        <div class="field-row">
+          <label class="field half">
+            <span class="field-label">誤り訂正レベル</span>
+            <select id="createEcLevel">
+              <option value="L">L（標準）</option>
+              <option value="M" selected>M（推奨）</option>
+              <option value="Q">Q（やや高い）</option>
+              <option value="H">H（高い・ロゴ重ね向け）</option>
+            </select>
+          </label>
+          <label class="field half">
+            <span class="field-label">サイズ <span id="createSizeVal">320</span>px</span>
+            <input id="createSize" type="range" min="180" max="600" step="20" value="320" />
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label class="field half">
+            <span class="field-label">前景色</span>
+            <input id="createFg" type="color" value="#3a2e28" />
+          </label>
+          <label class="field half">
+            <span class="field-label">背景色</span>
+            <input id="createBg" type="color" value="#faf4e7" />
+          </label>
+        </div>
+
+        <button id="generateBtn" type="button" class="btn btn-primary full">QRコードを作成</button>
+
+        <div id="createResult" class="create-result" hidden>
+          <div id="createCanvasWrap" class="create-canvas-wrap"></div>
+          <div class="create-actions">
+            <button id="downloadQrBtn" type="button" class="btn btn-secondary small">PNGを保存</button>
+            <button id="shareQrBtn" type="button" class="btn btn-secondary small" hidden>共有</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>🔒 QRコードの読み取り・作成はすべて端末内で処理され、サーバーには一切送信されません。</p>
+  </footer>
+</div>
+
+<!-- インストール促し バナー -->
+<div id="installBanner" class="install-banner" hidden>
+  <span class="install-emblem" aria-hidden="true">🔳</span>
+  <div class="install-text">
+    <strong>ホーム画面に追加できます</strong>
+    <span>アプリのようにワンタッチで開けます</span>
+  </div>
+  <button id="installBtn" type="button" class="btn btn-primary small">インストール</button>
+  <button id="installDismiss" type="button" class="icon-btn small" aria-label="閉じる">✕</button>
+</div>
+
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="vendor/qrcode_UTF8.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "QR早見帖 - 無料のQRコードスキャナー",
+  "short_name": "QR早見帖",
+  "description": "カメラでかざす、または画像を読み込むだけでQRコードを瞬時に読み取れる無料アプリ。URL・Wi-Fi・連絡先などを自動判定し、オリジナルQRコードの作成もできます。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6efe1",
+  "theme_color": "#f6efe1",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
