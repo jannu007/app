@@ -41,6 +41,21 @@
   <!-- ============ 診断 ============ -->
   <main id="panel-check" class="panel" role="tabpanel" aria-labelledby="tab-check">
 
+    <section class="card install-card" id="install-card" hidden>
+      <div class="install-head">
+        <span class="install-icon" aria-hidden="true">🪞</span>
+        <div>
+          <h2 class="card-title">ホーム画面に追加</h2>
+          <p class="card-lead" id="install-lead">インストールすると、アプリのように起動でき、オフラインでも使えます。</p>
+        </div>
+      </div>
+      <div class="row-actions" id="install-actions">
+        <button class="btn btn-primary" id="btn-install" type="button">インストールする</button>
+        <button class="btn btn-ghost" id="btn-install-later" type="button">あとで</button>
+      </div>
+      <ol class="install-steps" id="install-steps" hidden></ol>
+    </section>
+
     <!-- ステップ1: 写真を用意する -->
     <section class="card" id="step-input">
       <h2 class="card-title">1. 顔写真を用意する</h2>
@@ -253,6 +268,23 @@
         <li>前髪や手で額・頬が隠れないように。</li>
         <li>比べるときは、毎回できるだけ同じ条件で。</li>
       </ul>
+    </div>
+
+    <div class="card" id="about-install">
+      <h2 class="card-title">ホーム画面に追加して使う</h2>
+      <p class="body-text">
+        インストールすると、ブラウザのタブを開かずにアプリとして起動でき、電波のない場所でも使えます。
+        費用はかからず、アカウントも不要です。
+      </p>
+      <ul class="method-list">
+        <li><b>Android（Chrome）</b>— 右上の「⋮」から「アプリをインストール」または「ホーム画面に追加」。</li>
+        <li><b>iPhone・iPad（Safari）</b>— 下部の共有ボタン <span aria-hidden="true">⬆️</span> から「ホーム画面に追加」。</li>
+        <li><b>パソコン（Chrome・Edge）</b>— アドレスバー右端のインストールアイコンから。</li>
+      </ul>
+      <p class="body-text">
+        LINEやX、メールアプリの中で開いた画面（アプリ内ブラウザ）では、インストールの項目が出ません。
+        その場合は「ブラウザで開く」を選んでから、上の手順をお試しください。
+      </p>
     </div>
 
     <div class="card">
