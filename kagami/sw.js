@@ -1,9 +1,10 @@
-const CACHE_NAME = "utsushi-kagami-v2";
+const CACHE_NAME = "utsushi-kagami-v3";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
   "./js/analyze.js",
+  "./js/facetype.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
@@ -32,6 +33,21 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
+
+  // 顔ランドマークのモデル・WebAssembly は大きいので、
+  // インストール時ではなく、実際に使われたときに保存する（cache-first）
+  if (req.url.includes("/vendor/mediapipe/")) {
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+        }
+        return res;
+      }))
+    );
+    return;
+  }
 
   // Google Fonts: 手元のキャッシュを使いつつ裏で更新する
   if (req.url.includes("fonts.googleapis.com") || req.url.includes("fonts.gstatic.com")) {

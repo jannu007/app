@@ -147,6 +147,32 @@
         <p class="result-notes" id="result-notes" hidden></p>
       </div>
 
+      <div class="card" id="facetype-card" hidden>
+        <h2 class="card-title">似ている顔タイプ</h2>
+        <p class="card-lead">顔の特徴点から、輪郭と目鼻立ちの比率を測って判定しています。</p>
+
+        <div class="facetype-loading" id="facetype-loading">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>顔立ちを見ています…</p>
+        </div>
+
+        <div id="facetype-body" hidden>
+          <div class="facetype-head">
+            <p class="facetype-name" id="facetype-name"></p>
+            <p class="facetype-yomi" id="facetype-yomi"></p>
+            <p class="facetype-match"><span id="facetype-match"></span><span class="unit">%</span> 一致</p>
+          </div>
+          <p class="facetype-catch" id="facetype-catch"></p>
+          <p class="facetype-impression" id="facetype-impression"></p>
+          <p class="facetype-strong" id="facetype-strong"></p>
+          <ul class="facetype-details" id="facetype-details"></ul>
+          <p class="facetype-note">
+            顔立ちのタイプは、肌の状態や推定年齢とは別に、顔の造作の比率だけから判定しています。
+            角度や表情で結果は変わります。正面から撮ると安定します。
+          </p>
+        </div>
+      </div>
+
       <div class="card">
         <h2 class="card-title">7項目の内訳</h2>
         <p class="card-lead">数値が高いほど良好な状態です。</p>
@@ -253,6 +279,12 @@
         <li><b>クマ</b>— 目の下と頬の明るさの差を見ます。</li>
       </ul>
       <p class="body-text">
+        「似ている顔タイプ」だけは別のしくみで、顔の特徴点（ランドマーク）を検出し、
+        輪郭の縦横比・エラの張り・目の丸さ・目の間隔を、頬骨の幅を1とした比率で測っています。
+        この検出には Google の MediaPipe（Apache-2.0）をアプリに同梱して使っており、
+        こちらも通信は行わず、画像は端末内から出ません。
+      </p>
+      <p class="body-text">
         照明の色かぶりはホワイトバランス補正で打ち消し、明るさの影響は部位ごとに正規化しています。
         それでも、強い逆光・濃いメイク・眼鏡・ヒゲは結果に影響します。
         同じ結果を比べたいときは、同じ場所・同じ時間帯で撮るのがおすすめです。
@@ -304,6 +336,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="./js/analyze.js"></script>
+<script src="./js/facetype.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>
