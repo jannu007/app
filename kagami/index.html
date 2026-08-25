@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>うつし鏡 - 無料の顔年齢・肌年齢チェック（端末内だけで解析）</title>
+<meta name="description" content="顔写真から推定年齢と肌スコアを表示する完全無料のアプリ。シワ・目元・キメ・ハリ・明るさ・均一さ・クマの7項目を判定し、記録して変化を追えます。写真は端末内だけで解析され、どこにも送信されません。オフラインでも使えます。" />
+<meta name="theme-color" content="#f6efe1" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#211d19" media="(prefers-color-scheme: dark)" />
+<meta name="color-scheme" content="light dark" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="うつし鏡" />
+
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="site-header">
+    <a class="back-link" href="../index.html">← アプリ集</a>
+    <h1>うつし鏡</h1>
+    <p class="tagline">顔写真から、今日の肌をうつす</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="画面の切り替え">
+    <button class="tab-btn is-active" role="tab" id="tab-check" aria-controls="panel-check" aria-selected="true" data-tab="check">診断</button>
+    <button class="tab-btn" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" data-tab="history">記録</button>
+    <button class="tab-btn" role="tab" id="tab-about" aria-controls="panel-about" aria-selected="false" data-tab="about">しくみ</button>
+  </nav>
+
+  <!-- ============ 診断 ============ -->
+  <main id="panel-check" class="panel" role="tabpanel" aria-labelledby="tab-check">
+
+    <!-- ステップ1: 写真を用意する -->
+    <section class="card" id="step-input">
+      <h2 class="card-title">1. 顔写真を用意する</h2>
+      <p class="card-lead">正面を向き、明るい場所で、髪や手で顔が隠れないように写してください。</p>
+
+      <div class="source-actions">
+        <button class="btn btn-primary" id="btn-camera" type="button">
+          <span class="btn-icon" aria-hidden="true">📷</span>カメラで撮る
+        </button>
+        <button class="btn btn-secondary" id="btn-file" type="button">
+          <span class="btn-icon" aria-hidden="true">🖼️</span>写真を選ぶ
+        </button>
+        <input type="file" id="file-input" accept="image/*" hidden />
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        画像をここにドラッグ＆ドロップしても読み込めます
+      </div>
+
+      <p class="privacy-note">
+        <span aria-hidden="true">🔒</span>
+        写真はこの端末の中だけで解析されます。サーバーへの送信は一切ありません。
+      </p>
+    </section>
+
+    <!-- カメラ -->
+    <section class="card" id="step-camera" hidden>
+      <h2 class="card-title">カメラ</h2>
+      <div class="camera-stage">
+        <video id="video" playsinline muted autoplay></video>
+        <div class="face-guide" aria-hidden="true"><span></span></div>
+      </div>
+      <p class="card-lead camera-hint">枠に顔を合わせて、まっすぐ前を向いてください。</p>
+      <div class="row-actions">
+        <button class="btn btn-primary" id="btn-shutter" type="button">撮影する</button>
+        <button class="btn btn-ghost" id="btn-switch-cam" type="button">カメラ切替</button>
+        <button class="btn btn-ghost" id="btn-cancel-cam" type="button">やめる</button>
+      </div>
+      <p class="error-text" id="camera-error" hidden></p>
+    </section>
+
+    <!-- ステップ2: 顔の範囲を確認する -->
+    <section class="card" id="step-adjust" hidden>
+      <h2 class="card-title">2. 顔の範囲を確認する</h2>
+      <p class="card-lead" id="adjust-lead">枠を顔に合わせてください。枠はドラッグで移動、右下の丸で大きさを変えられます。</p>
+
+      <div class="adjust-stage" id="adjust-stage">
+        <canvas id="preview-canvas"></canvas>
+        <div class="crop-box" id="crop-box">
+          <div class="crop-oval"></div>
+          <div class="crop-line crop-line-eye"><span>目</span></div>
+          <div class="crop-handle" id="crop-handle" role="button" tabindex="0" aria-label="枠の大きさを変える"></div>
+        </div>
+      </div>
+
+      <div class="row-actions">
+        <button class="btn btn-primary" id="btn-analyze" type="button">この範囲で診断する</button>
+        <button class="btn btn-ghost" id="btn-redo" type="button">撮り直す</button>
+      </div>
+    </section>
+
+    <!-- 解析中 -->
+    <section class="card center" id="step-loading" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="loading-text">肌をうつしています…</p>
+    </section>
+
+    <!-- ステップ3: 結果 -->
+    <section id="step-result" hidden>
+
+      <div class="card result-hero">
+        <p class="result-label">推定される顔年齢</p>
+        <p class="result-age"><span id="result-age">--</span><span class="unit">歳</span></p>
+        <p class="result-diff" id="result-diff" hidden></p>
+
+        <div class="score-ring-wrap">
+          <svg class="score-ring" viewBox="0 0 120 120" role="img" aria-labelledby="score-ring-title">
+            <title id="score-ring-title">肌スコア</title>
+            <circle class="ring-bg" cx="60" cy="60" r="52" />
+            <circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52" />
+          </svg>
+          <div class="score-ring-center">
+            <span class="score-value" id="result-score">--</span>
+            <span class="score-caption">肌スコア</span>
+          </div>
+        </div>
+
+        <p class="result-comment" id="result-comment"></p>
+        <p class="result-notes" id="result-notes" hidden></p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">7項目の内訳</h2>
+        <p class="card-lead">数値が高いほど良好な状態です。</p>
+        <div class="radar-wrap">
+          <svg id="radar" viewBox="0 0 260 260" role="img" aria-labelledby="radar-title">
+            <title id="radar-title">7項目のバランス</title>
+          </svg>
+        </div>
+        <ul class="item-list" id="item-list"></ul>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">今日のケア</h2>
+        <ul class="care-list" id="care-list"></ul>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">記録する</h2>
+        <p class="card-lead">結果を端末内に保存すると、あとから変化を見返せます。実年齢は記録と「実年齢との差」の表示にのみ使い、診断結果そのものには影響しません。</p>
+        <div class="save-row">
+          <label class="field">
+            <span class="field-label">実年齢（任意）</span>
+            <input type="number" id="real-age" min="5" max="110" inputmode="numeric" placeholder="例: 34" />
+          </label>
+          <label class="field">
+            <span class="field-label">メモ（任意）</span>
+            <input type="text" id="memo" maxlength="40" placeholder="例: 睡眠6時間" />
+          </label>
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-primary" id="btn-save" type="button">この結果を記録する</button>
+          <button class="btn btn-ghost" id="btn-again" type="button">もう一度診断する</button>
+        </div>
+      </div>
+
+      <p class="disclaimer">
+        この結果は画像処理にもとづく目安であり、医学的な診断ではありません。
+        照明・角度・化粧・カメラの性能で結果は変わります。肌のお悩みは皮膚科医にご相談ください。
+      </p>
+    </section>
+
+    <p class="error-text card" id="global-error" hidden></p>
+  </main>
+
+  <!-- ============ 記録 ============ -->
+  <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" hidden>
+    <div class="card" id="history-empty">
+      <h2 class="card-title">まだ記録がありません</h2>
+      <p class="card-lead">診断のあと「この結果を記録する」を押すと、ここに残ります。同じ時間帯・同じ場所で撮ると、変化を比べやすくなります。</p>
+    </div>
+
+    <div class="card" id="history-chart-card" hidden>
+      <h2 class="card-title">推移</h2>
+      <div class="chart-toggle" role="group" aria-label="表示する指標">
+        <button class="chip is-active" data-metric="age" type="button">顔年齢</button>
+        <button class="chip" data-metric="score" type="button">肌スコア</button>
+      </div>
+      <div class="chart-wrap">
+        <svg id="history-chart" viewBox="0 0 320 180" role="img" aria-labelledby="chart-title">
+          <title id="chart-title">記録の推移</title>
+        </svg>
+      </div>
+      <p class="chart-summary" id="chart-summary"></p>
+    </div>
+
+    <div class="card" id="history-list-card" hidden>
+      <h2 class="card-title">記録一覧</h2>
+      <ul class="history-list" id="history-list"></ul>
+      <div class="row-actions">
+        <button class="btn btn-ghost" id="btn-export" type="button">記録を書き出す</button>
+        <button class="btn btn-ghost btn-danger" id="btn-clear" type="button">すべて削除</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ しくみ ============ -->
+  <section id="panel-about" class="panel" role="tabpanel" aria-labelledby="tab-about" hidden>
+    <div class="card">
+      <h2 class="card-title">写真はどこにも送られません</h2>
+      <p class="body-text">
+        うつし鏡は、HTMLとJavaScriptだけでできた静的なアプリです。撮影・読み込んだ画像は
+        ブラウザのメモリ上で解析され、処理が終われば消えます。外部サーバーへの送信も、
+        AIモデルのダウンロードもありません。機内モードのままでも動きます。
+      </p>
+      <p class="body-text">
+        記録として保存した内容（日時・年齢・スコア・小さなサムネイル・メモ）は、この端末の
+        ブラウザ内（localStorage）にのみ保存されます。「すべて削除」でいつでも消せます。
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">どうやって測っているか</h2>
+      <p class="body-text">
+        肌色の分布から顔の位置を探し、目の高さを基準に顔を一定の大きさへそろえます。
+        そのうえで、部位ごとに次のような画像特徴を取り出しています。
+      </p>
+      <ul class="method-list">
+        <li><b>シワ</b>— 額とほうれい線の位置で、局所的な明暗差（線の強さ）を測ります。</li>
+        <li><b>目元</b>— 目尻の細かい凹凸の量を測ります。</li>
+        <li><b>キメ</b>— 頬の細かい凹凸のばらつきから、肌表面のなめらかさを見ます。</li>
+        <li><b>ハリ</b>— フェイスラインに出る線と影の濃さを見ます。</li>
+        <li><b>明るさ</b>— 顔全体の輝度と黄みの強さから、くすみ具合を見ます。</li>
+        <li><b>均一さ</b>— 頬の中での色のばらつきを見ます。</li>
+        <li><b>クマ</b>— 目の下と頬の明るさの差を見ます。</li>
+      </ul>
+      <p class="body-text">
+        照明の色かぶりはホワイトバランス補正で打ち消し、明るさの影響は部位ごとに正規化しています。
+        それでも、強い逆光・濃いメイク・眼鏡・ヒゲは結果に影響します。
+        同じ結果を比べたいときは、同じ場所・同じ時間帯で撮るのがおすすめです。
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">上手に撮るコツ</h2>
+      <ul class="method-list">
+        <li>窓の近くなど、正面から自然光が当たる場所で。</li>
+        <li>真上からのライトは影が濃くなり、実際よりシワが強く出ます。</li>
+        <li>顔を画面いっぱいに、まっすぐ正面から。</li>
+        <li>前髪や手で額・頬が隠れないように。</li>
+        <li>比べるときは、毎回できるだけ同じ条件で。</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">ご注意</h2>
+      <p class="body-text">
+        本アプリは娯楽・セルフチェックを目的としたもので、医学的な診断や治療の判断に用いることはできません。
+        肌トラブルや気になる変化がある場合は、皮膚科などの医療機関にご相談ください。
+      </p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>うつし鏡 — 完全無料・広告なし・オフライン対応。写真は端末内でのみ扱われます。</p>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./js/analyze.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
