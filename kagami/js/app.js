@@ -400,6 +400,64 @@
     renderResult(result);
     showStep("result");
     window.scrollTo({ top: 0, behavior: "smooth" });
+    runFaceType();
+  }
+
+  /* ---------------- 顔立ちのタイプ ---------------- */
+
+  /** 直近の顔立ち判定 */
+  let lastFaceType = null;
+
+  /**
+   * 顔立ちのタイプを判定して表示する。
+   * 肌の解析とは別のしくみ（顔の特徴点の検出）を使い、時間もかかるため、
+   * 結果画面を出したあとに追いかけて表示する。
+   * 判定できない環境・写真ではカードごと出さない。
+   */
+  async function runFaceType() {
+    const card = $("#facetype-card");
+    lastFaceType = null;
+    if (!window.KagamiFaceType || !sourceCanvas) { card.hidden = true; return; }
+
+    $("#facetype-loading").hidden = false;
+    $("#facetype-body").hidden = true;
+    card.hidden = false;
+
+    const type = await window.KagamiFaceType.detect(sourceCanvas);
+    if (!type) { card.hidden = true; return; }
+
+    lastFaceType = type;
+    $("#facetype-name").textContent = type.name;
+    $("#facetype-yomi").textContent = type.yomi;
+    $("#facetype-match").textContent = type.match;
+    $("#facetype-catch").textContent = type.near
+      ? `${type.catch}（${type.near}寄り）`
+      : type.catch;
+    $("#facetype-impression").textContent = type.impression;
+    $("#facetype-strong").textContent = type.strong;
+
+    const list = $("#facetype-details");
+    list.textContent = "";
+    type.details.forEach((d) => {
+      const li = document.createElement("li");
+      const label = document.createElement("span");
+      label.className = "d-label";
+      label.textContent = d.label;
+      const value = document.createElement("span");
+      value.className = "d-value";
+      value.textContent = d.value;
+      const note = document.createElement("span");
+      note.className = "d-note";
+      note.textContent = d.note;
+      const ref = document.createElement("span");
+      ref.className = "d-ref";
+      ref.textContent = d.ref;
+      li.append(label, value, note, ref);
+      list.appendChild(li);
+    });
+
+    $("#facetype-loading").hidden = true;
+    $("#facetype-body").hidden = false;
   }
 
   /* ---------------- 結果の描画 ---------------- */
@@ -602,6 +660,8 @@
     sourceCanvas = null;
     cropBox = null;
     lastResult = null;
+    lastFaceType = null;
+    $("#facetype-card").hidden = true;
     $("#memo").value = "";
     showStep("input");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -662,6 +722,7 @@
       realAge: Number.isFinite(realAge) && realAge >= 5 && realAge <= 110 ? realAge : null,
       memo: $("#memo").value.trim().slice(0, 40),
       scores: lastResult.scores,
+      faceType: lastFaceType ? lastFaceType.name : null,
       thumb: makeThumb(),
     };
     const list = loadHistory();
@@ -781,6 +842,13 @@
       );
 
       main.append(date, figures);
+
+      if (entry.faceType) {
+        const ft = document.createElement("div");
+        ft.className = "history-memo";
+        ft.textContent = entry.faceType;
+        main.appendChild(ft);
+      }
 
       if (entry.memo) {
         const memo = document.createElement("div");

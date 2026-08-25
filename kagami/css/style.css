@@ -772,3 +772,119 @@ body {
   padding: 2px 0;
 }
 .install-steps b { color: rgb(var(--mizu)); }
+
+/* ---------------- 顔立ちのタイプ ---------------- */
+
+.facetype-loading {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.facetype-loading .spinner { margin-top: 0; }
+.facetype-loading p {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: rgb(var(--ink-soft));
+}
+
+.facetype-head {
+  text-align: center;
+  padding: 4px 0 12px;
+  border-bottom: 1px solid rgb(var(--ink) / 0.08);
+}
+
+.facetype-name {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0;
+  color: rgb(var(--mizu));
+}
+
+.facetype-yomi {
+  margin: 2px 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: rgb(var(--ink-soft));
+}
+
+.facetype-match {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: rgb(var(--ink-soft));
+}
+.facetype-match span:first-child {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: rgb(var(--ink));
+}
+.facetype-match .unit { margin-right: 4px; }
+
+.facetype-catch {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.facetype-impression,
+.facetype-strong {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.85;
+}
+.facetype-strong {
+  background: rgb(var(--matcha) / 0.1);
+  color: rgb(var(--matcha));
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.facetype-details {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 360px) {
+  .facetype-details { grid-template-columns: 1fr; }
+}
+.facetype-details li {
+  background: rgb(var(--ink) / 0.04);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+}
+.facetype-details .d-label {
+  display: block;
+  font-size: 0.68rem;
+  color: rgb(var(--ink-soft));
+}
+.facetype-details .d-value {
+  display: block;
+  font-family: "Shippori Mincho", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.facetype-details .d-note {
+  display: block;
+  font-size: 0.68rem;
+  color: rgb(var(--mizu));
+}
+
+.facetype-note {
+  margin: 12px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.7;
+  color: rgb(var(--ink-soft));
+}
+.facetype-details .d-ref {
+  display: block;
+  font-size: 0.62rem;
+  color: rgb(var(--ink-soft));
+  opacity: 0.85;
+  margin-top: 2px;
+}
