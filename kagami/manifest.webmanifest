@@ -1,0 +1,20 @@
+{
+  "name": "うつし鏡 - 無料の顔年齢・肌年齢チェック",
+  "short_name": "うつし鏡",
+  "description": "顔写真から推定年齢と肌スコアを表示する完全無料のアプリ。シワ・目元・キメ・ハリ・明るさ・均一さ・クマの7項目を判定し、記録して変化を追えます。写真は端末内だけで解析され、どこにも送信されません。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6efe1",
+  "theme_color": "#f6efe1",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
