@@ -676,16 +676,47 @@
     toast("記録をすべて削除しました");
   });
 
-  $("#btn-export").addEventListener("click", () => {
+  /**
+   * 埋め込みビューアなど、ページから直接ファイルを保存できない環境向けの窓口。
+   * 使えない場合は null を返し、通常のダウンロードにそのまま任せる。
+   */
+  async function viewerSave() {
+    try {
+      if (!window.claude || typeof window.claude.use !== "function") return null;
+      const downloads = await window.claude.use("downloads");
+      return downloads && typeof downloads.save === "function"
+        ? (req) => downloads.save(req)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  $("#btn-export").addEventListener("click", async () => {
     const list = loadHistory();
     if (!list.length) { toast("書き出す記録がありません"); return; }
     // 画像は大きいので、書き出しには含めない
     const plain = list.map(({ thumb, ...rest }) => rest);
-    const blob = new Blob([JSON.stringify(plain, null, 2)], { type: "application/json" });
+    const json = JSON.stringify(plain, null, 2);
+    const filename = `utsushi-kagami-${new Date().toISOString().slice(0, 10)}.json`;
+
+    const save = await viewerSave();
+    if (save) {
+      try {
+        await save({ filename, data: json });
+        toast("記録を書き出しました");
+      } catch (err) {
+        // 利用者が保存をやめた場合は何も知らせない
+        if (!err || err.code !== "declined") toast("書き出せませんでした");
+      }
+      return;
+    }
+
+    const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `utsushi-kagami-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = filename;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
