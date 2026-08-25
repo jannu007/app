@@ -871,6 +871,154 @@
     $("#chart-summary").textContent = text;
   }
 
+  /* ---------------- ホーム画面への追加 ---------------- */
+
+  const INSTALL_DISMISS_KEY = "utsushi-kagami-install-dismissed-v1";
+
+  /** すでにアプリとして起動しているか */
+  function isInstalled() {
+    return window.matchMedia("(display-mode: standalone)").matches
+      || window.navigator.standalone === true;
+  }
+
+  /**
+   * 手順を自分でたどってもらう案内を出す。
+   * Chrome 以外（iOS の Safari など）にはインストールを起動する仕組みがないため、
+   * その端末で実際に必要な操作だけを並べる。
+   */
+  function showInstallSteps(title, lead, steps) {
+    const card = $("#install-card");
+    if (!card) return;
+    $("#install-card .card-title").textContent = title;
+    $("#install-lead").textContent = lead;
+    $("#install-actions").hidden = true;
+
+    const list = $("#install-steps");
+    list.textContent = "";
+    steps.forEach((step) => {
+      const li = document.createElement("li");
+      li.innerHTML = "";
+      // 太字にしたい部分は【】で囲って渡す
+      step.split(/【|】/).forEach((part, i) => {
+        if (i % 2 === 1) {
+          const b = document.createElement("b");
+          b.textContent = part;
+          li.appendChild(b);
+        } else if (part) {
+          li.appendChild(document.createTextNode(part));
+        }
+      });
+      list.appendChild(li);
+    });
+    list.hidden = false;
+    card.hidden = false;
+  }
+
+  function setupInstall() {
+    const card = $("#install-card");
+    // マニフェストの無いページ（単体で埋め込んだ場合など）では案内しない
+    if (!card || !document.querySelector('link[rel="manifest"]')) return;
+
+    const aboutSection = $("#about-install");
+    if (isInstalled()) {
+      // インストール済みなら、案内はどこにも出さない
+      if (aboutSection) aboutSection.hidden = true;
+      return;
+    }
+
+    let dismissed = false;
+    try { dismissed = localStorage.getItem(INSTALL_DISMISS_KEY) === "1"; } catch { /* 既定のまま */ }
+
+    let deferredPrompt = null;
+
+    // Chrome 系: ブラウザがインストール可能と判断した時点で呼ばれる
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!dismissed) card.hidden = false;
+    });
+
+    $("#btn-install").addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      const prompt = deferredPrompt;
+      deferredPrompt = null;
+      card.hidden = true;
+      try {
+        prompt.prompt();
+        const { outcome } = await prompt.userChoice;
+        if (outcome !== "accepted") {
+          // 断られた場合は、次の機会にまた出せるよう元に戻す
+          deferredPrompt = prompt;
+          card.hidden = dismissed;
+        }
+      } catch {
+        toast("インストールを開始できませんでした");
+      }
+    });
+
+    $("#btn-install-later").addEventListener("click", () => {
+      dismissed = true;
+      card.hidden = true;
+      try { localStorage.setItem(INSTALL_DISMISS_KEY, "1"); } catch { /* 保存できなくても支障はない */ }
+    });
+
+    window.addEventListener("appinstalled", () => {
+      card.hidden = true;
+      if (aboutSection) aboutSection.hidden = true;
+      toast("ホーム画面に追加しました");
+    });
+
+    if (dismissed) return;
+
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    // LINE・X・Facebook などのアプリ内ブラウザ。インストールの項目自体が無い
+    const isInAppBrowser = /\bFBAN|\bFBAV|Line\/|Instagram|Twitter|MicroMessenger/i.test(ua);
+
+    if (isInAppBrowser) {
+      showInstallSteps(
+        "ブラウザで開くとインストールできます",
+        "いまアプリの中のブラウザで開いているため、ホーム画面に追加できません。",
+        [
+          "画面の【…】または【⋮】メニューを開く",
+          "【ブラウザで開く】（Chrome・Safari）を選ぶ",
+          "開いたブラウザで、あらためてこの案内に従う",
+        ]
+      );
+      return;
+    }
+
+    if (isIOS) {
+      showInstallSteps(
+        "ホーム画面に追加",
+        "アプリのように起動でき、オフラインでも使えます。Safari で次の操作をしてください。",
+        [
+          "画面下の【共有ボタン】（□に↑）を押す",
+          "メニューを下にたどって【ホーム画面に追加】を選ぶ",
+          "右上の【追加】を押す",
+        ]
+      );
+      return;
+    }
+
+    // Chrome 以外のPC・Androidブラウザ向け。beforeinstallprompt が来れば
+    // 上のボタン付き表示に切り替わるので、少し待ってから案内を出す
+    setTimeout(() => {
+      if (deferredPrompt || !card.hidden || dismissed || isInstalled()) return;
+      showInstallSteps(
+        "ホーム画面に追加",
+        "アプリのように起動でき、オフラインでも使えます。ご利用のブラウザのメニューから追加できます。",
+        [
+          "Android（Chrome）: 右上の【⋮】→【アプリをインストール】",
+          "パソコン（Chrome・Edge）: アドレスバー右端の【インストール】",
+        ]
+      );
+    }, 3000);
+  }
+
+  setupInstall();
+
   /* ---------------- Service Worker ---------------- */
 
   if ("serviceWorker" in navigator) {

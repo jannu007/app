@@ -733,3 +733,42 @@ body {
   outline: 2px solid rgb(var(--mizu));
   outline-offset: 2px;
 }
+
+/* ---------------- インストールの案内 ---------------- */
+
+.install-card {
+  border-color: rgb(var(--mizu) / 0.4);
+  background:
+    linear-gradient(135deg, rgb(var(--mizu) / 0.10), rgb(var(--gold) / 0.08)),
+    rgb(var(--card-bg) / 0.94);
+}
+
+.install-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.install-icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  background: rgb(var(--mizu) / 0.14);
+}
+
+.install-head .card-lead { margin-bottom: 0; }
+
+.install-steps {
+  margin: 12px 0 0;
+  padding: 0 0 0 20px;
+}
+.install-steps li {
+  font-size: 0.8rem;
+  line-height: 1.8;
+  padding: 2px 0;
+}
+.install-steps b { color: rgb(var(--mizu)); }
