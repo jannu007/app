@@ -908,3 +908,90 @@ body {
   border-radius: 999px;
   padding: 5px 14px;
 }
+
+/* ---------------- 顔タイプの例 ---------------- */
+
+.facetype-examples {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgb(var(--gold) / 0.1);
+}
+
+.facetype-examples .ex-title {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: rgb(var(--ink-soft));
+}
+
+.facetype-examples .ex-names {
+  margin: 4px 0 0;
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.facetype-examples .ex-note {
+  margin: 6px 0 0;
+  font-size: 0.66rem;
+  line-height: 1.6;
+  color: rgb(var(--ink-soft));
+}
+
+.facetype-empty {
+  margin: 14px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.7;
+  color: rgb(var(--ink-soft));
+}
+.facetype-empty a { color: rgb(var(--mizu)); }
+
+.body-text.small {
+  font-size: 0.74rem;
+  line-height: 1.75;
+  color: rgb(var(--ink-soft));
+}
+.body-text.small code {
+  font-size: 0.92em;
+  background: rgb(var(--ink) / 0.06);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.example-rows {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+
+.example-row {
+  display: grid;
+  grid-template-columns: 8.2em 1fr;
+  align-items: center;
+  gap: 10px;
+}
+@media (max-width: 420px) {
+  .example-row { grid-template-columns: 1fr; gap: 4px; }
+}
+
+.example-row .ex-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.example-row input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.84rem;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(var(--ink) / 0.18);
+  background: rgb(var(--paper));
+  color: rgb(var(--ink));
+}
+.example-row input:focus {
+  outline: 2px solid rgb(var(--mizu) / 0.5);
+  outline-offset: 1px;
+}

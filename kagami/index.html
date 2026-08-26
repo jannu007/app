@@ -167,6 +167,16 @@
           <p class="facetype-catch" id="facetype-catch"></p>
           <p class="facetype-impression" id="facetype-impression"></p>
           <p class="facetype-strong" id="facetype-strong"></p>
+
+          <div class="facetype-examples" id="facetype-examples" hidden>
+            <p class="ex-title">このタイプの例</p>
+            <p class="ex-names" id="facetype-example-names"></p>
+            <p class="ex-note">顔立ちの分類の例として挙げているもので、ご本人と顔を照合した結果ではありません。</p>
+          </div>
+
+          <p class="facetype-empty" id="facetype-example-empty" hidden>
+            このタイプの例に挙げる名前を、<a href="#about-examples" data-goto-about="1">「しくみ」タブ</a>から登録できます。
+          </p>
           <ul class="facetype-details" id="facetype-details"></ul>
           <p class="facetype-note">
             顔立ちのタイプは、肌の状態や推定年齢とは別に、顔の造作の比率だけから判定しています。
@@ -314,6 +324,29 @@
       </ul>
     </div>
 
+    <div class="card" id="about-examples">
+      <h2 class="card-title">顔タイプの例に名前を登録する</h2>
+      <p class="body-text">
+        8つの顔タイプそれぞれに、そのタイプの雰囲気を思い浮かべやすくする名前を登録できます。
+        登録するとこの端末の診断結果に「このタイプの例」として表示されます。
+      </p>
+      <p class="body-text small">
+        このアプリは顔の造作の比率からタイプを分けているだけで、特定の人物と顔を突き合わせているわけではありません。
+        実在の方の名前を挙げる場合は、その点をふまえてお選びください。
+      </p>
+
+      <div class="example-rows" id="example-rows"></div>
+
+      <div class="row-actions">
+        <button class="btn btn-primary" id="btn-examples-save" type="button">登録する</button>
+        <button class="btn btn-ghost" id="btn-examples-clear" type="button">登録を消す</button>
+      </div>
+      <p class="body-text small">
+        名前は「、」または「,」で区切ると複数登録できます。
+        公開するアプリ全体に反映したい場合は、<code>js/facetype-examples.js</code> に書き込んでください。
+      </p>
+    </div>
+
     <div class="card" id="about-install">
       <h2 class="card-title">ホーム画面に追加して使う</h2>
       <p class="body-text">
@@ -349,6 +382,7 @@
 
 <script src="./js/analyze.js"></script>
 <script src="./js/facetype.js"></script>
+<script src="./js/facetype-examples.js"></script>
 <script src="./js/measure.js"></script>
 <script src="./js/app.js"></script>
 </body>
