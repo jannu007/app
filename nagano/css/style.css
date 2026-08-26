@@ -1,0 +1,372 @@
+:root {
+  --paper: 246, 240, 228;
+  --paper-2: 255, 253, 247;
+  --ink: 46, 42, 38;
+  --ink-soft: 106, 94, 84;
+  --ink-faint: 150, 138, 126;
+  --indigo: 45, 78, 118;
+  --indigo-soft: 104, 141, 178;
+  --matcha: 92, 138, 108;
+  --gold: 194, 148, 62;
+  --apple: 178, 58, 52;
+  --sky: 128, 168, 200;
+  --card-bg: 255, 253, 247;
+  --line: 214, 200, 178;
+  --shadow: 58, 46, 40;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: 30, 28, 25;
+    --paper-2: 42, 38, 34;
+    --ink: 238, 230, 218;
+    --ink-soft: 196, 184, 168;
+    --ink-faint: 148, 138, 126;
+    --indigo: 126, 166, 206;
+    --indigo-soft: 92, 128, 164;
+    --matcha: 130, 178, 142;
+    --gold: 212, 172, 96;
+    --apple: 224, 116, 106;
+    --sky: 118, 156, 190;
+    --card-bg: 43, 39, 34;
+    --line: 78, 70, 62;
+    --shadow: 0, 0, 0;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  color: rgb(var(--ink));
+  background: rgb(var(--paper));
+  min-height: 100vh;
+  min-height: 100dvh;
+  line-height: 1.7;
+  font-size: 15px;
+  overflow-x: hidden;
+}
+
+/* ---------- 背景 ---------- */
+.scene-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+.ink-blob { position: absolute; border-radius: 50%; filter: blur(46px); opacity: 0.5; }
+.blob-a { width: 60vw; height: 60vw; top: -14vw; left: -16vw; background: rgba(104,141,178,0.34); }
+.blob-b { width: 52vw; height: 52vw; top: 22vh; right: -18vw; background: rgba(92,138,108,0.3); }
+.blob-c { width: 56vw; height: 56vw; bottom: -18vw; left: 4vw; background: rgba(194,148,62,0.24); }
+@media (prefers-color-scheme: dark) { .ink-blob { opacity: 0.28; } }
+.ridge { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 26vh; opacity: .34; }
+
+/* ---------- シェル ---------- */
+.app-shell { max-width: 660px; margin: 0 auto; padding: 0 14px calc(84px + env(safe-area-inset-bottom)); position: relative; }
+
+.app-header {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 10px;
+  padding: max(12px, env(safe-area-inset-top)) 2px 10px;
+  background: linear-gradient(rgb(var(--paper)) 72%, rgba(var(--paper), 0));
+  backdrop-filter: blur(6px);
+}
+.brand { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+.brand h1 {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.16rem; margin: 0; letter-spacing: .05em; white-space: nowrap;
+}
+.brand .sub { font-size: .66rem; color: rgb(var(--ink-soft)); display: block; letter-spacing: .08em; }
+.icon-btn {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px;
+  border: 1px solid rgba(var(--line), .9); background: rgba(var(--card-bg), .9);
+  color: rgb(var(--ink)); display: grid; place-items: center; cursor: pointer;
+}
+.icon-btn:active { transform: scale(.95); }
+
+.menu-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.28); z-index: 44; }
+.menu-panel {
+  position: fixed; top: calc(max(12px, env(safe-area-inset-top)) + 50px);
+  right: max(14px, calc(50vw - 316px)); z-index: 45;
+  background: rgb(var(--card-bg)); border: 1px solid rgba(var(--line), 1);
+  border-radius: 16px; padding: 6px; min-width: 226px;
+  box-shadow: 0 18px 40px -14px rgba(var(--shadow), .5);
+}
+.menu-item {
+  display: block; width: 100%; text-align: left; background: none; border: 0;
+  padding: 11px 12px; border-radius: 11px; font: inherit; font-size: .86rem;
+  color: rgb(var(--ink)); cursor: pointer;
+}
+.menu-item:active { background: rgba(var(--indigo), .1); }
+.menu-item.danger { color: rgb(var(--apple)); }
+
+/* ---------- タブ ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 35;
+  display: flex; gap: 2px;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: rgba(var(--paper), .94);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(var(--line), .8);
+}
+.tab-btn {
+  flex: 1; border: 0; background: none; font: inherit; font-size: .66rem;
+  color: rgb(var(--ink-soft)); padding: 5px 2px 3px; border-radius: 12px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.3;
+}
+.tab-btn .ti { font-size: 1.16rem; line-height: 1; }
+.tab-btn.active { color: rgb(var(--indigo)); background: rgba(var(--indigo), .1); font-weight: 700; }
+.tab-panel { display: none; animation: fade .22s ease; }
+.tab-panel.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 共通 ---------- */
+.card {
+  background: rgba(var(--card-bg), .94);
+  border: 1px solid rgba(var(--line), .85);
+  border-radius: 18px; padding: 14px;
+  box-shadow: 0 8px 22px -14px rgba(var(--shadow), .4);
+  margin-bottom: 12px;
+}
+h2.sec-title {
+  font-family: "Shippori Mincho", serif; font-size: 1rem; margin: 18px 0 9px;
+  display: flex; align-items: center; gap: 7px;
+}
+h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px; background: rgb(var(--indigo)); }
+.muted { color: rgb(var(--ink-soft)); font-size: .78rem; }
+.tiny { font-size: .72rem; color: rgb(var(--ink-faint)); line-height: 1.6; }
+
+/* ---------- 検索・フィルタ ---------- */
+.search-row { position: relative; margin-bottom: 9px; }
+.search-row input {
+  width: 100%; font: inherit; font-size: .92rem;
+  padding: 11px 38px 11px 38px; border-radius: 14px;
+  border: 1px solid rgba(var(--line), 1); background: rgba(var(--card-bg), .96);
+  color: rgb(var(--ink));
+}
+.search-row input:focus { outline: 2px solid rgba(var(--indigo), .45); outline-offset: 1px; }
+.search-row .s-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgb(var(--ink-faint)); }
+.search-row .s-clear {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  border: 0; background: rgba(var(--ink-faint), .18); color: rgb(var(--ink-soft));
+  width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: .8rem; line-height: 1;
+}
+
+.chip-row { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 7px; scrollbar-width: none; }
+.chip-row::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; border: 1px solid rgba(var(--line), 1); background: rgba(var(--card-bg), .8);
+  color: rgb(var(--ink-soft)); font: inherit; font-size: .76rem; padding: 5px 11px;
+  border-radius: 999px; cursor: pointer; white-space: nowrap;
+}
+.chip.on { background: rgb(var(--indigo)); border-color: rgb(var(--indigo)); color: #fff; font-weight: 700; }
+.chip.on.green { background: rgb(var(--matcha)); border-color: rgb(var(--matcha)); }
+.chip.on.gold { background: rgb(var(--gold)); border-color: rgb(var(--gold)); }
+.chip.on.apple { background: rgb(var(--apple)); border-color: rgb(var(--apple)); }
+
+.list-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 9px; }
+.list-meta .count { font-size: .76rem; color: rgb(var(--ink-soft)); }
+.list-meta select {
+  font: inherit; font-size: .76rem; padding: 5px 9px; border-radius: 10px;
+  border: 1px solid rgba(var(--line), 1); background: rgba(var(--card-bg), .95); color: rgb(var(--ink));
+}
+
+/* ---------- 市町村カード ---------- */
+.town-list { display: flex; flex-direction: column; gap: 10px; }
+.town-card {
+  position: relative; text-align: left; width: 100%;
+  background: rgba(var(--card-bg), .95);
+  border: 1px solid rgba(var(--line), .85);
+  border-left: 5px solid rgb(var(--indigo));
+  border-radius: 16px; padding: 12px 13px 11px; cursor: pointer;
+  font: inherit; color: inherit;
+  box-shadow: 0 7px 18px -14px rgba(var(--shadow), .45);
+  transition: transform .16s ease;
+}
+.town-card:active { transform: scale(.985); }
+.town-card.visited { background: linear-gradient(100deg, rgba(var(--matcha), .1), rgba(var(--card-bg), .96) 46%); }
+.tc-head { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.tc-name { font-family: "Shippori Mincho", serif; font-size: 1.12rem; font-weight: 700; letter-spacing: .02em; }
+.tc-kana { font-size: .68rem; color: rgb(var(--ink-faint)); }
+.tc-badges { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+.badge {
+  font-size: .62rem; padding: 2px 7px; border-radius: 999px; font-weight: 700; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.badge.type-市 { background: rgba(var(--indigo), .15); color: rgb(var(--indigo)); }
+.badge.type-町 { background: rgba(var(--matcha), .18); color: rgb(var(--matcha)); }
+.badge.type-村 { background: rgba(var(--gold), .2); color: rgb(var(--gold)); }
+.badge.region { background: rgba(var(--ink-faint), .16); color: rgb(var(--ink-soft)); }
+.badge.eki { background: rgba(var(--apple), .14); color: rgb(var(--apple)); }
+.tc-catch { font-size: .84rem; color: rgb(var(--ink-soft)); margin: 5px 0 7px; }
+.tc-tags { display: flex; flex-wrap: wrap; gap: 4px; padding-right: 30px; }
+.tag {
+  font-size: .68rem; padding: 2px 8px; border-radius: 7px;
+  background: rgba(var(--indigo-soft), .14); color: rgb(var(--ink-soft));
+}
+.tag.soba { background: rgba(var(--matcha), .16); color: rgb(var(--matcha)); font-weight: 700; }
+.tc-star {
+  position: absolute; right: 8px; bottom: 6px; border: 0; background: none;
+  font-size: 1.06rem; cursor: pointer; padding: 4px; line-height: 1; opacity: .35;
+}
+.tc-star.on { opacity: 1; }
+.empty { text-align: center; padding: 34px 12px; color: rgb(var(--ink-soft)); font-size: .86rem; }
+
+/* ---------- 地域タブ ---------- */
+.region-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.region-card {
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: rgba(var(--card-bg), .95); border: 1px solid rgba(var(--line), .9);
+  border-radius: 16px; padding: 12px;
+  box-shadow: 0 7px 18px -14px rgba(var(--shadow), .45);
+}
+.region-card:active { transform: scale(.98); }
+.region-card .rc-top { display: flex; align-items: center; gap: 7px; }
+.region-card .rc-emoji { font-size: 1.3rem; }
+.region-card .rc-name { font-family: "Shippori Mincho", serif; font-size: 1rem; font-weight: 700; }
+.region-card .rc-count { margin-left: auto; font-size: .68rem; color: rgb(var(--ink-faint)); }
+.region-card .rc-desc { font-size: .72rem; color: rgb(var(--ink-soft)); margin-top: 5px; line-height: 1.6; }
+
+/* ---------- そば・道の駅タブ ---------- */
+.soba-item, .eki-item {
+  border-bottom: 1px dashed rgba(var(--line), 1); padding: 10px 2px;
+}
+.soba-item:last-child, .eki-item:last-child { border-bottom: 0; }
+.soba-name { font-family: "Shippori Mincho", serif; font-weight: 700; font-size: .95rem; color: rgb(var(--matcha)); }
+.soba-town { font-size: .72rem; color: rgb(var(--ink-faint)); margin-left: 6px; }
+.soba-desc { font-size: .78rem; color: rgb(var(--ink-soft)); margin-top: 3px; }
+.eki-name { font-size: .88rem; font-weight: 700; }
+.link-btn {
+  border: 0; background: none; color: rgb(var(--indigo)); font: inherit; font-size: .74rem;
+  cursor: pointer; padding: 2px 0; text-decoration: underline;
+}
+
+/* ---------- 記録タブ ---------- */
+.progress-wrap { display: flex; align-items: center; gap: 14px; }
+.ring-num { font-family: "Shippori Mincho", serif; font-size: 1.6rem; font-weight: 700; }
+.ring-num small { font-size: .8rem; color: rgb(var(--ink-soft)); font-weight: 400; }
+.ring-bg { fill: none; stroke: rgba(var(--line), 1); stroke-width: 9; }
+.ring-fg {
+  fill: none; stroke: rgb(var(--matcha)); stroke-width: 9; stroke-linecap: round;
+  transform: rotate(-90deg); transform-origin: 50% 50%;
+  stroke-dasharray: 264; transition: stroke-dashoffset .7s cubic-bezier(.22,.9,.32,1);
+}
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.stat-box { background: rgba(var(--indigo), .07); border-radius: 12px; padding: 9px 6px; text-align: center; }
+.stat-box b { display: block; font-family: "Shippori Mincho", serif; font-size: 1.12rem; }
+.stat-box span { font-size: .66rem; color: rgb(var(--ink-soft)); }
+.bar { height: 8px; border-radius: 4px; background: rgba(var(--line), 1); overflow: hidden; margin-top: 4px; }
+.bar > i { display: block; height: 100%; background: rgb(var(--indigo)); border-radius: 4px; transition: width .6s ease; }
+.region-progress { margin-top: 4px; }
+.region-progress .rp-row { margin-bottom: 9px; }
+.region-progress .rp-label { display: flex; justify-content: space-between; font-size: .76rem; }
+
+.btn {
+  font: inherit; font-size: .84rem; border-radius: 12px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid rgba(var(--line), 1); background: rgba(var(--card-bg), .95); color: rgb(var(--ink));
+}
+.btn:active { transform: scale(.98); }
+.btn.primary { background: rgb(var(--indigo)); border-color: rgb(var(--indigo)); color: #fff; font-weight: 700; }
+.btn.green { background: rgb(var(--matcha)); border-color: rgb(var(--matcha)); color: #fff; font-weight: 700; }
+.btn.block { display: block; width: 100%; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- 詳細シート ---------- */
+.sheet-scrim {
+  position: fixed; inset: 0; background: rgba(0,0,0,.42); z-index: 50;
+  animation: fade .2s ease;
+}
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; top: 4vh; z-index: 51;
+  background: rgb(var(--paper)); border-radius: 22px 22px 0 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 -12px 40px -12px rgba(var(--shadow), .55);
+  animation: slideup .28s cubic-bezier(.22,.9,.32,1);
+  max-width: 660px; margin: 0 auto;
+}
+@keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
+.sheet-head {
+  padding: 12px 16px 10px; border-bottom: 1px solid rgba(var(--line), .9);
+  display: flex; align-items: flex-start; gap: 10px;
+  background: rgba(var(--card-bg), .6);
+}
+.sheet-head .sh-main { flex: 1; min-width: 0; }
+.sheet-head h3 { font-family: "Shippori Mincho", serif; font-size: 1.34rem; margin: 0; letter-spacing: .03em; }
+.sheet-body { flex: 1; overflow-y: auto; padding: 14px 16px calc(20px + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+.sheet-nav {
+  display: flex; gap: 8px; padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(var(--line), .9); background: rgba(var(--card-bg), .8);
+}
+.sheet-nav .btn { flex: 1; text-align: center; }
+
+.d-sec { margin-bottom: 16px; }
+.d-sec h4 {
+  font-family: "Shippori Mincho", serif; font-size: .93rem; margin: 0 0 7px;
+  display: flex; align-items: center; gap: 6px; color: rgb(var(--indigo));
+}
+.d-sec p { margin: 0; font-size: .86rem; }
+.d-list { list-style: none; margin: 0; padding: 0; }
+.d-list li { padding: 7px 0; border-bottom: 1px dashed rgba(var(--line), 1); }
+.d-list li:last-child { border-bottom: 0; }
+.d-list .dl-name { font-weight: 700; font-size: .87rem; }
+.d-list .dl-desc { font-size: .78rem; color: rgb(var(--ink-soft)); }
+.meibutsu-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.meibutsu {
+  font-size: .78rem; padding: 4px 10px; border-radius: 999px;
+  background: rgba(var(--gold), .18); color: rgb(var(--ink));
+  border: 1px solid rgba(var(--gold), .4);
+}
+.d-facts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.fact {
+  font-size: .7rem; background: rgba(var(--indigo), .1); color: rgb(var(--ink-soft));
+  padding: 3px 9px; border-radius: 8px;
+}
+.soba-box {
+  background: rgba(var(--matcha), .1); border: 1px solid rgba(var(--matcha), .3);
+  border-radius: 14px; padding: 11px 12px;
+}
+.eki-box {
+  background: rgba(var(--apple), .08); border: 1px solid rgba(var(--apple), .25);
+  border-radius: 14px; padding: 11px 12px;
+}
+.eki-box ul { margin: 4px 0 0; padding-left: 18px; font-size: .85rem; }
+.act-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.act-row .btn {
+  flex: 1; text-align: center; font-size: .82rem; padding: 10px 6px; font-weight: 700;
+  border: 1.5px solid rgba(var(--indigo), .35); background: rgba(var(--card-bg), 1);
+}
+.act-row .btn.green, .act-row .btn.primary { border-color: transparent; }
+.sheet-nav .btn { border: 1px solid rgba(var(--ink-faint), .55); }
+.sheet-nav .btn[disabled] { opacity: .38; }
+.ext-links { display: flex; gap: 8px; }
+.ext-links a {
+  flex: 1; text-align: center; text-decoration: none; font-size: .8rem;
+  border: 1px solid rgba(var(--line), 1); border-radius: 12px; padding: 9px 6px;
+  color: rgb(var(--indigo)); background: rgba(var(--card-bg), .95);
+}
+
+/* ---------- トースト ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: calc(78px + env(safe-area-inset-bottom));
+  transform: translate(-50%, 14px); z-index: 60;
+  background: rgba(var(--ink), .93); color: rgb(var(--paper-2));
+  padding: 9px 17px; border-radius: 999px; font-size: .8rem;
+  opacity: 0; pointer-events: none; transition: opacity .24s, transform .24s;
+  max-width: 88vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- ダイアログ ---------- */
+.modal-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.44); z-index: 55; display: grid; place-items: center; padding: 18px; }
+.modal {
+  background: rgb(var(--paper)); border-radius: 20px; padding: 18px;
+  max-width: 460px; width: 100%; max-height: 82vh; overflow-y: auto;
+  box-shadow: 0 20px 50px -18px rgba(var(--shadow), .6);
+}
+.modal h3 { font-family: "Shippori Mincho", serif; margin: 0 0 10px; font-size: 1.06rem; }
+.modal p, .modal li { font-size: .84rem; color: rgb(var(--ink-soft)); }
+.modal ul { padding-left: 18px; margin: 6px 0; }
+
+/* ---------- 今日の一市町村 ---------- */
+.today-card {
+  background: linear-gradient(135deg, rgba(var(--indigo), .12), rgba(var(--gold), .12));
+  border: 1px solid rgba(var(--gold), .35);
+}
+.today-card .tk-label { font-size: .68rem; letter-spacing: .16em; color: rgb(var(--ink-soft)); }
+.today-card .tk-name { font-family: "Shippori Mincho", serif; font-size: 1.5rem; font-weight: 700; margin: 2px 0 4px; }

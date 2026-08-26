@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>信州まちしるべ - 長野県77市町村の魅力・名物・観光・道の駅・ご当地そばが一覧でわかる無料アプリ</title>
+<meta name="description" content="長野県の全77市町村（19市23町35村）の魅力、名物、観光スポット、お店、道の駅の有無、ご当地そば、住民と土地の特徴を一覧で調べられる完全無料アプリ。地域・種別・道の駅の有無でしぼり込み、訪問チェックで制覇率も記録できます。広告なし・登録不要・オフライン対応。" />
+<meta name="theme-color" content="#f6f0e4" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1e1c19" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="信州まちしるべ" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="scene-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <svg class="ridge" viewBox="0 0 400 120" preserveAspectRatio="none">
+    <path d="M0 120 L0 74 L38 40 L66 62 L100 22 L134 58 L168 34 L200 66 L232 30 L268 60 L300 40 L338 70 L370 48 L400 76 L400 120 Z" fill="rgba(45,78,118,0.18)"/>
+    <path d="M0 120 L0 92 L44 70 L82 88 L120 62 L160 90 L196 72 L238 94 L280 70 L320 92 L360 76 L400 96 L400 120 Z" fill="rgba(92,138,108,0.2)"/>
+  </svg>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="30" height="30">
+          <path d="M4 50 L20 22 L30 38 L40 16 L60 50 Z" fill="rgb(45,78,118)"/>
+          <path d="M20 22 L26 32 L14 32 Z" fill="#fff" opacity=".85"/>
+          <path d="M40 16 L47 28 L33 28 Z" fill="#fff" opacity=".85"/>
+          <circle cx="32" cy="55" r="5" fill="rgb(194,148,62)"/>
+          <path d="M2 50 H62" stroke="rgb(92,138,108)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span>
+        <h1>信州まちしるべ</h1>
+        <span class="sub">長野県77市町村ガイド</span>
+      </span>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+    </button>
+
+  </header>
+
+  <main>
+
+    <!-- ============ 一覧タブ ============ -->
+    <section id="tab-list" class="tab-panel active">
+      <div class="search-row">
+        <span class="s-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/></svg>
+        </span>
+        <input id="searchInput" type="search" placeholder="市町村名・名物・そば・観光地で検索" autocomplete="off" aria-label="検索" />
+        <button id="searchClear" class="s-clear" hidden aria-label="検索をクリア">✕</button>
+      </div>
+
+      <div class="chip-row" id="regionChips" role="group" aria-label="地域でしぼり込み"></div>
+      <div class="chip-row" id="filterChips" role="group" aria-label="条件でしぼり込み">
+        <button class="chip" data-filter="type" data-value="市">市（19）</button>
+        <button class="chip" data-filter="type" data-value="町">町（23）</button>
+        <button class="chip" data-filter="type" data-value="村">村（35）</button>
+        <button class="chip" data-filter="eki" data-value="1">🚗 道の駅あり</button>
+        <button class="chip" data-filter="fav" data-value="1">⭐ お気に入り</button>
+        <button class="chip" data-filter="unvisited" data-value="1">🚩 まだ行っていない</button>
+      </div>
+
+      <div class="list-meta">
+        <span class="count" id="listCount">77市町村</span>
+        <select id="sortSelect" aria-label="並び替え">
+          <option value="region">地域ごとにまとめる</option>
+          <option value="kana">五十音順</option>
+          <option value="popDesc">人口の多い順</option>
+          <option value="popAsc">人口の少ない順</option>
+          <option value="areaDesc">面積の広い順</option>
+          <option value="areaAsc">面積の狭い順</option>
+        </select>
+      </div>
+
+      <div class="town-list" id="townList"></div>
+    </section>
+
+    <!-- ============ 地域タブ ============ -->
+    <section id="tab-region" class="tab-panel">
+      <div class="card">
+        <h2 class="sec-title" style="margin-top:0">10の地域でめぐる</h2>
+        <p class="tiny">長野県は南北に約212km。県内は10の広域圏に分かれ、地域ごとに気候も方言も食べものも違います。気になる地域を選ぶと、その市町村の一覧が開きます。</p>
+      </div>
+      <div class="region-grid" id="regionGrid"></div>
+      <div class="card" style="margin-top:14px">
+        <h2 class="sec-title" style="margin-top:0">数字で見る長野県</h2>
+        <div class="stat-grid" id="prefStats"></div>
+      </div>
+    </section>
+
+    <!-- ============ そば・道の駅タブ ============ -->
+    <section id="tab-soba" class="tab-panel">
+      <div class="chip-row" id="sobaTabChips">
+        <button class="chip on green" data-view="soba">🍜 ご当地そば</button>
+        <button class="chip" data-view="eki">🚗 道の駅</button>
+        <button class="chip" data-view="meibutsu">🍎 名物さがし</button>
+      </div>
+      <div id="sobaView"></div>
+    </section>
+
+    <!-- ============ 記録タブ ============ -->
+    <section id="tab-log" class="tab-panel">
+      <div class="card">
+        <h2 class="sec-title" style="margin-top:0">77市町村の制覇ぐあい</h2>
+        <div class="progress-wrap">
+          <svg viewBox="0 0 100 100" width="92" height="92" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" class="ring-bg"/>
+            <circle cx="50" cy="50" r="42" class="ring-fg" id="progRing"/>
+          </svg>
+          <div>
+            <div class="ring-num"><span id="visitedNum">0</span><small> / 77市町村</small></div>
+            <div class="muted" id="progMsg">気になる市町村を開いて「行った」を押すと記録されます。</div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-box"><b id="statFav">0</b><span>お気に入り</span></div>
+          <div class="stat-box"><b id="statEki">0</b><span>道の駅ありを訪問</span></div>
+          <div class="stat-box"><b id="statRegion">0</b><span>制覇した地域</span></div>
+        </div>
+      </div>
+
+      <div class="card today-card">
+        <div class="tk-label">きょうの一市町村</div>
+        <div class="tk-name" id="todayName">－</div>
+        <div class="muted" id="todayCatch"></div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn primary" id="todayOpen">くわしく見る</button>
+          <button class="btn" id="todayShuffle">別の町にする</button>
+        </div>
+      </div>
+
+      <h2 class="sec-title">地域ごとの制覇ぐあい</h2>
+      <div class="card region-progress" id="regionProgress"></div>
+
+      <h2 class="sec-title">行ったところ</h2>
+      <div class="card" id="visitedList"></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="menuScrim" class="menu-scrim" hidden></div>
+<nav id="menuPanel" class="menu-panel" hidden>
+  <button data-action="howto" class="menu-item">📖 このアプリの使い方</button>
+  <button data-action="stats" class="menu-item">📊 長野県のまとめ数字</button>
+  <button data-action="about" class="menu-item">ℹ️ 出典と免責について</button>
+  <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+  <button data-action="reset" class="menu-item danger">🗑 記録をすべて消す</button>
+</nav>
+
+<nav class="tabbar" role="tablist">
+  <button class="tab-btn active" data-tab="list" role="tab"><span class="ti">🗾</span>一覧</button>
+  <button class="tab-btn" data-tab="region" role="tab"><span class="ti">🧭</span>地域</button>
+  <button class="tab-btn" data-tab="soba" role="tab"><span class="ti">🍜</span>そば・道の駅</button>
+  <button class="tab-btn" data-tab="log" role="tab"><span class="ti">🚩</span>記録</button>
+</nav>
+
+<div id="sheetRoot"></div>
+<div id="modalRoot"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
