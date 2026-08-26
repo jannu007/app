@@ -194,6 +194,7 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
 .badge.type-村 { background: rgba(var(--gold), .2); color: rgb(var(--gold)); }
 .badge.region { background: rgba(var(--ink-faint), .16); color: rgb(var(--ink-soft)); }
 .badge.eki { background: rgba(var(--apple), .14); color: rgb(var(--apple)); }
+.badge.mus { background: rgba(var(--gold), .18); color: rgb(var(--gold)); }
 .tc-catch { font-size: .84rem; color: rgb(var(--ink-soft)); margin: 5px 0 7px; }
 .tc-tags { display: flex; flex-wrap: wrap; gap: 4px; padding-right: 30px; }
 .tag {
@@ -307,6 +308,12 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
 .d-list li:last-child { border-bottom: 0; }
 .d-list .dl-name { font-weight: 700; font-size: .87rem; }
 .d-list .dl-desc { font-size: .78rem; color: rgb(var(--ink-soft)); }
+.mus-empty {
+  background: rgba(var(--ink-faint), .09);
+  border: 1px dashed rgba(var(--line), 1);
+  border-radius: 14px; padding: 11px 12px; font-size: .86rem;
+}
+
 .kigashitsu-box {
   background: rgba(var(--apple), .07);
   border: 1px solid rgba(var(--apple), .22);

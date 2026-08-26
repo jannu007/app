@@ -38,6 +38,7 @@
     region: "",
     types: new Set(),
     eki: false,
+    mus: false,
     favOnly: false,
     unvisited: false,
     sort: "region",
@@ -80,6 +81,7 @@
       t.m.join(" "),
       t.s.map((x) => x[0] + " " + x[1]).join(" "),
       t.shop.map((x) => x[0] + " " + x[1]).join(" "),
+      t.mus.map((x) => x[0] + " " + x[1]).join(" "),
       t.eki.join(" "),
       t.soba[0] + " " + t.soba[1],
       t.kg.join(" "),
@@ -96,6 +98,7 @@
       if (state.region && t.r !== state.region) return false;
       if (state.types.size && !state.types.has(t.t)) return false;
       if (state.eki && t.eki.length === 0) return false;
+      if (state.mus && t.mus.length === 0) return false;
       if (state.favOnly && !state.fav.has(t.id)) return false;
       if (state.unvisited && state.visited.has(t.id)) return false;
       return true;
@@ -121,6 +124,7 @@
     const sobaTag = `<span class="tag soba">🍜 ${esc(t.soba[0])}</span>`;
     const kgTag = `<span class="tag kigashitsu">👥 ${esc(t.kg[0])}</span>`;
     const ekiBadge = t.eki.length ? `<span class="badge eki">道の駅 ${t.eki.length}</span>` : "";
+    const musBadge = t.mus.length ? `<span class="badge mus">🖼 ${t.mus.length}</span>` : "";
     const fav = state.fav.has(t.id);
     const visited = state.visited.has(t.id);
     return `
@@ -130,6 +134,7 @@
             <span class="tc-name">${esc(t.n)}</span>
             <span class="tc-kana">${esc(t.k)}</span>
             <span class="tc-badges">
+              ${musBadge}
               ${ekiBadge}
               <span class="badge region">${esc(REGION_MAP[t.r].name)}</span>
               <span class="badge type-${t.t}">${t.t}</span>
@@ -190,6 +195,7 @@
       [fmtPop(pop), "おおよその人口"],
       [Math.round(area).toLocaleString(), "面積 km²（全国4位）"],
       [String(eki), "道の駅の数"],
+      [String(TOWNS.reduce((a, t) => a + t.mus.length, 0)), "美術館・博物館"],
       [`${ekiTowns}/77`, "道の駅がある市町村"],
     ]
       .map(([b, s]) => `<div class="stat-box"><b>${b}</b><span>${s}</span></div>`)
@@ -255,6 +261,41 @@
             .map((t) => `<button class="tag" style="border:0;cursor:pointer;font:inherit;font-size:.72rem" data-id="${t.id}">${esc(t.n)}</button>`)
             .join("")}</div>
           <p class="tiny" style="margin-top:8px">道の駅がなくても、直売所・農産物マルシェ・日帰り温泉が旅の休憩地になる市町村がたくさんあります。</p>
+        </div>`;
+      return;
+    }
+
+    if (state.sobaView === "mus") {
+      const has = TOWNS.filter((t) => t.mus.length).sort(
+        (a, b) => a._regionIndex - b._regionIndex || a.k.localeCompare(b.k, "ja")
+      );
+      const none = TOWNS.filter((t) => !t.mus.length).sort(
+        (a, b) => a._regionIndex - b._regionIndex || a.k.localeCompare(b.k, "ja")
+      );
+      const total = has.reduce((a, t) => a + t.mus.length, 0);
+      root.innerHTML = `
+        <div class="card">
+          <p class="tiny" style="margin:0">このアプリに収録した美術館・博物館は<b>${total}館</b>、ある市町村は<b>${has.length}</b>です。県立美術館から村立の資料館、企業や個人の私設館まで、信州は館の多い土地です。</p>
+        </div>
+        <h2 class="sec-title">美術館・博物館がある市町村</h2>
+        <div class="card">
+          ${has
+            .map(
+              (t) => `
+            <div class="eki-item">
+              <div class="eki-name">${esc(t.n)} <span class="badge region">${esc(REGION_MAP[t.r].name)}</span></div>
+              <div class="soba-desc">${t.mus.map((m) => "🖼 " + esc(m[0])).join("<br />")}</div>
+              <button class="link-btn" data-id="${t.id}">${esc(t.n)}のページを見る →</button>
+            </div>`
+            )
+            .join("")}
+        </div>
+        <h2 class="sec-title">アプリに収録のない市町村</h2>
+        <div class="card">
+          <div class="tc-tags">${none
+            .map((t) => `<button class="tag" style="border:0;cursor:pointer;font:inherit;font-size:.72rem" data-id="${t.id}">${esc(t.n)}</button>`)
+            .join("")}</div>
+          <p class="tiny" style="margin-top:8px">小さな郷土資料館や公民館の展示室がある場合もあります。各ページの「館をさがす」から探せます。</p>
         </div>`;
       return;
     }
@@ -399,6 +440,7 @@
               <span class="fact">人口 約${fmtPop(t.pop)}人</span>
               <span class="fact">面積 ${t.area}km²</span>
               <span class="fact">${t.eki.length ? "道の駅 " + t.eki.length + "駅" : "道の駅なし"}</span>
+              ${t.mus.length ? `<span class="fact">美術館・博物館 ${t.mus.length}館</span>` : ""}
             </div>
           </div>
           <button class="icon-btn" data-close="1" aria-label="閉じる">✕</button>
@@ -433,6 +475,29 @@
                 )
                 .join("")}
             </ul>
+          </div>
+
+          <div class="d-sec">
+            <h4>🖼 美術館・博物館</h4>
+            ${
+              t.mus.length
+                ? `<ul class="d-list">
+                     ${t.mus
+                       .map(
+                         (x) => `<li>
+                           <div class="dl-name">${esc(x[0])}</div>
+                           <div class="dl-desc">${esc(x[1])}</div>
+                           ${linkRow(`${t.n} ${x[0]}`, `長野県 ${t.n} ${x[0]}`)}
+                         </li>`
+                       )
+                       .join("")}
+                   </ul>`
+                : `<div class="mus-empty">
+                     <b>このアプリには収録がありません</b>
+                     <div class="tiny" style="margin-top:4px">小さな郷土資料館や公民館の展示室がある場合もあります。下のリンクから探せます。</div>
+                     ${linkRow(`${t.n} 資料館`, `長野県 ${t.n} 美術館 博物館 資料館`, "近くの資料館", "館をさがす")}
+                   </div>`
+            }
           </div>
 
           ${
@@ -569,9 +634,9 @@
     <h3>このアプリの使い方</h3>
     <ul>
       <li><b>一覧</b>：市町村名・名物・そば・観光地の名前で検索できます。地域や「市／町／村」、「道の駅あり」でしぼり込みも。</li>
-      <li><b>市町村カード</b>をタップすると、魅力・名物・観光・お店・道の駅・ご当地そば・住民の人柄・土地の特徴が開きます。観光スポット・お店・道の駅・そばには、それぞれ「🗺 地図」「🔎 検索」のリンクが付いています。シート下の「前／次」で隣の市町村へ移動できます。</li>
+      <li><b>市町村カード</b>をタップすると、魅力・名物・観光・美術館と博物館・お店・道の駅・ご当地そば・住民の人柄・土地の特徴が開きます。観光スポット・お店・道の駅・そばには、それぞれ「🗺 地図」「🔎 検索」のリンクが付いています。シート下の「前／次」で隣の市町村へ移動できます。</li>
       <li><b>地域</b>：長野県の10の広域圏から探せます。</li>
-      <li><b>そば・道の駅</b>：全77市町村のご当地そば一覧、道の駅の一覧（ある／ない）、名物から探す一覧を切り替えられます。</li>
+      <li><b>そば・道の駅</b>：全77市町村のご当地そば一覧、道の駅の一覧（ある／ない）、美術館・博物館の一覧、名物から探す一覧を切り替えられます。</li>
       <li><b>記録</b>：訪れた市町村に「行った」を付けると、77市町村の制覇ぐあいが記録されます。「きょうの一市町村」は、まだ行っていない町から選ばれます。</li>
     </ul>
     <p>記録は端末の中だけに保存されます。サーバーには何も送信されません。</p>`;
@@ -580,6 +645,7 @@
     const pop = TOWNS.reduce((a, t) => a + t.pop, 0);
     const area = TOWNS.reduce((a, t) => a + t.area, 0);
     const eki = TOWNS.reduce((a, t) => a + t.eki.length, 0);
+    const mus = TOWNS.reduce((a, t) => a + t.mus.length, 0);
     const big = [...TOWNS].sort((a, b) => b.pop - a.pop).slice(0, 3);
     const small = [...TOWNS].sort((a, b) => a.pop - b.pop).slice(0, 3);
     const wide = [...TOWNS].sort((a, b) => b.area - a.area).slice(0, 3);
@@ -590,6 +656,7 @@
         <li>面積：約<b>${Math.round(area).toLocaleString()}km²</b>（全国4位の広さ）。</li>
         <li>人口：約<b>${fmtPop(pop)}人</b>（このアプリの収録値の合計）。</li>
         <li>収録した道の駅：<b>${eki}駅</b>。</li>
+        <li>収録した美術館・博物館：<b>${mus}館</b>（${TOWNS.filter((t) => t.mus.length).length}市町村）。</li>
         <li>人口の多い順：${big.map((t) => t.n).join("・")}</li>
         <li>人口の少ない順：${small.map((t) => t.n).join("・")}</li>
         <li>面積の広い順：${wide.map((t) => t.n).join("・")}</li>
@@ -656,6 +723,10 @@
         state.eki = !state.eki;
         el.classList.toggle("on", state.eki);
         el.classList.add("apple");
+      } else if (f === "mus") {
+        state.mus = !state.mus;
+        el.classList.toggle("on", state.mus);
+        el.classList.add("gold");
       } else if (f === "fav") {
         state.favOnly = !state.favOnly;
         el.classList.toggle("on", state.favOnly);
