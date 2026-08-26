@@ -888,3 +888,23 @@ body {
   opacity: 0.85;
   margin-top: 2px;
 }
+
+/* ---------------- 推定の幅と個人補正 ---------------- */
+
+.result-range {
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  color: rgb(var(--ink-soft));
+  font-variant-numeric: tabular-nums;
+}
+
+.result-calibrated {
+  margin: 8px auto 0;
+  display: inline-block;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: rgb(var(--matcha));
+  background: rgb(var(--matcha) / 0.1);
+  border-radius: 999px;
+  padding: 5px 14px;
+}

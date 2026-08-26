@@ -129,6 +129,8 @@
       <div class="card result-hero">
         <p class="result-label">推定される顔年齢</p>
         <p class="result-age"><span id="result-age">--</span><span class="unit">歳</span></p>
+        <p class="result-range" id="result-range" hidden></p>
+        <p class="result-calibrated" id="result-calibrated" hidden></p>
         <p class="result-diff" id="result-diff" hidden></p>
 
         <div class="score-ring-wrap">
@@ -266,8 +268,10 @@
     <div class="card">
       <h2 class="card-title">どうやって測っているか</h2>
       <p class="body-text">
-        肌色の分布から顔の位置を探し、目の高さを基準に顔を一定の大きさへそろえます。
-        そのうえで、部位ごとに次のような画像特徴を取り出しています。
+        まず顔の特徴点を検出し、両目が水平に、目と目の間隔が一定になるように顔をそろえます。
+        こうすると顔の大きさ・傾き・撮影距離が変わっても、同じ部位を同じ物差しで測れます。
+        そのうえで、その人の実際の位置に合わせて部位を切り出し、次の特徴を取り出しています。
+        （特徴点が取れない写真では、肌色と明暗から位置を推定する簡易な方式に切り替わります。）
       </p>
       <ul class="method-list">
         <li><b>シワ</b>— 額とほうれい線の位置で、局所的な明暗差（線の強さ）を測ります。</li>
@@ -279,7 +283,13 @@
         <li><b>クマ</b>— 目の下と頬の明るさの差を見ます。</li>
       </ul>
       <p class="body-text">
-        「似ている顔タイプ」だけは別のしくみで、顔の特徴点（ランドマーク）を検出し、
+        推定年齢は幅（±）つきで表示します。測れなかった部位が多いときや、表情が強くて
+        補正の当てが外れやすいときは、幅が広がります。また、実年齢を入れて2回以上記録すると、
+        あなたのずれの分だけ結果をずらす「個人補正」が働きます。極端な1回に引きずられないよう
+        差の中央値を使い、ずらす量には上限を設けています。
+      </p>
+      <p class="body-text">
+        「似ている顔タイプ」は、同じ特徴点から別に判定しています。
         輪郭の縦横比・エラの張り・目の丸さ・目の間隔を、頬骨の幅を1とした比率で測っています。
         この検出には Google の MediaPipe（Apache-2.0）をアプリに同梱して使っており、
         こちらも通信は行わず、画像は端末内から出ません。
@@ -294,10 +304,12 @@
     <div class="card">
       <h2 class="card-title">上手に撮るコツ</h2>
       <ul class="method-list">
+        <li><b>口を閉じた自然な表情で。</b>笑うとほうれい線と目尻の線が深くなり、実際より年上に出ます（ある程度は自動で差し引いていますが、真顔が最も正確です）。</li>
         <li>窓の近くなど、正面から自然光が当たる場所で。</li>
         <li>真上からのライトは影が濃くなり、実際よりシワが強く出ます。</li>
-        <li>顔を画面いっぱいに、まっすぐ正面から。</li>
+        <li>顔を画面いっぱいに、まっすぐ正面から。顔が小さく写ると肌の細かさを測れません。</li>
         <li>前髪や手で額・頬が隠れないように。</li>
+        <li>美肌加工やフィルターのかかった写真は、実際より若く出ます。</li>
         <li>比べるときは、毎回できるだけ同じ条件で。</li>
       </ul>
     </div>
@@ -337,6 +349,7 @@
 
 <script src="./js/analyze.js"></script>
 <script src="./js/facetype.js"></script>
+<script src="./js/measure.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>
