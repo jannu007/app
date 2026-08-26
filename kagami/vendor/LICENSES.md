@@ -1,8 +1,8 @@
 # 同梱ライブラリとモデルについて
 
-うつし鏡は、顔の特徴点（ランドマーク）の検出に MediaPipe を使用しています。
-いずれもこのフォルダに同梱してあり、実行時に外部サーバーへ取りに行くことはありません。
-解析はすべて端末内で完結します。
+うつし鏡は、顔の特徴点（ランドマーク）の検出に MediaPipe を、年齢の推定に
+face-api.js を使用しています。いずれもこのフォルダに同梱してあり、実行時に
+外部サーバーへ取りに行くことはありません。解析はすべて端末内で完結します。
 
 ## MediaPipe Tasks Vision
 
@@ -41,3 +41,39 @@ SIMD対応版のみを同梱しています。WebAssembly の SIMD に対応し�
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
+## face-api.js（年齢推定）
+
+- 提供元: Vladimir Mandic（`@vladmandic/face-api`。justadudewhohacks による face-api.js の派生）
+- ライセンス: MIT License
+- 入手元: https://www.npmjs.com/package/@vladmandic/face-api
+- 同梱ファイル:
+  - `faceapi/face-api.esm.js`（TensorFlow.js を含む実行本体）
+  - `faceapi/age_gender_model.bin` / `age_gender_model-weights_manifest.json`（年齢・性別の推定モデル）
+  - `faceapi/tiny_face_detector_model.bin` / `tiny_face_detector_model-weights_manifest.json`（顔の枠の検出）
+
+アプリで使っているのは年齢の推定のみです。性別の推定結果は表示しません。
+
+### MIT License について
+
+    MIT License
+
+    Copyright (c) Vladimir Mandic
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.

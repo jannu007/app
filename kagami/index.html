@@ -130,10 +130,11 @@
         <p class="result-label">推定される顔年齢</p>
         <p class="result-age"><span id="result-age">--</span><span class="unit">歳</span></p>
         <p class="result-range" id="result-range" hidden></p>
+        <p class="result-source" id="result-source" hidden></p>
         <p class="result-calibrated" id="result-calibrated" hidden></p>
         <p class="result-diff" id="result-diff" hidden></p>
 
-        <div class="score-ring-wrap">
+        <div class="score-ring-wrap" id="score-ring-wrap">
           <svg class="score-ring" viewBox="0 0 120 120" role="img" aria-labelledby="score-ring-title">
             <title id="score-ring-title">肌スコア</title>
             <circle class="ring-bg" cx="60" cy="60" r="52" />
@@ -147,6 +148,7 @@
 
         <p class="result-comment" id="result-comment"></p>
         <p class="result-notes" id="result-notes" hidden></p>
+        <p class="result-skin-skip" id="result-skin-skip" hidden></p>
       </div>
 
       <div class="card" id="facetype-card" hidden>
@@ -185,7 +187,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="items-card">
         <h2 class="card-title">7項目の内訳</h2>
         <p class="card-lead">数値が高いほど良好な状態です。</p>
         <div class="radar-wrap">
@@ -196,7 +198,7 @@
         <ul class="item-list" id="item-list"></ul>
       </div>
 
-      <div class="card">
+      <div class="card" id="care-card">
         <h2 class="card-title">今日のケア</h2>
         <ul class="care-list" id="care-list"></ul>
       </div>
@@ -293,6 +295,11 @@
         <li><b>クマ</b>— 目の下と頬の明るさの差を見ます。</li>
       </ul>
       <p class="body-text">
+        年齢の推定だけは、画像処理ではなく学習済みモデルが担当しています。顔の傾きを直したうえで、
+        モデル付属の検出器に顔の枠を決めてもらい、そこから年齢を推定します。
+        こちらも同梱してあるので通信は行わず、画像は端末内から出ません。
+      </p>
+      <p class="body-text">
         推定年齢は幅（±）つきで表示します。測れなかった部位が多いときや、表情が強くて
         補正の当てが外れやすいときは、幅が広がります。また、実年齢を入れて2回以上記録すると、
         あなたのずれの分だけ結果をずらす「個人補正」が働きます。極端な1回に引きずられないよう
@@ -317,7 +324,7 @@
         <li><b>口を閉じた自然な表情で。</b>笑うとほうれい線と目尻の線が深くなり、実際より年上に出ます（ある程度は自動で差し引いていますが、真顔が最も正確です）。</li>
         <li>窓の近くなど、正面から自然光が当たる場所で。</li>
         <li>真上からのライトは影が濃くなり、実際よりシワが強く出ます。</li>
-        <li>顔を画面いっぱいに、まっすぐ正面から。顔が小さく写ると肌の細かさを測れません。</li>
+        <li>顔を画面いっぱいに、まっすぐ正面から。顔が小さく写ると、年齢は出せますが肌の7項目は測れません。</li>
         <li>前髪や手で額・頬が隠れないように。</li>
         <li>美肌加工やフィルターのかかった写真は、実際より若く出ます。</li>
         <li>比べるときは、毎回できるだけ同じ条件で。</li>
@@ -384,6 +391,7 @@
 <script src="./js/facetype.js"></script>
 <script src="./js/facetype-examples.js"></script>
 <script src="./js/measure.js"></script>
+<script src="./js/agemodel.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>

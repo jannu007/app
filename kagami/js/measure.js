@@ -249,13 +249,19 @@
     return (strong / base) * 100;
   }
 
+  // ぼかした結果の使い回し。明るさ・赤みなど面が違えば別物なので、
+  // 半径だけでなく元の配列そのものも鍵にする
   const blurCache = new Map();
   function subtractBlur(src, radius) {
-    const key = radius;
-    let blurred = blurCache.get(key);
+    let perPlane = blurCache.get(src);
+    if (!perPlane) {
+      perPlane = new Map();
+      blurCache.set(src, perPlane);
+    }
+    let blurred = perPlane.get(radius);
     if (!blurred) {
       blurred = boxBlur(src, radius);
-      blurCache.set(key, blurred);
+      perPlane.set(radius, blurred);
     }
     const out = new Float32Array(src.length);
     for (let i = 0; i < src.length; i++) out[i] = src[i] - blurred[i];
