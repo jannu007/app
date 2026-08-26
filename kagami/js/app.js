@@ -400,6 +400,26 @@
         }
       }
       if (!result) result = window.Kagami.analyze(sourceCanvas, cropBox);
+
+      // 年齢は学習済みモデルで推定する。画像の特徴から測る経験則より正確なため。
+      // モデルを読み込めない環境では、経験則の推定をそのまま使う。
+      const guess = window.KagamiAgeModel
+        ? await window.KagamiAgeModel.estimate(sourceCanvas, lastLandmarks ? lastLandmarks.landmarks : null)
+        : null;
+
+      if (!result.ok && guess) {
+        // 肌は測れなかったが年齢は出せる場合（顔が小さい写真など）。
+        // 何も返さずに終えるより、出せるものを出したほうが役に立つ。
+        result = { ok: true, ageOnly: true, skinSkipReason: result.reason, items: [], scores: {} };
+      }
+
+      if (result.ok && guess) {
+        result.age = clamp(Math.round(guess.age), 15, 89);
+        result.ageRange = guess.range;
+        result.ageSource = guess.source;
+      } else if (result.ok) {
+        result.ageSource = "heuristic";
+      }
     } catch (err) {
       showStep("adjust");
       showError("解析中に問題が起きました。別の写真でお試しください。");
@@ -604,6 +624,16 @@
       rangeEl.hidden = true;
     }
 
+    const sourceEl = $("#result-source");
+    if (sourceEl) {
+      if (result.ageSource === "heuristic") {
+        sourceEl.textContent = "簡易判定（年齢推定モデルを読み込めませんでした）";
+        sourceEl.hidden = false;
+      } else {
+        sourceEl.hidden = true;
+      }
+    }
+
     const calibEl = $("#result-calibrated");
     if (calib && calib.offset !== 0) {
       const dir = calib.offset > 0 ? "上" : "下";
@@ -627,6 +657,21 @@
 
     // 実年齢が入力済みなら差分を出す
     updateAgeDiff();
+
+    // 肌を測れなかったときは、年齢だけを見せる
+    const ageOnly = !!result.ageOnly;
+    $("#score-ring-wrap").hidden = ageOnly;
+    $("#items-card").hidden = ageOnly;
+    $("#care-card").hidden = ageOnly;
+    $("#result-comment").hidden = ageOnly;
+    const skipEl = $("#result-skin-skip");
+    if (ageOnly) {
+      skipEl.textContent = "肌の解析はできませんでした。" + (result.skinSkipReason || "");
+      skipEl.hidden = false;
+      $("#result-notes").hidden = true;
+      return;
+    }
+    skipEl.hidden = true;
 
     $("#result-comment").textContent = buildOverall(result);
 
@@ -869,7 +914,7 @@
       at: new Date().toISOString(),
       age: lastResult.age,
       rawAge: lastResult.rawAge != null ? lastResult.rawAge : lastResult.age,
-      score: lastResult.score,
+      score: lastResult.score != null ? lastResult.score : null,
       realAge: Number.isFinite(realAge) && realAge >= 5 && realAge <= 110 ? realAge : null,
       memo: $("#memo").value.trim().slice(0, 40),
       scores: lastResult.scores,

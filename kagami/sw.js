@@ -1,4 +1,4 @@
-const CACHE_NAME = "utsushi-kagami-v5";
+const CACHE_NAME = "utsushi-kagami-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./js/facetype.js",
   "./js/facetype-examples.js",
   "./js/measure.js",
+  "./js/agemodel.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
@@ -36,9 +37,9 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
-  // 顔ランドマークのモデル・WebAssembly は大きいので、
-  // インストール時ではなく、実際に使われたときに保存する（cache-first）
-  if (req.url.includes("/vendor/mediapipe/")) {
+  // モデル類（顔の特徴点・年齢推定）は大きいので、インストール時ではなく
+  // 実際に使われたときに保存する（cache-first）
+  if (req.url.includes("/vendor/")) {
     event.respondWith(
       caches.match(req).then((cached) => cached || fetch(req).then((res) => {
         if (res.ok) {

@@ -995,3 +995,20 @@ body {
   outline: 2px solid rgb(var(--mizu) / 0.5);
   outline-offset: 1px;
 }
+
+.result-source {
+  margin: 4px 0 0;
+  font-size: 0.7rem;
+  color: rgb(var(--gold));
+}
+
+.result-skin-skip {
+  margin: 14px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.8;
+  text-align: left;
+  color: rgb(var(--ink-soft));
+  background: rgb(var(--ink) / 0.05);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+}
