@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>免許みちしるべ - 自動車免許の取得を最後まで案内する完全無料アプリ</title>
+<meta name="description" content="自動車免許の取得に特化した完全無料アプリ。学科〇×問題190問、道路標識31種の図鑑とクイズ、仮免・本免の模擬試験、教習の進み具合や費用の記録まで。広告なし・登録不要・サーバー送信なしでオフラインでも使えます。" />
+<meta name="theme-color" content="#f4eee2" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1e1b17" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="免許みちしるべ" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="road-bg" aria-hidden="true">
+  <div class="ink-blob blob-a"></div>
+  <div class="ink-blob blob-b"></div>
+  <div class="ink-blob blob-c"></div>
+  <div class="paper-texture"></div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="30" height="30">
+          <rect x="6" y="20" width="52" height="34" rx="6" fill="rgb(47,93,140)"/>
+          <rect x="10" y="24" width="44" height="26" rx="4" fill="rgb(244,238,226)"/>
+          <circle cx="23" cy="34" r="7" fill="rgb(47,93,140)"/>
+          <path d="M15 46c1.6-5 14.8-5 16.4 0z" fill="rgb(47,93,140)"/>
+          <rect x="35" y="30" width="16" height="3.4" rx="1.7" fill="rgb(176,58,46)"/>
+          <rect x="35" y="37" width="16" height="3.4" rx="1.7" fill="rgb(196,149,63)"/>
+          <rect x="35" y="44" width="11" height="3.4" rx="1.7" fill="rgb(94,140,122)"/>
+          <path d="M4 58h56" stroke="rgb(94,140,122)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <h1>免許みちしるべ</h1>
+    </div>
+    <button id="menuBtn" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <button data-action="howto" class="menu-item">📖 このアプリの使い方</button>
+      <button data-action="traps" class="menu-item">⚠️ ひっかけワード集</button>
+      <button data-action="about" class="menu-item">ℹ️ 免責と出典について</button>
+      <button data-action="install" id="installMenuItem" class="menu-item" hidden>📲 アプリをインストール</button>
+      <button data-action="reset" class="menu-item danger">🗑 記録をすべて消す</button>
+    </nav>
+  </header>
+
+  <div class="road-divider" aria-hidden="true"></div>
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+
+  <main class="app-main">
+
+    <!-- ============ 道のりタブ ============ -->
+    <section id="tab-road" class="tab-panel">
+      <div class="card hero-card">
+        <div class="hero-top">
+          <div class="progress-ring" id="roadRing">
+            <svg viewBox="0 0 100 100" width="92" height="92" aria-hidden="true">
+              <circle cx="50" cy="50" r="42" class="ring-bg"/>
+              <circle cx="50" cy="50" r="42" class="ring-fg" id="roadRingFg"/>
+            </svg>
+            <span class="ring-label"><b id="roadPercent">0</b><small>%</small></span>
+          </div>
+          <div class="hero-text">
+            <p class="hero-kicker">合格までの道のり</p>
+            <h2 id="roadStepTitle">教習所を選ぶ・入校手続き</h2>
+            <p id="roadStepHint" class="hero-hint">いま取り組んでいるステップです。終わったらチェックを付けましょう。</p>
+          </div>
+        </div>
+        <div class="countdown-row">
+          <label class="field">
+            <span class="field-label">次の検定・試験日</span>
+            <input type="date" id="examDate" class="input" />
+          </label>
+          <div class="countdown-box">
+            <span class="hud-label">残り</span>
+            <span class="hud-value" id="countdownValue">--</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-title">📍 取得までの9ステップ</h3>
+      <div id="roadList" class="road-list"></div>
+
+      <h3 class="section-title">🎒 持ち物チェック</h3>
+      <div id="checklistArea" class="road-list"></div>
+
+      <p class="note-text">※ 手続きや必要書類は教習所・都道府県で異なります。最新の案内を必ず確認してください。</p>
+    </section>
+
+    <!-- ============ 学科タブ ============ -->
+    <section id="tab-quiz" class="tab-panel" hidden>
+
+      <div id="quizHome" class="screen">
+        <div class="card stat-card">
+          <div class="stat-grid">
+            <div class="stat-box"><span class="hud-label">解いた問題</span><span class="hud-value" id="statAnswered">0</span></div>
+            <div class="stat-box"><span class="hud-label">正答率</span><span class="hud-value" id="statRate">--</span></div>
+            <div class="stat-box"><span class="hud-label">苦手な問題</span><span class="hud-value" id="statWeak">0</span></div>
+          </div>
+          <div class="mastery-track"><div class="mastery-bar" id="masteryBar"></div></div>
+          <p class="mastery-note"><span id="masteryText">まだ挑戦していません</span></p>
+        </div>
+
+        <h3 class="section-title">📝 模擬試験に挑戦</h3>
+        <button class="mode-card" data-mode="kari">
+          <span class="mode-emblem">🪪</span>
+          <span class="mode-info"><b>仮免模試</b><small>50問／30分／45問以上で合格</small></span>
+          <span class="mode-arrow">→</span>
+        </button>
+        <button class="mode-card" data-mode="honmen">
+          <span class="mode-emblem">🏛️</span>
+          <span class="mode-info"><b>本免模試</b><small>95問／50分／86問以上で合格</small></span>
+          <span class="mode-arrow">→</span>
+        </button>
+
+        <h3 class="section-title">🔁 ふだんの練習</h3>
+        <button class="mode-card" data-mode="random">
+          <span class="mode-emblem">🎲</span>
+          <span class="mode-info"><b>おまかせ10問</b><small>すぐ解ける・解説つき</small></span>
+          <span class="mode-arrow">→</span>
+        </button>
+        <button class="mode-card" data-mode="weak">
+          <span class="mode-emblem">💪</span>
+          <span class="mode-info"><b>弱点復習</b><small id="weakCountText">間違えた問題だけを解き直す</small></span>
+          <span class="mode-arrow">→</span>
+        </button>
+        <button class="mode-card" data-mode="trap">
+          <span class="mode-emblem">⚠️</span>
+          <span class="mode-info"><b>ひっかけ道場</b><small>試験で狙われる言い回しを集中攻略</small></span>
+          <span class="mode-arrow">→</span>
+        </button>
+
+        <h3 class="section-title">📚 分野別に練習</h3>
+        <div id="catList" class="cat-list"></div>
+      </div>
+
+      <div id="quizPlay" class="screen" hidden>
+        <div class="quiz-progress">
+          <button id="quitBtn" class="text-btn">やめる</button>
+          <span id="progressText">第1問 / 10問</span>
+          <span id="quizTimer" class="quiz-timer">--:--</span>
+        </div>
+        <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+
+        <div class="card question-card">
+          <span class="q-category" id="qCategory">標識・標示</span>
+          <p id="qText" class="q-text">問題文</p>
+        </div>
+
+        <div class="ox-row">
+          <button class="ox-btn ox-o" data-answer="true"><span>◯</span><small>正しい</small></button>
+          <button class="ox-btn ox-x" data-answer="false"><span>✕</span><small>誤り</small></button>
+        </div>
+
+        <div id="feedbackCard" class="card feedback-card" hidden>
+          <p id="feedbackHead" class="feedback-head"></p>
+          <p id="feedbackExplain" class="feedback-explain"></p>
+          <button id="nextBtn" class="btn btn-primary full">つぎへ</button>
+        </div>
+      </div>
+
+      <div id="quizResult" class="screen" hidden>
+        <div class="card result-card">
+          <p class="result-emblem" id="resultEmblem" aria-hidden="true">🎉</p>
+          <h2 id="resultTitle">合格ライン到達！</h2>
+          <p class="result-score"><span id="resultScore">0</span> / <span id="resultTotal">0</span> 問正解</p>
+          <div class="score-bar"><div id="resultBar" class="score-bar-fill"></div></div>
+          <p id="resultComment" class="result-comment"></p>
+          <div id="resultCats" class="result-cats"></div>
+          <button id="retryBtn" class="btn btn-primary full">もう一度</button>
+          <button id="reviewBtn" class="btn btn-secondary full">まちがえた問題を見る</button>
+          <button id="backHomeBtn" class="btn btn-ghost full">メニューに戻る</button>
+        </div>
+        <div id="reviewList" class="review-list" hidden></div>
+      </div>
+    </section>
+
+    <!-- ============ 標識タブ ============ -->
+    <section id="tab-signs" class="tab-panel" hidden>
+      <div class="segmented" role="tablist">
+        <button class="seg-btn is-on" data-signview="book">📖 標識図鑑</button>
+        <button class="seg-btn" data-signview="quiz">✏️ 標識クイズ</button>
+      </div>
+
+      <div id="signBook" class="screen">
+        <div id="signFilter" class="chip-row"></div>
+        <div id="signGrid" class="sign-grid"></div>
+        <p class="note-text">※ イラストは形と色の特徴をつかむためのオリジナル簡略図です。実際の標識とは細部が異なります。</p>
+      </div>
+
+      <div id="signQuiz" class="screen" hidden>
+        <div class="quiz-progress">
+          <button id="signQuitBtn" class="text-btn">やめる</button>
+          <span id="signProgress">第1問 / 10問</span>
+          <span id="signScoreText">正解 0</span>
+        </div>
+        <div class="progress-track"><div id="signProgressBar" class="progress-bar"></div></div>
+
+        <div class="card sign-question">
+          <div id="signFigure" class="sign-figure"></div>
+          <p class="sign-ask">この標識の意味は？</p>
+        </div>
+        <div id="signChoices" class="choices-list"></div>
+
+        <div id="signFeedback" class="card feedback-card" hidden>
+          <p id="signFeedbackHead" class="feedback-head"></p>
+          <p id="signFeedbackText" class="feedback-explain"></p>
+          <button id="signNextBtn" class="btn btn-primary full">つぎへ</button>
+        </div>
+
+        <div id="signResult" class="card result-card" hidden>
+          <p class="result-emblem">🚸</p>
+          <h2>標識クイズ 結果</h2>
+          <p class="result-score"><span id="signResultScore">0</span> / 10 問正解</p>
+          <p id="signResultComment" class="result-comment"></p>
+          <button id="signRetryBtn" class="btn btn-primary full">もう一度</button>
+          <button id="signToBookBtn" class="btn btn-secondary full">図鑑で確認する</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 教習記録タブ ============ -->
+    <section id="tab-log" class="tab-panel" hidden>
+      <div class="card stat-card">
+        <h3 class="card-title">🚗 教習の進み具合</h3>
+        <div id="logSummary" class="log-summary"></div>
+      </div>
+
+      <div class="segmented" role="tablist">
+        <button class="seg-btn is-on" data-logview="skill1">技能・第一段階</button>
+        <button class="seg-btn" data-logview="skill2">技能・第二段階</button>
+        <button class="seg-btn" data-logview="gakka">学科</button>
+      </div>
+      <div id="logList" class="log-list"></div>
+
+      <h3 class="section-title">💰 費用メモ</h3>
+      <div class="card fee-card">
+        <div id="feeList" class="fee-list"></div>
+        <div class="fee-total"><span>合計</span><b id="feeTotal">0円</b></div>
+        <div class="fee-add">
+          <input type="text" id="feeLabel" class="input" placeholder="項目（例：追加技能教習）" />
+          <input type="number" id="feeAmount" class="input input-num" placeholder="金額" inputmode="numeric" />
+          <button id="feeAddBtn" class="btn btn-primary">追加</button>
+        </div>
+        <button id="feeTemplateBtn" class="btn btn-ghost full">目安の内訳を読み込む</button>
+      </div>
+
+      <h3 class="section-title">🗒 教習メモ</h3>
+      <div class="card">
+        <textarea id="memoBox" class="input memo" rows="5" placeholder="指導員に言われたこと、苦手な項目、次回やることなどを書いておけます。"></textarea>
+      </div>
+      <p class="note-text">※ 入力した内容はこの端末の中だけに保存されます。サーバーには送信されません。</p>
+    </section>
+  </main>
+
+  <nav class="tab-bar" role="tablist">
+    <button class="tab-btn is-on" data-tab="road"><span>🗺️</span>道のり</button>
+    <button class="tab-btn" data-tab="quiz"><span>📝</span>学科</button>
+    <button class="tab-btn" data-tab="signs"><span>🚸</span>標識</button>
+    <button class="tab-btn" data-tab="log"><span>🚗</span>教習記録</button>
+  </nav>
+</div>
+
+<!-- モーダル -->
+<div id="howtoModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
+    <div class="modal-header"><span class="modal-emblem" aria-hidden="true">📖</span><h2 id="howtoTitle">このアプリの使い方</h2></div>
+    <div class="modal-body howto-body">
+      <p><b>🗺️ 道のり</b>：入校から免許交付までの9ステップを、チェックしながら進められます。次の検定日を入れると残り日数が出ます。</p>
+      <p><b>📝 学科</b>：〇×形式の学科問題190問。仮免模試（50問・30分）と本免模試（95問・50分）は本番と同じ形式で時間を計り、練習モードでは1問ごとに解説が出ます。間違えた問題は自動で「弱点復習」にたまります。</p>
+      <p><b>🚸 標識</b>：31種類の標識を図鑑で確認し、クイズで覚えられます。</p>
+      <p><b>🚗 教習記録</b>：技能・学科の受講済み項目、費用、メモを記録できます。</p>
+      <p class="hint">すべて無料で、広告も登録もありません。記録は端末内（ローカルストレージ）にだけ保存され、通信は行いません。ホーム画面に追加すればオフラインでも使えます。</p>
+    </div>
+    <div class="modal-actions"><button class="btn btn-primary full" data-close="howtoModal">わかった</button></div>
+  </div>
+</div>
+
+<div id="trapsModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top" role="dialog" aria-modal="true" aria-labelledby="trapsTitle">
+    <div class="modal-header"><span class="modal-emblem" aria-hidden="true">⚠️</span><h2 id="trapsTitle">ひっかけワード集</h2></div>
+    <div class="modal-body"><div id="trapsBody" class="traps-body"></div></div>
+    <div class="modal-actions"><button class="btn btn-primary full" data-close="trapsModal">閉じる</button></div>
+  </div>
+</div>
+
+<div id="aboutModal" class="modal-overlay modal-overlay--top" hidden>
+  <div class="modal ink-modal modal--top" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="modal-header"><span class="modal-emblem" aria-hidden="true">ℹ️</span><h2 id="aboutTitle">免責と出典について</h2></div>
+    <div class="modal-body howto-body">
+      <p>このアプリは、普通自動車免許の取得を目指す人のための<b>学習用</b>アプリです。問題文・解説・流れの説明は、道路交通法や交通の教則の一般的な内容をもとに作成したオリジナルです。実際の試験問題そのものではありません。</p>
+      <p>教習の項目名や手数料、必要書類は、教習所・都道府県・時期によって異なります。手続きの前には、必ず教習所の案内や各都道府県警察の公式情報を確認してください。</p>
+      <p>法令は改正されることがあります。最新の内容は教本や公式資料でご確認ください。</p>
+      <p class="hint">データはすべて端末内に保存され、外部に送信されません。アプリを削除したりブラウザのデータを消したりすると、記録も消えます。</p>
+    </div>
+    <div class="modal-actions"><button class="btn btn-primary full" data-close="aboutModal">閉じる</button></div>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal-overlay" hidden>
+  <div class="modal ink-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-header"><span class="modal-emblem" aria-hidden="true">🗑</span><h2 id="confirmTitle">記録をすべて消しますか？</h2></div>
+    <div class="modal-body howto-body"><p>道のりのチェック、学科の成績、教習記録、費用メモがすべて消えます。この操作は元に戻せません。</p></div>
+    <div class="modal-actions">
+      <button id="confirmResetBtn" class="btn btn-danger full">すべて消す</button>
+      <button class="btn btn-secondary full" data-close="confirmModal">やめる</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/questions.js"></script>
+<script src="js/signs.js"></script>
+<script src="js/curriculum.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

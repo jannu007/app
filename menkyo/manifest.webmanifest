@@ -1,0 +1,20 @@
+{
+  "name": "免許みちしるべ - 自動車免許の取得を案内する無料アプリ",
+  "short_name": "免許みちしるべ",
+  "description": "学科〇×問題190問、道路標識31種の図鑑とクイズ、仮免・本免の模擬試験、教習の進み具合と費用の記録。完全無料・広告なし・登録不要でオフラインでも使えます。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4eee2",
+  "theme_color": "#f4eee2",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
