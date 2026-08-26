@@ -35,7 +35,7 @@
         },
         runningMode: "IMAGE",
         numFaces: 1,
-        outputFaceBlendshapes: false,
+        outputFaceBlendshapes: true,
         outputFacialTransformationMatrixes: false,
       });
     })().catch(() => null);
@@ -275,5 +275,46 @@
     }
   }
 
-  window.KagamiFaceType = { detect, TYPES };
+  /**
+   * 顔の特徴点と、表情の強さを取り出す（肌の解析でも使う）。
+   *
+   * 笑うとほうれい線と目尻の線は深くなり、目は細くなる。年齢の推定では
+   * それを差し引く必要があるので、表情の強さもあわせて返す。
+   *
+   * 見つからなければ null。
+   */
+  async function landmarksOf(source) {
+    const landmarker = await getLandmarker();
+    if (!landmarker) return null;
+    try {
+      const result = landmarker.detect(source);
+      const faces = result && result.faceLandmarks;
+      if (!faces || !faces.length) return null;
+
+      const shapes = result.faceBlendshapes && result.faceBlendshapes[0];
+      const score = (name) => {
+        if (!shapes || !shapes.categories) return 0;
+        const hit = shapes.categories.find((c) => c.categoryName === name);
+        return hit ? hit.score : 0;
+      };
+      const expression = {
+        smile: Math.max(score("mouthSmileLeft"), score("mouthSmileRight")),
+        squint: (score("eyeSquintLeft") + score("eyeSquintRight")) / 2,
+        browDown: (score("browDownLeft") + score("browDownRight")) / 2,
+        jawOpen: score("jawOpen"),
+      };
+      return { landmarks: faces[0], expression };
+    } catch {
+      return null;
+    }
+  }
+
+  /** 取り出した特徴点から、顔立ちのタイプだけを求める */
+  function typeOf(landmarks, aspect) {
+    const type = classify(measure(landmarks, aspect));
+    if (type) type.details = describe(type.measures);
+    return type;
+  }
+
+  window.KagamiFaceType = { detect, landmarksOf, typeOf, TYPES };
 })();

@@ -776,5 +776,5 @@
     };
   }
 
-  window.Kagami = { detectFace, analyze, resizeImageData, REGIONS };
+  window.Kagami = { detectFace, analyze, resizeImageData, REGIONS, buildItems };
 })();

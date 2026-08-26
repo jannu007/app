@@ -1,10 +1,11 @@
-const CACHE_NAME = "utsushi-kagami-v3";
+const CACHE_NAME = "utsushi-kagami-v4";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
   "./js/analyze.js",
   "./js/facetype.js",
+  "./js/measure.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",

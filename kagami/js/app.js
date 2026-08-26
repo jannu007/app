@@ -380,10 +380,26 @@
     setTimeout(runAnalysis, 60);
   });
 
-  function runAnalysis() {
-    let result;
+  /** 直近の顔の特徴点（肌の解析と顔立ちの両方で使う） */
+  let lastLandmarks = null;
+
+  async function runAnalysis() {
+    let result = null;
+    lastLandmarks = null;
+
     try {
-      result = window.Kagami.analyze(sourceCanvas, cropBox);
+      // 顔の特徴点が取れるときは、部位を正確に当てられるそちらで解析する。
+      // 取れないとき（モデルを読めない環境・横顔など）は、
+      // 肌色と明暗だけで測る従来のしくみに切り替える。
+      if (window.KagamiFaceType && window.KagamiMeasure) {
+        lastLandmarks = await window.KagamiFaceType.landmarksOf(sourceCanvas);
+        if (lastLandmarks) {
+          result = window.KagamiMeasure.analyzeWithLandmarks(
+            sourceCanvas, lastLandmarks.landmarks, lastLandmarks.expression
+          );
+        }
+      }
+      if (!result) result = window.Kagami.analyze(sourceCanvas, cropBox);
     } catch (err) {
       showStep("adjust");
       showError("解析中に問題が起きました。別の写真でお試しください。");
@@ -423,7 +439,9 @@
     $("#facetype-body").hidden = true;
     card.hidden = false;
 
-    const type = await window.KagamiFaceType.detect(sourceCanvas);
+    const type = lastLandmarks
+      ? window.KagamiFaceType.typeOf(lastLandmarks.landmarks, sourceCanvas.height / sourceCanvas.width)
+      : await window.KagamiFaceType.detect(sourceCanvas);
     if (!type) { card.hidden = true; return; }
 
     lastFaceType = type;
@@ -460,11 +478,65 @@
     $("#facetype-body").hidden = false;
   }
 
+  /* ---------------- 個人補正 ---------------- */
+
+  /*
+   * 推定年齢は「写真から見た目を測った値」なので、実年齢とは人によって
+   * ずれ方の癖がある。実年齢を入れて記録した回が2回以上あれば、その差の
+   * 中央値ぶんだけ結果をずらし、その人に合った表示にする。
+   *
+   * 中央値を使うのは、たまたま条件の悪かった1回に引きずられないため。
+   * ずらす量は上限を設け、記録が少ないうちは効き目を弱めている。
+   */
+  const CALIBRATION_MIN = 2;
+
+  function personalOffset() {
+    const pairs = loadHistory()
+      .filter((e) => Number.isFinite(e.realAge) && Number.isFinite(e.rawAge != null ? e.rawAge : e.age))
+      .map((e) => e.realAge - (e.rawAge != null ? e.rawAge : e.age));
+    if (pairs.length < CALIBRATION_MIN) return null;
+
+    const sorted = pairs.slice().sort((a, b) => a - b);
+    const mid = sorted.length >> 1;
+    const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+    // 記録が少ないうちは控えめに寄せる（2回で6割、5回以上で全部）
+    const strength = clamp(pairs.length / 5, 0.6, 1);
+    const offset = Math.round(clamp(median * strength, -15, 15));
+    return { offset, samples: pairs.length };
+  }
+
   /* ---------------- 結果の描画 ---------------- */
 
   function renderResult(result) {
+    // 実年齢を登録した記録があれば、その人のずれの分だけ補正する
+    const calib = personalOffset();
+    // 二度描画しても補正が重ねがけにならないよう、補正前の値を保っておく
+    if (result.rawAge == null) result.rawAge = result.age;
+    result.age = calib ? clamp(result.rawAge + calib.offset, 15, 79) : result.rawAge;
+
     $("#result-age").textContent = result.age;
     $("#result-score").textContent = result.score;
+
+    const rangeEl = $("#result-range");
+    if (result.ageRange) {
+      rangeEl.textContent = `およそ ${Math.max(15, result.age - result.ageRange)}〜${Math.min(79, result.age + result.ageRange)} 歳`;
+      rangeEl.hidden = false;
+    } else {
+      rangeEl.hidden = true;
+    }
+
+    const calibEl = $("#result-calibrated");
+    if (calib && calib.offset !== 0) {
+      const dir = calib.offset > 0 ? "上" : "下";
+      calibEl.textContent = `あなたの記録${calib.samples}件から ${Math.abs(calib.offset)}歳 ${dir}に補正しています`;
+      calibEl.hidden = false;
+    } else if (calib) {
+      calibEl.textContent = `あなたの記録${calib.samples}件で補正済みです`;
+      calibEl.hidden = false;
+    } else {
+      calibEl.hidden = true;
+    }
 
     // 肌スコアのリング（円周 2πr, r=52 → 約326.7）
     const circumference = 2 * Math.PI * 52;
@@ -718,6 +790,7 @@
       id: Date.now(),
       at: new Date().toISOString(),
       age: lastResult.age,
+      rawAge: lastResult.rawAge != null ? lastResult.rawAge : lastResult.age,
       score: lastResult.score,
       realAge: Number.isFinite(realAge) && realAge >= 5 && realAge <= 110 ? realAge : null,
       memo: $("#memo").value.trim().slice(0, 40),
