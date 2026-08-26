@@ -453,6 +453,7 @@
       : type.catch;
     $("#facetype-impression").textContent = type.impression;
     $("#facetype-strong").textContent = type.strong;
+    renderExamples(type.key);
 
     const list = $("#facetype-details");
     list.textContent = "";
@@ -476,6 +477,83 @@
 
     $("#facetype-loading").hidden = true;
     $("#facetype-body").hidden = false;
+  }
+
+  /* ---------------- 顔タイプの例（名前） ---------------- */
+
+  /**
+   * このタイプの例として登録された名前を出す。
+   * 登録が無ければ、登録できることだけ案内する。
+   */
+  function renderExamples(key) {
+    const box = $("#facetype-examples");
+    const empty = $("#facetype-example-empty");
+    const names = window.KagamiExamples ? window.KagamiExamples.namesFor(key) : [];
+
+    if (names.length) {
+      $("#facetype-example-names").textContent = names.join(" ／ ");
+      box.hidden = false;
+      empty.hidden = true;
+    } else {
+      box.hidden = true;
+      empty.hidden = false;
+    }
+  }
+
+  /** 「しくみ」タブの登録画面を組み立てる */
+  function setupExampleEditor() {
+    const wrap = $("#example-rows");
+    if (!wrap || !window.KagamiExamples || !window.KagamiFaceType) return;
+
+    const current = window.KagamiExamples.all();
+    const inputs = {};
+
+    window.KagamiFaceType.TYPES.forEach((t) => {
+      const row = document.createElement("div");
+      row.className = "example-row";
+
+      const label = document.createElement("label");
+      label.className = "ex-label";
+      label.textContent = t.name;
+      label.setAttribute("for", "ex-" + t.key);
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.id = "ex-" + t.key;
+      input.placeholder = "例: 名前A、名前B";
+      input.value = (current[t.key] || []).join("、");
+      inputs[t.key] = input;
+
+      row.append(label, input);
+      wrap.appendChild(row);
+    });
+
+    $("#btn-examples-save").addEventListener("click", () => {
+      const map = {};
+      Object.entries(inputs).forEach(([key, input]) => {
+        map[key] = input.value
+          .split(/[、,]/)
+          .map((n) => n.trim())
+          .filter(Boolean)
+          .slice(0, 6);
+      });
+      if (window.KagamiExamples.save(map)) {
+        toast("登録しました");
+        if (lastFaceType) renderExamples(lastFaceType.key);
+      } else {
+        toast("登録できませんでした");
+      }
+    });
+
+    $("#btn-examples-clear").addEventListener("click", () => {
+      if (!confirm("登録した名前をすべて消します。よろしいですか？")) return;
+      window.KagamiExamples.clear();
+      Object.entries(inputs).forEach(([key, input]) => {
+        input.value = (window.KagamiExamples.defaults[key] || []).join("、");
+      });
+      toast("登録を消しました");
+      if (lastFaceType) renderExamples(lastFaceType.key);
+    });
   }
 
   /* ---------------- 個人補正 ---------------- */
@@ -1168,8 +1246,19 @@
     });
   }
 
+  // 「しくみ」タブへの案内リンク
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("[data-goto-about]");
+    if (!link) return;
+    e.preventDefault();
+    $("#tab-about").click();
+    const target = $("#about-examples");
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   /* ---------------- 起動 ---------------- */
 
   showStep("input");
   renderHistory();
+  setupExampleEditor();
 })();
