@@ -709,11 +709,11 @@
     return el;
   }
 
-  /** 7項目のレーダーチャートを描く */
-  function renderRadar(items) {
-    const svg = $("#radar");
+  /** 7項目のレーダーチャートを描く（描く場所を指定できる） */
+  function renderRadar(items, svg = $("#radar")) {
+    if (!svg) return;
     // タイトル以外を消す
-    $$("#radar > *:not(title)", document).forEach((el) => el.remove());
+    Array.from(svg.children).forEach((el) => { if (el.tagName !== "title") el.remove(); });
 
     const cx = 130, cy = 132, R = 84;
     const n = items.length;
@@ -767,9 +767,9 @@
     });
   }
 
-  /** 項目ごとのバーと講評 */
-  function renderItems(items) {
-    const list = $("#item-list");
+  /** 項目ごとのバーと講評（描く場所を指定できる） */
+  function renderItems(items, list = $("#item-list")) {
+    if (!list) return;
     list.textContent = "";
     items.forEach((it) => {
       const li = document.createElement("li");
@@ -849,7 +849,24 @@
     el.hidden = false;
   }
 
-  $("#real-age").addEventListener("input", updateAgeDiff);
+  const REAL_AGE_KEY = "utsushi-kagami-real-age-v1";
+
+  $("#real-age").addEventListener("input", () => {
+    updateAgeDiff();
+    // 自分の年齢は毎回変わらないので、次回のために覚えておく
+    const value = $("#real-age").value.trim();
+    try {
+      if (value) localStorage.setItem(REAL_AGE_KEY, value);
+      else localStorage.removeItem(REAL_AGE_KEY);
+    } catch { /* 覚えられなくても支障はない */ }
+  });
+
+  function restoreRealAge() {
+    try {
+      const saved = localStorage.getItem(REAL_AGE_KEY);
+      if (saved) $("#real-age").value = saved;
+    } catch { /* 既定のまま */ }
+  }
 
   $("#btn-again").addEventListener("click", () => {
     sourceCanvas = null;
@@ -885,19 +902,47 @@
     }
   }
 
-  /** 記録用の小さなサムネイル（顔の範囲を96pxに縮小したJPEG）を作る */
+  // 顔の輪郭をなぞる特徴点の番号
+  const THUMB_OVAL = [
+    10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365,
+    379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93,
+    234, 127, 162, 21, 54, 103, 67, 109,
+  ];
+
+  /**
+   * 記録用の小さなサムネイル（顔を96pxの正方形に収めたJPEG）を作る。
+   *
+   * 特徴点が取れているときは顔の輪郭から切り出す。枠だけを頼りにすると
+   * 口元や首が中心に来てしまい、一覧で誰の記録か見分けにくくなるため。
+   */
   function makeThumb() {
-    if (!sourceCanvas || !cropBox) return "";
+    if (!sourceCanvas) return "";
+
+    let sx, sy, side;
+    const marks = lastLandmarks && lastLandmarks.landmarks;
+    if (marks) {
+      const w = sourceCanvas.width, h = sourceCanvas.height;
+      const xs = THUMB_OVAL.map((i) => marks[i].x * w);
+      const ys = THUMB_OVAL.map((i) => marks[i].y * h);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      side = Math.max(maxX - minX, maxY - minY) * 1.15;
+      sx = (minX + maxX) / 2 - side / 2;
+      sy = (minY + maxY) / 2 - side / 2;
+    } else if (cropBox) {
+      side = Math.min(cropBox.w, cropBox.h);
+      sx = cropBox.x + (cropBox.w - side) / 2;
+      sy = cropBox.y + (cropBox.h - side) / 2;
+    } else {
+      return "";
+    }
+
     const size = 96;
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     ctx.imageSmoothingQuality = "high";
-    // 正方形に収まるよう、顔の中央を切り出す
-    const side = Math.min(cropBox.w, cropBox.h);
-    const sx = cropBox.x + (cropBox.w - side) / 2;
-    const sy = cropBox.y + (cropBox.h - side) / 2;
     ctx.drawImage(sourceCanvas, sx, sy, side, side, 0, 0, size, size);
     try {
       return canvas.toDataURL("image/jpeg", 0.7);
@@ -915,6 +960,7 @@
       age: lastResult.age,
       rawAge: lastResult.rawAge != null ? lastResult.rawAge : lastResult.age,
       score: lastResult.score != null ? lastResult.score : null,
+      ageRange: lastResult.ageRange != null ? lastResult.ageRange : null,
       realAge: Number.isFinite(realAge) && realAge >= 5 && realAge <= 110 ? realAge : null,
       memo: $("#memo").value.trim().slice(0, 40),
       scores: lastResult.scores,
@@ -995,6 +1041,121 @@
     });
   });
 
+  /* ---------------- 記録の詳細 ---------------- */
+
+  /** 詳細を開いている記録 */
+  let detailEntry = null;
+  /** シートを開く前にどこにいたか（閉じたときに戻すため） */
+  let detailReturnFocus = null;
+
+  /** 数値の項目を1つ作る */
+  function fact(label, value, wide) {
+    const li = document.createElement("li");
+    if (wide) li.className = "is-wide";
+    const l = document.createElement("span");
+    l.className = "f-label";
+    l.textContent = label;
+    const v = document.createElement("span");
+    v.className = "f-value";
+    v.textContent = value;
+    li.append(l, v);
+    return li;
+  }
+
+  /** 記録の詳細を開く */
+  function openDetail(entry) {
+    detailEntry = entry;
+
+    const thumb = $("#detail-thumb");
+    if (entry.thumb) {
+      thumb.src = entry.thumb;
+      thumb.hidden = false;
+    } else {
+      thumb.removeAttribute("src");
+      thumb.hidden = true;
+    }
+
+    $("#detail-date").textContent = formatDate(entry.at);
+    $("#detail-age").textContent = entry.age;
+
+    const rangeEl = $("#detail-range");
+    if (Number.isFinite(entry.ageRange)) {
+      rangeEl.textContent = `およそ ${Math.max(15, entry.age - entry.ageRange)}〜${Math.min(89, entry.age + entry.ageRange)} 歳`;
+      rangeEl.hidden = false;
+    } else {
+      rangeEl.hidden = true;
+    }
+
+    // 実年齢との差
+    const diffEl = $("#detail-diff");
+    if (Number.isFinite(entry.realAge)) {
+      const diff = entry.age - entry.realAge;
+      diffEl.classList.toggle("is-young", diff < 0);
+      diffEl.classList.toggle("is-old", diff > 0);
+      diffEl.textContent = diff === 0
+        ? `実年齢 ${entry.realAge}歳 とちょうど同じ`
+        : `実年齢 ${entry.realAge}歳 より ${Math.abs(diff)}歳 ${diff < 0 ? "若い" : "上"}`;
+      diffEl.hidden = false;
+    } else {
+      diffEl.hidden = true;
+    }
+
+    // 数値の一覧
+    const facts = $("#detail-facts");
+    facts.textContent = "";
+    if (Number.isFinite(entry.score)) facts.appendChild(fact("肌スコア", entry.score + " 点"));
+    if (Number.isFinite(entry.realAge)) facts.appendChild(fact("実年齢", entry.realAge + " 歳"));
+    if (Number.isFinite(entry.rawAge) && entry.rawAge !== entry.age) {
+      facts.appendChild(fact("補正前", entry.rawAge + " 歳"));
+    }
+    if (entry.faceType) facts.appendChild(fact("顔タイプ", entry.faceType));
+    if (entry.memo) facts.appendChild(fact("メモ", entry.memo, true));
+
+    // 7項目
+    const items = (entry.scores && Object.keys(entry.scores).length && window.Kagami)
+      ? window.Kagami.buildItems(entry.scores)
+      : null;
+    if (items) {
+      renderRadar(items, $("#detail-radar"));
+      renderItems(items, $("#detail-items"));
+      $("#detail-radar-section").hidden = false;
+      $("#detail-empty").hidden = true;
+    } else {
+      $("#detail-radar-section").hidden = true;
+      $("#detail-empty").hidden = false;
+    }
+
+    detailReturnFocus = document.activeElement;
+    $("#detail-sheet").hidden = false;
+    document.body.classList.add("sheet-open");
+    $("#detail-close").focus();
+  }
+
+  function closeDetail() {
+    $("#detail-sheet").hidden = true;
+    document.body.classList.remove("sheet-open");
+    detailEntry = null;
+    if (detailReturnFocus && detailReturnFocus.isConnected) detailReturnFocus.focus();
+    detailReturnFocus = null;
+  }
+
+  $("#detail-close").addEventListener("click", closeDetail);
+  $$("[data-close-detail]").forEach((el) => el.addEventListener("click", closeDetail));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("#detail-sheet").hidden) closeDetail();
+  });
+
+  $("#detail-delete").addEventListener("click", () => {
+    if (!detailEntry) return;
+    if (!confirm("この記録を削除します。よろしいですか？")) return;
+    const next = loadHistory().filter((e) => e.id !== detailEntry.id);
+    saveHistory(next);
+    closeDetail();
+    renderHistory();
+    toast("削除しました");
+  });
+
   function renderHistory() {
     const list = loadHistory();
     const hasAny = list.length > 0;
@@ -1009,6 +1170,19 @@
     ul.textContent = "";
     list.forEach((entry) => {
       const li = document.createElement("li");
+      li.className = "is-tappable";
+      li.tabIndex = 0;
+      li.setAttribute("role", "button");
+      li.setAttribute("aria-label", `${formatDate(entry.at)} の記録の詳細を見る`);
+      const open = (e) => {
+        // 削除ボタンを押したときは開かない
+        if (e.target.closest(".history-del")) return;
+        openDetail(entry);
+      };
+      li.addEventListener("click", open);
+      li.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetail(entry); }
+      });
 
       if (entry.thumb) {
         const img = document.createElement("img");
@@ -1065,7 +1239,12 @@
         toast("削除しました");
       });
 
-      li.append(main, del);
+      const chevron = document.createElement("span");
+      chevron.className = "history-chevron";
+      chevron.textContent = "›";
+      chevron.setAttribute("aria-hidden", "true");
+
+      li.append(main, del, chevron);
       ul.appendChild(li);
     });
 
@@ -1306,4 +1485,5 @@
   showStep("input");
   renderHistory();
   setupExampleEditor();
+  restoreRealAge();
 })();

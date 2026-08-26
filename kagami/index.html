@@ -385,6 +385,46 @@
   </footer>
 </div>
 
+<div class="sheet" id="detail-sheet" hidden>
+  <div class="sheet-backdrop" data-close-detail></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="sheet-head">
+      <h2 class="sheet-title" id="detail-title">記録の詳細</h2>
+      <button class="sheet-close" id="detail-close" type="button" aria-label="閉じる">✕</button>
+    </div>
+
+    <div class="sheet-body">
+      <div class="detail-top">
+        <img class="detail-thumb" id="detail-thumb" alt="" hidden />
+        <div class="detail-head">
+          <p class="detail-date" id="detail-date"></p>
+          <p class="detail-age"><span id="detail-age">--</span><span class="unit">歳</span></p>
+          <p class="detail-range" id="detail-range" hidden></p>
+          <p class="detail-diff" id="detail-diff" hidden></p>
+        </div>
+      </div>
+
+      <ul class="detail-facts" id="detail-facts"></ul>
+
+      <div class="detail-section" id="detail-radar-section">
+        <h3 class="detail-heading">7項目の内訳</h3>
+        <div class="radar-wrap">
+          <svg id="detail-radar" viewBox="0 0 260 260" role="img" aria-labelledby="detail-radar-title">
+            <title id="detail-radar-title">この記録の7項目</title>
+          </svg>
+        </div>
+        <ul class="item-list" id="detail-items"></ul>
+      </div>
+
+      <p class="detail-empty" id="detail-empty" hidden>この記録には肌の内訳がありません。</p>
+
+      <div class="row-actions">
+        <button class="btn btn-ghost btn-danger" id="detail-delete" type="button">この記録を削除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="./js/analyze.js"></script>
