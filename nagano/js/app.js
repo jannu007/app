@@ -61,6 +61,18 @@
   const fmtPop = (n) => n.toLocaleString("ja-JP");
   const townById = (id) => TOWNS.find((t) => t.id === id);
 
+  /* ---------- 外部リンク ----------
+     施設ごとの公式URLは移転・閉店で変わるため、
+     地名を添えた地図検索／Web検索のリンクにしています。 */
+  const cleanQ = (s) => String(s).replace(/（[^）]*）/g, " ").replace(/\s+/g, " ").trim();
+  const mapsLink = (q) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(cleanQ(q));
+  const webLink = (q) => "https://www.google.com/search?q=" + encodeURIComponent(cleanQ(q));
+  const linkRow = (mapQ, webQ, mapLabel = "地図", webLabel = "検索") => `
+    <div class="item-links">
+      <a class="ilink map" href="${mapsLink(mapQ)}" target="_blank" rel="noopener">🗺 ${esc(mapLabel)}</a>
+      <a class="ilink web" href="${webLink(webQ)}" target="_blank" rel="noopener">🔎 ${esc(webLabel)}</a>
+    </div>`;
+
   /* ---------- 検索用インデックス ---------- */
   TOWNS.forEach((t) => {
     t._search = [
@@ -70,6 +82,8 @@
       t.shop.map((x) => x[0] + " " + x[1]).join(" "),
       t.eki.join(" "),
       t.soba[0] + " " + t.soba[1],
+      t.kg.join(" "),
+      t.kgt,
     ].join(" ").toLowerCase();
     t._regionIndex = REGION_ORDER.indexOf(t.r);
   });
@@ -105,6 +119,7 @@
       .map((m) => `<span class="tag">${esc(m)}</span>`)
       .join("");
     const sobaTag = `<span class="tag soba">🍜 ${esc(t.soba[0])}</span>`;
+    const kgTag = `<span class="tag kigashitsu">👥 ${esc(t.kg[0])}</span>`;
     const ekiBadge = t.eki.length ? `<span class="badge eki">道の駅 ${t.eki.length}</span>` : "";
     const fav = state.fav.has(t.id);
     const visited = state.visited.has(t.id);
@@ -121,7 +136,7 @@
             </span>
           </div>
           <div class="tc-catch">${visited ? "🚩 " : ""}${esc(t.c)}</div>
-          <div class="tc-tags">${sobaTag}${tags}</div>
+          <div class="tc-tags">${sobaTag}${kgTag}${tags}</div>
         </button>
         <button class="tc-star${fav ? " on" : ""}" data-fav="${t.id}" aria-label="${esc(t.n)}をお気に入り">${fav ? "⭐" : "☆"}</button>
       </div>`;
@@ -408,7 +423,15 @@
           <div class="d-sec">
             <h4>⛩️ 観光スポット</h4>
             <ul class="d-list">
-              ${t.s.map((x) => `<li><div class="dl-name">${esc(x[0])}</div><div class="dl-desc">${esc(x[1])}</div></li>`).join("")}
+              ${t.s
+                .map(
+                  (x) => `<li>
+                    <div class="dl-name">${esc(x[0])}</div>
+                    <div class="dl-desc">${esc(x[1])}</div>
+                    ${linkRow(`${t.n} ${x[0]}`, `長野県 ${t.n} ${x[0]}`)}
+                  </li>`
+                )
+                .join("")}
             </ul>
           </div>
 
@@ -417,7 +440,15 @@
               ? `<div class="d-sec">
                    <h4>🛍️ お店・立ち寄りどころ</h4>
                    <ul class="d-list">
-                     ${t.shop.map((x) => `<li><div class="dl-name">${esc(x[0])}</div><div class="dl-desc">${esc(x[1])}</div></li>`).join("")}
+                     ${t.shop
+                       .map(
+                         (x) => `<li>
+                           <div class="dl-name">${esc(x[0])}</div>
+                           <div class="dl-desc">${esc(x[1])}</div>
+                           ${linkRow(`${t.n} ${x[0]}`, `長野県 ${t.n} ${x[0]}`)}
+                         </li>`
+                       )
+                       .join("")}
                    </ul>
                  </div>`
               : ""
@@ -428,8 +459,20 @@
             <div class="eki-box">
               ${
                 t.eki.length
-                  ? `<b>${t.eki.length}駅あります</b><ul>${t.eki.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>`
-                  : `<b>道の駅はありません</b><div class="tiny" style="margin-top:4px">直売所や日帰り温泉が休憩どころになります。</div>`
+                  ? `<b>${t.eki.length}駅あります</b>
+                     <ul class="eki-list">
+                       ${t.eki
+                         .map(
+                           (e) => `<li>
+                             <span class="eki-li-name">${esc(e)}</span>
+                             ${linkRow(`長野県 ${e}`, `長野県 ${e}`)}
+                           </li>`
+                         )
+                         .join("")}
+                     </ul>`
+                  : `<b>道の駅はありません</b>
+                     <div class="tiny" style="margin-top:4px">直売所や日帰り温泉が休憩どころになります。</div>
+                     ${linkRow(`${t.n} 農産物直売所`, `長野県 ${t.n} 直売所 日帰り温泉`, "近くの直売所", "休憩どころ")}`
               }
             </div>
           </div>
@@ -439,6 +482,16 @@
             <div class="soba-box">
               <div class="soba-name" style="font-size:1rem">${esc(t.soba[0])}</div>
               <div class="soba-desc" style="margin-top:4px">${esc(t.soba[1])}</div>
+              ${linkRow(`${t.n} そば`, `${t.soba[0]} ${t.n}`, "そば店をさがす", `${t.soba[0]}を調べる`)}
+            </div>
+          </div>
+
+          <div class="d-sec">
+            <h4>🧑‍🤝‍🧑 住民の人柄</h4>
+            <div class="kigashitsu-box">
+              <div class="kg-tags">${t.kg.map((k) => `<span class="kg-tag">${esc(k)}</span>`).join("")}</div>
+              <p style="margin-top:7px">${esc(t.kgt)}</p>
+              <p class="tiny" style="margin-top:7px">※ その土地でよく語られる気質の傾向です。一人ひとりに当てはまるものではありません。</p>
             </div>
           </div>
 
@@ -516,7 +569,7 @@
     <h3>このアプリの使い方</h3>
     <ul>
       <li><b>一覧</b>：市町村名・名物・そば・観光地の名前で検索できます。地域や「市／町／村」、「道の駅あり」でしぼり込みも。</li>
-      <li><b>市町村カード</b>をタップすると、魅力・名物・観光・お店・道の駅・ご当地そば・住民と土地の特徴が開きます。シート下の「前／次」で隣の市町村へ移動できます。</li>
+      <li><b>市町村カード</b>をタップすると、魅力・名物・観光・お店・道の駅・ご当地そば・住民の人柄・土地の特徴が開きます。観光スポット・お店・道の駅・そばには、それぞれ「🗺 地図」「🔎 検索」のリンクが付いています。シート下の「前／次」で隣の市町村へ移動できます。</li>
       <li><b>地域</b>：長野県の10の広域圏から探せます。</li>
       <li><b>そば・道の駅</b>：全77市町村のご当地そば一覧、道の駅の一覧（ある／ない）、名物から探す一覧を切り替えられます。</li>
       <li><b>記録</b>：訪れた市町村に「行った」を付けると、77市町村の制覇ぐあいが記録されます。「きょうの一市町村」は、まだ行っていない町から選ばれます。</li>
@@ -549,6 +602,8 @@
     <p>このアプリの内容は、長野県内の各市町村の一般に知られた特徴・名物・観光資源をまとめた読みものです。人口はおおむね2020年国勢調査の水準、面積は概数で、いずれも「だいたいの規模感」をつかむための目安としてご覧ください。</p>
     <p>道の駅・お店・イベントは、新規開業や休業、季節・曜日による営業の変更があります。<b>お出かけの前に、各市町村や施設の公式情報で必ずご確認ください。</b></p>
     <p>登山・秘湯・火山周辺（御嶽山など）へ向かうときは、最新の気象・火山・道路情報の確認をお願いします。</p>
+    <p>「住民の人柄」は、その土地の歴史や産業から一般に語られる気質の傾向をまとめたものです。個々の住民を評価するものではなく、一人ひとりに当てはまるものでもありません。</p>
+    <p>各項目の「🗺 地図」「🔎 検索」は、施設ごとの公式URLが移転や閉店で変わることを避けるため、地名を添えた地図検索・Web検索を開くようにしています。</p>
     <p>本アプリは無料で、広告・登録・課金はありません。入力した記録は端末内にのみ保存され、外部へ送信されることはありません。</p>`;
 
   /* ---------- イベント ---------- */

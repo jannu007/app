@@ -201,6 +201,7 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
   background: rgba(var(--indigo-soft), .14); color: rgb(var(--ink-soft));
 }
 .tag.soba { background: rgba(var(--matcha), .16); color: rgb(var(--matcha)); font-weight: 700; }
+.tag.kigashitsu { background: rgba(var(--apple), .12); color: rgb(var(--apple)); font-weight: 700; }
 .tc-star {
   position: absolute; right: 8px; bottom: 6px; border: 0; background: none;
   font-size: 1.06rem; cursor: pointer; padding: 4px; line-height: 1; opacity: .35;
@@ -306,6 +307,36 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
 .d-list li:last-child { border-bottom: 0; }
 .d-list .dl-name { font-weight: 700; font-size: .87rem; }
 .d-list .dl-desc { font-size: .78rem; color: rgb(var(--ink-soft)); }
+.kigashitsu-box {
+  background: rgba(var(--apple), .07);
+  border: 1px solid rgba(var(--apple), .22);
+  border-radius: 14px; padding: 11px 12px;
+}
+.kigashitsu-box p { font-size: .86rem; }
+.kg-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.kg-tag {
+  font-size: .78rem; font-weight: 700; padding: 4px 11px; border-radius: 999px;
+  background: rgba(var(--apple), .16); color: rgb(var(--apple));
+  border: 1px solid rgba(var(--apple), .3);
+}
+
+/* 施設ごとの地図・検索リンク */
+.item-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ilink {
+  font-size: .72rem; text-decoration: none; white-space: nowrap;
+  padding: 4px 10px; border-radius: 9px;
+  border: 1px solid rgba(var(--line), 1);
+  background: rgba(var(--card-bg), .95);
+  color: rgb(var(--indigo));
+}
+.ilink:active { transform: scale(.97); }
+.ilink.web { color: rgb(var(--ink-soft)); }
+.eki-list { list-style: none; padding-left: 0; margin: 7px 0 0; }
+.eki-list li { padding: 7px 0; border-bottom: 1px dashed rgba(var(--apple), .3); }
+.eki-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.eki-li-name { font-size: .88rem; font-weight: 700; }
+.soba-box .item-links { margin-top: 9px; }
+
 .meibutsu-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .meibutsu {
   font-size: .78rem; padding: 4px 10px; border-radius: 999px;
