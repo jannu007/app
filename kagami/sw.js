@@ -1,4 +1,4 @@
-const CACHE_NAME = "utsushi-kagami-v6";
+const CACHE_NAME = "utsushi-kagami-v7";
 const ASSETS = [
   "./",
   "./index.html",
