@@ -1,9 +1,10 @@
-const CACHE_NAME = "shinshu-michishirube-v3";
+const CACHE_NAME = "shinshu-michishirube-v4";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
   "./js/data.js",
+  "./js/map.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",

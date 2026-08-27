@@ -13,6 +13,12 @@
   --card-bg: 255, 253, 247;
   --line: 214, 200, 178;
   --shadow: 58, 46, 40;
+  /* 地図の塗り分け（市・町・村）: scripts/validate_palette.js で検証済み */
+  --map-shi: 74, 130, 192;
+  --map-machi: 56, 145, 106;
+  --map-mura: 192, 118, 31;
+  --map-line: 246, 240, 228;
+  --map-dim: 200, 190, 174;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -31,11 +37,18 @@
     --card-bg: 43, 39, 34;
     --line: 78, 70, 62;
     --shadow: 0, 0, 0;
+    --map-shi: 78, 140, 216;
+    --map-machi: 51, 165, 124;
+    --map-mura: 198, 127, 43;
+    --map-line: 30, 28, 25;
+    --map-dim: 82, 76, 68;
     color-scheme: dark;
   }
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* .town-list など display を持つ要素にも hidden を効かせる */
+[hidden] { display: none !important; }
 html, body { margin: 0; padding: 0; }
 body {
   font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
@@ -408,3 +421,81 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
 }
 .today-card .tk-label { font-size: .68rem; letter-spacing: .16em; color: rgb(var(--ink-soft)); }
 .today-card .tk-name { font-family: "Shippori Mincho", serif; font-size: 1.5rem; font-weight: 700; margin: 2px 0 4px; }
+
+
+/* ---------- 一覧／地図の切り替え ---------- */
+.view-toggle {
+  display: flex; gap: 4px; padding: 4px; margin-bottom: 10px;
+  background: rgba(var(--ink-faint), .12); border-radius: 14px;
+}
+.vt-btn {
+  flex: 1; font: inherit; font-size: .84rem; padding: 8px 6px; cursor: pointer;
+  border: 0; border-radius: 11px; background: none; color: rgb(var(--ink-soft));
+}
+.vt-btn.active {
+  background: rgba(var(--card-bg), 1); color: rgb(var(--ink)); font-weight: 700;
+  box-shadow: 0 2px 8px -4px rgba(var(--shadow), .5);
+}
+
+/* ---------- 地図 ---------- */
+.map-caption {
+  font-size: .82rem; color: rgb(var(--ink-soft));
+  padding: 7px 12px; margin-bottom: 7px;
+  background: rgba(var(--card-bg), .9); border: 1px solid rgba(var(--line), .85);
+  border-radius: 12px;
+}
+.map-caption b { font-family: "Shippori Mincho", serif; font-size: 1.02rem; color: rgb(var(--ink)); }
+.map-wrap {
+  position: relative;
+  background: rgba(var(--card-bg), .92);
+  border: 1px solid rgba(var(--line), .85);
+  border-radius: 18px; padding: 8px; overflow: hidden;
+  box-shadow: 0 8px 22px -14px rgba(var(--shadow), .4);
+  /* 県全体がひと目で入る高さに収める */
+  height: min(56vh, 540px);
+}
+#mapSvg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#mapSvg:active { cursor: grabbing; }
+.mun {
+  fill-opacity: .92;
+  stroke: rgb(var(--map-line)); stroke-width: 1.1; stroke-linejoin: round;
+  cursor: pointer; transition: opacity .18s ease;
+}
+.mun.type-市 { fill: rgb(var(--map-shi)); }
+.mun.type-町 { fill: rgb(var(--map-machi)); }
+.mun.type-村 { fill: rgb(var(--map-mura)); }
+.mun.dim { fill: rgb(var(--map-dim)); opacity: .5; }
+.mun-visited {
+  fill: none; stroke: rgb(var(--matcha)); stroke-width: 3; stroke-linejoin: round;
+  pointer-events: none;
+}
+.mun:hover { filter: brightness(1.12); }
+.map-pin {
+  fill: none; stroke: rgb(var(--apple)); stroke-width: 3; paint-order: stroke;
+  pointer-events: none;
+}
+.map-zoom {
+  position: absolute; right: 12px; bottom: 12px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.mz-btn {
+  width: 38px; height: 38px; border-radius: 11px; font: inherit; font-size: 1rem; cursor: pointer;
+  border: 1px solid rgba(var(--line), 1); background: rgba(var(--card-bg), .96);
+  color: rgb(var(--ink)); display: grid; place-items: center;
+  box-shadow: 0 4px 12px -6px rgba(var(--shadow), .5);
+}
+.mz-btn:active { transform: scale(.94); }
+.map-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px;
+  font-size: .74rem; color: rgb(var(--ink-soft));
+}
+.ml-item { display: inline-flex; align-items: center; gap: 5px; }
+.sw {
+  width: 15px; height: 15px; border-radius: 4px; display: inline-block;
+  border: 1.5px solid rgb(var(--map-line));
+}
+.sw.shi { background: rgb(var(--map-shi)); }
+.sw.machi { background: rgb(var(--map-machi)); }
+.sw.mura { background: rgb(var(--map-mura)); }
+.sw.visited { background: rgba(var(--map-shi), .35); border-color: rgb(var(--matcha)); border-width: 2.5px; }
+.sw.dim { background: rgb(var(--map-dim)); opacity: .5; }
