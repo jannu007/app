@@ -164,8 +164,57 @@
   let vb = { x: VB_FULL[0], y: VB_FULL[1], w: VB_FULL[2], h: VB_FULL[3] };
   let mapBuilt = false;
 
+  let labelRaf = 0;
   function applyVB() {
     $("#mapSvg").setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    if (!labelRaf) labelRaf = requestAnimationFrame(() => { labelRaf = 0; paintLabels(); });
+  }
+
+  /* ---- 市町村名のラベル ----
+     全部を一度には置けないので、重なるものは省いて、
+     大きい市町村・選んだ市町村から順に置く。拡大すると増える。 */
+  let labelTargets = null;   // しぼり込み中はその市町村だけ
+  let labelPicked = null;    // タップした市町村は必ず出す
+
+  function paintLabels() {
+    const g = $("#mapLabels");
+    if (!g) return;
+    const svg = $("#mapSvg");
+    const rect = svg.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const unit = vb.w / rect.width;          // 画面1px = 何ユニットか
+    const fontPx = 10.5;
+    const font = fontPx * unit;
+    const padPx = 2;
+
+    const cand = (labelTargets && labelTargets.length ? labelTargets : TOWNS)
+      .filter((t) => MAP_SHAPES[t.n])
+      .slice()
+      .sort((a, b) => {
+        if (a.id === labelPicked) return -1;
+        if (b.id === labelPicked) return 1;
+        return b.area - a.area;
+      });
+
+    const placed = [];
+    const out = [];
+    for (const t of cand) {
+      const sh = MAP_SHAPES[t.n];
+      const sx = (sh.cx - vb.x) / unit;
+      const sy = (sh.cy - vb.y) / unit;
+      const w = t.n.length * fontPx + padPx * 2;
+      const h = fontPx + padPx * 2;
+      if (sx < w / 2 || sy < h / 2 || sx > rect.width - w / 2 || sy > rect.height - h / 2) continue;
+      const box = { x0: sx - w / 2, y0: sy - h / 2, x1: sx + w / 2, y1: sy + h / 2 };
+      if (placed.some((p) => box.x0 < p.x1 && box.x1 > p.x0 && box.y0 < p.y1 && box.y1 > p.y0)) continue;
+      placed.push(box);
+      out.push(
+        `<text class="mun-label${t.id === labelPicked ? " picked" : ""}" x="${sh.cx}" y="${sh.cy}">${esc(t.n)}</text>`
+      );
+    }
+    g.setAttribute("style", `font-size:${font}px; stroke-width:${3 * unit}px`);
+    g.innerHTML = out.join("");
   }
 
   function buildMap() {
@@ -180,7 +229,8 @@
         if (!shape) return "";
         return `<path class="mun type-${t.t}" data-id="${t.id}" d="${shape.d}"><title>${esc(t.n)}（${t.t}）</title></path>`;
       }).join("") +
-      `</g><g id="mapVisited" aria-hidden="true"></g><g id="mapPin"></g>`;
+      `</g><g id="mapVisited" aria-hidden="true"></g><g id="mapPin"></g>` +
+      `<g id="mapLabels" aria-hidden="true"></g>`;
     mapBuilt = true;
 
     /* なぞって移動・二本指で拡大縮小 */
@@ -245,6 +295,8 @@
     const t = townById(id);
     if (!t) return;
     $("#mapCaption").dataset.picked = "1";
+    labelPicked = id;
+    paintLabels();
     $("#mapCaption").innerHTML =
       `<b>${esc(t.n)}</b> <span class="muted">${esc(REGION_MAP[t.r].name)}地域 ／ ${esc(t.c)}</span>`;
     const shape = MAP_SHAPES[t.n];
@@ -308,7 +360,7 @@
     if (!cap.dataset.picked) {
       cap.innerHTML =
         list.length === TOWNS.length
-          ? "市町村をタップすると情報が開きます。"
+          ? "タップで情報が開きます。拡大すると名前がもっと出ます。"
           : `<b>${list.length}市町村</b> <span class="muted">が条件に合っています</span>`;
     }
     $$("#mapG path").forEach((p) => {
@@ -317,6 +369,9 @@
     $("#mapVisited").innerHTML = TOWNS.filter((t) => state.visited.has(t.id) && MAP_SHAPES[t.n])
       .map((t) => `<path class="mun-visited" d="${MAP_SHAPES[t.n].d}" />`)
       .join("");
+    labelTargets = list.length === TOWNS.length ? null : list;
+    if (labelPicked && !ok.has(labelPicked)) labelPicked = null;
+    paintLabels();
   }
 
   function setListView(view) {
@@ -813,7 +868,7 @@
   const HOWTO = `
     <h3>このアプリの使い方</h3>
     <ul>
-      <li><b>一覧と地図</b>：上のボタンで切り替えられます。地図では長野県の市町村をタップすると、その市町村の情報が開きます。指でなぞって移動、二本指または＋−で拡大縮小できます。検索やしぼり込みは地図にも効き、条件に合わない市町村はうすい色になります。</li>
+      <li><b>一覧と地図</b>：上のボタンで切り替えられます。地図では長野県の市町村をタップすると、その市町村の情報が開きます。市町村名は重ならないぶんだけ表示され、拡大すると増えます。指でなぞって移動、二本指または＋−で拡大縮小できます。検索やしぼり込みは地図にも効き、条件に合わない市町村はうすい色になります。</li>
       <li><b>一覧</b>：市町村名・名物・そば・観光地の名前で検索できます。地域や「市／町／村」、「道の駅あり」でしぼり込みも。</li>
       <li><b>市町村カード</b>をタップすると、魅力・名物・観光・美術館と博物館・お店・道の駅・ご当地そば・住民の人柄・土地の特徴が開きます。観光スポット・お店・道の駅・そばには、それぞれ「🗺 地図」「🔎 検索」のリンクが付いています。シート下の「前／次」で隣の市町村へ移動できます。</li>
       <li><b>地域</b>：長野県の10の広域圏から探せます。</li>
@@ -1047,6 +1102,10 @@
       $("#installMenuItem").hidden = true;
     });
   }
+
+  window.addEventListener("resize", () => {
+    if (state.listView === "map") paintLabels();
+  });
 
   /* 起動 */
   renderRegionChips();

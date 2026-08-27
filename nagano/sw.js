@@ -1,4 +1,4 @@
-const CACHE_NAME = "shinshu-michishirube-v4";
+const CACHE_NAME = "shinshu-michishirube-v5";
 const ASSETS = [
   "./",
   "./index.html",
