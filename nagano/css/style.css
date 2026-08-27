@@ -13,12 +13,18 @@
   --card-bg: 255, 253, 247;
   --line: 214, 200, 178;
   --shadow: 58, 46, 40;
-  /* 地図の塗り分け（市・町・村）: scripts/validate_palette.js で検証済み */
-  --map-shi: 74, 130, 192;
-  --map-machi: 56, 145, 106;
-  --map-mura: 192, 118, 31;
+  /* 地図の塗り分け（市・町・村）。淡い水彩の「塗り」と、
+     筆の際に色が溜まったような濃いめの「ふち」の二本立て。
+     市は都会をあらわすコンクリートの鼠色。 */
+  --map-shi: 182, 186, 196;
+  --map-shi-edge: 120, 127, 142;
+  --map-machi: 165, 198, 159;
+  --map-machi-edge: 106, 142, 101;
+  --map-mura: 223, 191, 120;
+  --map-mura-edge: 176, 140, 66;
+  --map-dim: 219, 213, 201;
+  --map-dim-edge: 190, 182, 168;
   --map-line: 246, 240, 228;
-  --map-dim: 200, 190, 174;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -37,11 +43,15 @@
     --card-bg: 43, 39, 34;
     --line: 78, 70, 62;
     --shadow: 0, 0, 0;
-    --map-shi: 78, 140, 216;
-    --map-machi: 51, 165, 124;
-    --map-mura: 198, 127, 43;
+    --map-shi: 90, 90, 102;
+    --map-shi-edge: 142, 145, 164;
+    --map-machi: 74, 106, 81;
+    --map-machi-edge: 122, 162, 128;
+    --map-mura: 117, 96, 61;
+    --map-mura-edge: 172, 146, 96;
+    --map-dim: 62, 58, 52;
+    --map-dim-edge: 96, 90, 82;
     --map-line: 30, 28, 25;
-    --map-dim: 82, 76, 68;
     color-scheme: dark;
   }
 }
@@ -456,20 +466,29 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
 }
 #mapSvg { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 #mapSvg:active { cursor: grabbing; }
+/* 水彩紙のざらつき。1枚のオーバーレイなので拡大縮小しても軽い。 */
+.map-wrap::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply; opacity: .17;
+}
+@media (prefers-color-scheme: dark) {
+  .map-wrap::after { mix-blend-mode: soft-light; opacity: .12; }
+}
 .mun {
-  fill-opacity: .92;
-  stroke: rgb(var(--map-line)); stroke-width: 1.1; stroke-linejoin: round;
+  fill-opacity: .86;
+  stroke-width: 1.2; stroke-linejoin: round; stroke-opacity: .8;
   cursor: pointer; transition: opacity .18s ease;
 }
-.mun.type-市 { fill: rgb(var(--map-shi)); }
-.mun.type-町 { fill: rgb(var(--map-machi)); }
-.mun.type-村 { fill: rgb(var(--map-mura)); }
-.mun.dim { fill: rgb(var(--map-dim)); opacity: .5; }
+.mun.type-市 { fill: rgb(var(--map-shi)); stroke: rgb(var(--map-shi-edge)); }
+.mun.type-町 { fill: rgb(var(--map-machi)); stroke: rgb(var(--map-machi-edge)); }
+.mun.type-村 { fill: rgb(var(--map-mura)); stroke: rgb(var(--map-mura-edge)); }
+.mun.dim { fill: rgb(var(--map-dim)); stroke: rgb(var(--map-dim-edge)); opacity: .55; }
 .mun-visited {
-  fill: none; stroke: rgb(var(--matcha)); stroke-width: 3; stroke-linejoin: round;
+  fill: none; stroke: rgb(var(--matcha)); stroke-width: 3.2; stroke-linejoin: round;
   pointer-events: none;
 }
-.mun:hover { filter: brightness(1.12); }
+.mun:hover { fill-opacity: 1; }
 .mun-label {
   font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
   font-weight: 700;
@@ -505,10 +524,10 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
 .ml-item { display: inline-flex; align-items: center; gap: 5px; }
 .sw {
   width: 15px; height: 15px; border-radius: 4px; display: inline-block;
-  border: 1.5px solid rgb(var(--map-line));
+  border: 1.5px solid transparent;
 }
-.sw.shi { background: rgb(var(--map-shi)); }
-.sw.machi { background: rgb(var(--map-machi)); }
-.sw.mura { background: rgb(var(--map-mura)); }
-.sw.visited { background: rgba(var(--map-shi), .35); border-color: rgb(var(--matcha)); border-width: 2.5px; }
-.sw.dim { background: rgb(var(--map-dim)); opacity: .5; }
+.sw.shi { background: rgb(var(--map-shi)); border-color: rgb(var(--map-shi-edge)); }
+.sw.machi { background: rgb(var(--map-machi)); border-color: rgb(var(--map-machi-edge)); }
+.sw.mura { background: rgb(var(--map-mura)); border-color: rgb(var(--map-mura-edge)); }
+.sw.visited { background: rgb(var(--map-shi)); border-color: rgb(var(--matcha)); border-width: 2.5px; }
+.sw.dim { background: rgb(var(--map-dim)); border-color: rgb(var(--map-dim-edge)); opacity: .6; }
