@@ -212,17 +212,19 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
   font-size: .62rem; padding: 2px 7px; border-radius: 999px; font-weight: 700; white-space: nowrap;
   border: 1px solid transparent;
 }
-.badge.type-市 { background: rgba(var(--indigo), .15); color: rgb(var(--indigo)); }
-.badge.type-町 { background: rgba(var(--matcha), .18); color: rgb(var(--matcha)); }
-.badge.type-村 { background: rgba(var(--gold), .2); color: rgb(var(--gold)); }
+/* 市・町・村のしるしは地図と同じ水彩の色に合わせる */
+.badge.type-市 { background: rgba(var(--map-shi), .6); color: rgb(var(--ink)); border-color: rgba(var(--map-shi-edge), .5); }
+.badge.type-町 { background: rgba(var(--map-machi), .6); color: rgb(var(--ink)); border-color: rgba(var(--map-machi-edge), .5); }
+.badge.type-村 { background: rgba(var(--map-mura), .6); color: rgb(var(--ink)); border-color: rgba(var(--map-mura-edge), .5); }
 .badge.region { background: rgba(var(--ink-faint), .16); color: rgb(var(--ink-soft)); }
 .badge.eki { background: rgba(var(--apple), .14); color: rgb(var(--apple)); }
 .badge.mus { background: rgba(var(--gold), .18); color: rgb(var(--gold)); }
 .tc-catch { font-size: .84rem; color: rgb(var(--ink-soft)); margin: 5px 0 7px; }
 .tc-tags { display: flex; flex-wrap: wrap; gap: 4px; padding-right: 30px; }
 .tag {
+  /* 名物のしるしは、地図の紙色になじむ中立の色に */
   font-size: .68rem; padding: 2px 8px; border-radius: 7px;
-  background: rgba(var(--indigo-soft), .14); color: rgb(var(--ink-soft));
+  background: rgba(var(--ink-faint), .14); color: rgb(var(--ink-soft));
 }
 .tag.soba { background: rgba(var(--matcha), .16); color: rgb(var(--matcha)); font-weight: 700; }
 .tag.kigashitsu { background: rgba(var(--apple), .12); color: rgb(var(--apple)); font-weight: 700; }
