@@ -129,7 +129,7 @@
     const fav = state.fav.has(t.id);
     const visited = state.visited.has(t.id);
     return `
-      <div class="town-card${visited ? " visited" : ""}" style="border-left-color:rgb(var(--${t.t === "市" ? "indigo" : t.t === "町" ? "matcha" : "gold"}))">
+      <div class="town-card${visited ? " visited" : ""}" style="border-left-color:rgb(var(--map-${t.t === "市" ? "shi" : t.t === "町" ? "machi" : "mura"}-edge))">
         <button class="tc-open" data-id="${t.id}" style="all:unset;display:block;cursor:pointer;width:100%">
           <div class="tc-head">
             <span class="tc-name">${esc(t.n)}</span>
