@@ -470,6 +470,19 @@ h2.sec-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px
   pointer-events: none;
 }
 .mun:hover { filter: brightness(1.12); }
+.mun-label {
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  font-weight: 700;
+  fill: rgb(var(--ink));
+  stroke: rgb(var(--map-line));
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.mun-label.picked { fill: rgb(var(--apple)); }
+
 .map-pin {
   fill: none; stroke: rgb(var(--apple)); stroke-width: 3; paint-order: stroke;
   pointer-events: none;

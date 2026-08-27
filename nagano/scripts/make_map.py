@@ -82,6 +82,61 @@ def ring_centroid(pts):
         return pts[0]
     return cx / (6 * a), cy / (6 * a)
 
+
+def point_in_ring(x, y, pts):
+    inside = False
+    n = len(pts) - 1
+    for i in range(n):
+        x0, y0 = pts[i]
+        x1, y1 = pts[i + 1]
+        if (y0 > y) != (y1 > y):
+            xx = x0 + (y - y0) * (x1 - x0) / (y1 - y0)
+            if x < xx:
+                inside = not inside
+    return inside
+
+
+def dist_to_ring(x, y, pts):
+    best = float("inf")
+    for i in range(len(pts) - 1):
+        x0, y0 = pts[i]
+        x1, y1 = pts[i + 1]
+        dx, dy = x1 - x0, y1 - y0
+        L2 = dx * dx + dy * dy
+        t = 0.0 if L2 == 0 else max(0.0, min(1.0, ((x - x0) * dx + (y - y0) * dy) / L2))
+        px, py = x0 + t * dx, y0 + t * dy
+        d = math.hypot(x - px, y - py)
+        if d < best:
+            best = d
+    return best
+
+
+def label_point(pts):
+    """図形の内側で、境界からいちばん離れた点（ラベルを置く場所）を返す。
+
+    重心はへこんだ形だと外に出てしまうため、格子探索で内側の広い場所を選ぶ。
+    """
+    cx, cy = ring_centroid(pts)
+    if point_in_ring(cx, cy, pts):
+        best = (dist_to_ring(cx, cy, pts), cx, cy)
+    else:
+        best = (-1.0, cx, cy)
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    step = max((x1 - x0), (y1 - y0)) / 24 or 1
+    y = y0 + step / 2
+    while y < y1:
+        x = x0 + step / 2
+        while x < x1:
+            if point_in_ring(x, y, pts):
+                d = dist_to_ring(x, y, pts)
+                if d > best[0]:
+                    best = (d, x, y)
+            x += step
+        y += step
+    return best[1], best[2]
+
 entries = []
 for f in feats:
     name = f["properties"].get("municipality") or f["properties"].get("displayName")
@@ -104,7 +159,7 @@ for f in feats:
             biggest = (area, dedup)
         seg = "M" + " ".join(f"{fmt(x)},{fmt(y)}" for x, y in dedup[:-1]) + "Z"
         d_parts.append(seg)
-    cx, cy = ring_centroid(biggest[1]) if biggest[1] else (0, 0)
+    cx, cy = label_point(biggest[1]) if biggest[1] else (0, 0)
     entries.append((name, "".join(d_parts), round(cx, 1), round(cy, 1)))
 
 entries.sort(key=lambda e: e[0])
