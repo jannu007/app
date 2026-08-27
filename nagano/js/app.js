@@ -43,6 +43,7 @@
     unvisited: false,
     sort: "region",
     sobaView: "soba",
+    listView: "list",
     sheetList: [],
     sheetIndex: -1,
     today: null,
@@ -149,11 +150,190 @@
 
   function renderList() {
     const list = filtered();
+    delete $("#mapCaption").dataset.picked;
     $("#listCount").textContent = `${list.length}市町村`;
     $("#townList").innerHTML = list.length
       ? list.map(townCard).join("")
       : `<div class="empty">条件に合う市町村が見つかりませんでした。<br />検索の言葉やしぼり込みを変えてみてください。</div>`;
     state.sheetList = list.map((t) => t.id);
+    if (state.listView === "map") paintMap(list);
+  }
+
+  /* ---------- 地図 ---------- */
+  const VB_FULL = MAP_VIEWBOX.split(" ").map(Number);
+  let vb = { x: VB_FULL[0], y: VB_FULL[1], w: VB_FULL[2], h: VB_FULL[3] };
+  let mapBuilt = false;
+
+  function applyVB() {
+    $("#mapSvg").setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  }
+
+  function buildMap() {
+    if (mapBuilt) return;
+    const svg = $("#mapSvg");
+    svg.setAttribute("viewBox", MAP_VIEWBOX);
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svg.innerHTML =
+      `<g id="mapG">` +
+      TOWNS.map((t) => {
+        const shape = MAP_SHAPES[t.n];
+        if (!shape) return "";
+        return `<path class="mun type-${t.t}" data-id="${t.id}" d="${shape.d}"><title>${esc(t.n)}（${t.t}）</title></path>`;
+      }).join("") +
+      `</g><g id="mapVisited" aria-hidden="true"></g><g id="mapPin"></g>`;
+    mapBuilt = true;
+
+    /* なぞって移動・二本指で拡大縮小 */
+    const pts = new Map();
+    const captured = new Set();
+    let last = null, moved = 0, pinch = 0;
+    /* ポインタキャプチャは実際にドラッグが始まってから。
+       押した瞬間に捕まえると click の対象が <svg> に付け替わり、
+       市町村をタップしても開けなくなる。 */
+    const capture = (id) => {
+      if (captured.has(id)) return;
+      try { svg.setPointerCapture(id); captured.add(id); } catch (e) {}
+    };
+    const toUnit = (dpx) => (dpx * vb.w) / svg.getBoundingClientRect().width;
+
+    svg.addEventListener("pointerdown", (e) => {
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 1) { last = { x: e.clientX, y: e.clientY }; moved = 0; }
+      if (pts.size === 2) { pinch = pinchDist(); pts.forEach((_v, id) => capture(id)); }
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2) {
+        const d = pinchDist();
+        if (pinch > 0 && d > 0) { zoomBy(pinch / d); pinch = d; }
+        return;
+      }
+      if (!last) return;
+      const dx = e.clientX - last.x, dy = e.clientY - last.y;
+      moved += Math.abs(dx) + Math.abs(dy);
+      if (moved > 8) capture(e.pointerId);
+      vb.x -= toUnit(dx);
+      vb.y -= toUnit(dy);
+      clampVB();
+      applyVB();
+      last = { x: e.clientX, y: e.clientY };
+    });
+    const end = (e) => {
+      pts.delete(e.pointerId);
+      captured.delete(e.pointerId);
+      if (pts.size < 2) pinch = 0;
+      if (pts.size === 0) last = null;
+    };
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+    svg.addEventListener("click", (e) => { if (moved > 10) e.stopPropagation(); }, true);
+    svg.addEventListener("wheel", (e) => { e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.12 : 1 / 1.12); }, { passive: false });
+
+    function pinchDist() {
+      const [a, b] = [...pts.values()];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+    /* 名前をキャプションに出す */
+    svg.addEventListener("pointerover", (e) => {
+      const path = e.target.closest("path[data-id]");
+      if (path) showCaption(path.dataset.id);
+    });
+  }
+
+  function showCaption(id) {
+    const t = townById(id);
+    if (!t) return;
+    $("#mapCaption").dataset.picked = "1";
+    $("#mapCaption").innerHTML =
+      `<b>${esc(t.n)}</b> <span class="muted">${esc(REGION_MAP[t.r].name)}地域 ／ ${esc(t.c)}</span>`;
+    const shape = MAP_SHAPES[t.n];
+    $("#mapPin").innerHTML = shape
+      ? `<circle class="map-pin" cx="${shape.cx}" cy="${shape.cy}" r="${Math.max(3, vb.w / 130)}" />`
+      : "";
+  }
+
+  function zoomBy(factor, keepCenter = true) {
+    const cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2;
+    const nw = Math.min(VB_FULL[2], Math.max(VB_FULL[2] / 12, vb.w * factor));
+    const ratio = nw / vb.w;
+    vb.w = nw;
+    vb.h *= ratio;
+    if (keepCenter) { vb.x = cx - vb.w / 2; vb.y = cy - vb.h / 2; }
+    clampVB();
+    applyVB();
+  }
+
+  function clampVB() {
+    vb.x = Math.min(Math.max(vb.x, VB_FULL[0] - vb.w * 0.1), VB_FULL[0] + VB_FULL[2] - vb.w * 0.9);
+    vb.y = Math.min(Math.max(vb.y, VB_FULL[1] - vb.h * 0.1), VB_FULL[1] + VB_FULL[3] - vb.h * 0.9);
+  }
+
+  function resetVB() {
+    vb = { x: VB_FULL[0], y: VB_FULL[1], w: VB_FULL[2], h: VB_FULL[3] };
+    applyVB();
+  }
+
+  /* しぼり込みの結果に合わせて地図を寄せる */
+  function fitTo(list) {
+    if (!list.length || list.length === TOWNS.length) return resetVB();
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    list.forEach((t) => {
+      const sh = MAP_SHAPES[t.n];
+      if (!sh) return;
+      const nums = sh.d.match(/-?\d+(\.\d+)?/g) || [];
+      for (let i = 0; i < nums.length; i += 2) {
+        const x = +nums[i], y = +nums[i + 1];
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    });
+    if (!isFinite(x0)) return resetVB();
+    const pad = Math.max((x1 - x0) * 0.12, (y1 - y0) * 0.12, 20);
+    let w = x1 - x0 + pad * 2, h = y1 - y0 + pad * 2;
+    const ar = VB_FULL[2] / VB_FULL[3];
+    if (w / h > ar) h = w / ar; else w = h * ar;
+    vb = { x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - h / 2, w, h };
+    if (vb.w > VB_FULL[2]) return resetVB();
+    clampVB();
+    applyVB();
+  }
+
+  function paintMap(list) {
+    buildMap();
+    const ok = new Set(list.map((t) => t.id));
+    const cap = $("#mapCaption");
+    if (!cap.dataset.picked) {
+      cap.innerHTML =
+        list.length === TOWNS.length
+          ? "市町村をタップすると情報が開きます。"
+          : `<b>${list.length}市町村</b> <span class="muted">が条件に合っています</span>`;
+    }
+    $$("#mapG path").forEach((p) => {
+      p.classList.toggle("dim", !ok.has(p.dataset.id));
+    });
+    $("#mapVisited").innerHTML = TOWNS.filter((t) => state.visited.has(t.id) && MAP_SHAPES[t.n])
+      .map((t) => `<path class="mun-visited" d="${MAP_SHAPES[t.n].d}" />`)
+      .join("");
+  }
+
+  function setListView(view) {
+    state.listView = view;
+    $$(".vt-btn").forEach((b) => {
+      const on = b.dataset.listview === view;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+    $("#townList").hidden = view !== "list";
+    $("#mapView").hidden = view !== "map";
+    $(".list-meta").hidden = view === "map";
+    if (view === "map") {
+      const list = filtered();
+      paintMap(list);
+      fitTo(list);
+    }
   }
 
   /* ---------- 地域チップ ---------- */
@@ -633,6 +813,7 @@
   const HOWTO = `
     <h3>このアプリの使い方</h3>
     <ul>
+      <li><b>一覧と地図</b>：上のボタンで切り替えられます。地図では長野県の市町村をタップすると、その市町村の情報が開きます。指でなぞって移動、二本指または＋−で拡大縮小できます。検索やしぼり込みは地図にも効き、条件に合わない市町村はうすい色になります。</li>
       <li><b>一覧</b>：市町村名・名物・そば・観光地の名前で検索できます。地域や「市／町／村」、「道の駅あり」でしぼり込みも。</li>
       <li><b>市町村カード</b>をタップすると、魅力・名物・観光・美術館と博物館・お店・道の駅・ご当地そば・住民の人柄・土地の特徴が開きます。観光スポット・お店・道の駅・そばには、それぞれ「🗺 地図」「🔎 検索」のリンクが付いています。シート下の「前／次」で隣の市町村へ移動できます。</li>
       <li><b>地域</b>：長野県の10の広域圏から探せます。</li>
@@ -670,12 +851,13 @@
     <p>道の駅・お店・イベントは、新規開業や休業、季節・曜日による営業の変更があります。<b>お出かけの前に、各市町村や施設の公式情報で必ずご確認ください。</b></p>
     <p>登山・秘湯・火山周辺（御嶽山など）へ向かうときは、最新の気象・火山・道路情報の確認をお願いします。</p>
     <p>「住民の人柄」は、その土地の歴史や産業から一般に語られる気質の傾向をまとめたものです。個々の住民を評価するものではなく、一人ひとりに当てはまるものでもありません。</p>
+    <p>アプリ内の長野県地図は、国土交通省 国土数値情報「行政区域データ 2025年版」（CC BY 4.0）を加工して作成しています。表示のために境界を簡略化しているため、正確な境界を示すものではありません。</p>
     <p>各項目の「🗺 地図」「🔎 検索」は、施設ごとの公式URLが移転や閉店で変わることを避けるため、地名を添えた地図検索・Web検索を開くようにしています。</p>
     <p>本アプリは無料で、広告・登録・課金はありません。入力した記録は端末内にのみ保存され、外部へ送信されることはありません。</p>`;
 
   /* ---------- イベント ---------- */
   document.addEventListener("click", (e) => {
-    const el = e.target.closest("[data-id],[data-fav],[data-region],[data-gotoregion],[data-filter],[data-view],[data-tab],[data-close],[data-step],[data-toggle-visit],[data-toggle-fav],[data-action],[data-modalclose]");
+    const el = e.target.closest("[data-id],[data-fav],[data-listview],[data-zoom],[data-region],[data-gotoregion],[data-filter],[data-view],[data-tab],[data-close],[data-step],[data-toggle-visit],[data-toggle-fav],[data-action],[data-modalclose]");
     if (!el) return;
 
     if (el.dataset.modalclose) return closeModal();
@@ -690,15 +872,26 @@
       }
       return;
     }
+    if (el.dataset.listview) return setListView(el.dataset.listview);
+    if (el.dataset.zoom) {
+      if (el.dataset.zoom === "in") zoomBy(1 / 1.5);
+      else if (el.dataset.zoom === "out") zoomBy(1.5);
+      else resetVB();
+      return;
+    }
     if (el.dataset.toggleVisit) return toggleVisit(el.dataset.toggleVisit);
     if (el.dataset.toggleFav) return toggleFav(el.dataset.toggleFav);
     if (el.dataset.fav) return toggleFav(el.dataset.fav);
-    if (el.dataset.id) return openSheet(el.dataset.id);
+    if (el.dataset.id) {
+      if (state.listView === "map" && el.tagName.toLowerCase() === "path") showCaption(el.dataset.id);
+      return openSheet(el.dataset.id);
+    }
 
     if (el.dataset.region !== undefined && el.hasAttribute("data-region")) {
       state.region = el.dataset.region;
       renderRegionChips();
       renderList();
+      if (state.listView === "map") fitTo(filtered());
       return;
     }
     if (el.dataset.gotoregion) {
@@ -708,6 +901,7 @@
       $("#searchClear").hidden = true;
       renderRegionChips();
       renderList();
+      if (state.listView === "map") fitTo(filtered());
       switchTab("list");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;

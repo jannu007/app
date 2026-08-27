@@ -64,6 +64,11 @@
 
     <!-- ============ 一覧タブ ============ -->
     <section id="tab-list" class="tab-panel active">
+      <div class="view-toggle" role="group" aria-label="表示の切り替え">
+        <button class="vt-btn active" data-listview="list" aria-pressed="true">📋 一覧</button>
+        <button class="vt-btn" data-listview="map" aria-pressed="false">🗾 地図</button>
+      </div>
+
       <div class="search-row">
         <span class="s-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/></svg>
@@ -96,6 +101,27 @@
       </div>
 
       <div class="town-list" id="townList"></div>
+
+      <div id="mapView" hidden>
+        <div class="map-caption" id="mapCaption">市町村をタップすると、その市町村の情報が開きます。</div>
+        <div class="map-wrap">
+          <svg id="mapSvg" role="img" aria-label="長野県77市町村の地図" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="map-zoom">
+            <button class="mz-btn" data-zoom="in" aria-label="拡大">＋</button>
+            <button class="mz-btn" data-zoom="out" aria-label="縮小">−</button>
+            <button class="mz-btn" data-zoom="reset" aria-label="全体に戻す">⟲</button>
+          </div>
+        </div>
+        <div class="map-legend">
+          <span class="ml-item"><i class="sw shi"></i>市</span>
+          <span class="ml-item"><i class="sw machi"></i>町</span>
+          <span class="ml-item"><i class="sw mura"></i>村</span>
+          <span class="ml-item"><i class="sw visited"></i>🚩 行った</span>
+          <span class="ml-item"><i class="sw dim"></i>条件に合わない</span>
+        </div>
+        <p class="tiny" style="margin-top:8px">指でなぞると動かせます。二本指または＋−で拡大縮小、⟲で全体に戻ります。<br />
+        地図出典：国土交通省 国土数値情報「行政区域データ 2025年版」（CC BY 4.0）を加工して作成。</p>
+      </div>
     </section>
 
     <!-- ============ 地域タブ ============ -->
@@ -183,6 +209,7 @@
 <div id="modalRoot"></div>
 
 <script src="js/data.js"></script>
+<script src="js/map.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
