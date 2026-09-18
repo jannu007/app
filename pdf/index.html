@@ -166,6 +166,36 @@
   </div>
 </div>
 
+<!-- テキスト編集モーダル（自由な位置にテキストを追加） -->
+<div id="textEditModal" class="modal-overlay" hidden>
+  <div class="modal ink-modal editor-modal" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <div class="modal-header">
+      <span class="modal-emblem" aria-hidden="true">✎</span>
+      <h2 id="editorTitle">テキストを追加</h2>
+    </div>
+    <p class="field-note editor-help">ページの好きな場所をタップするとテキストを追加できます。<span class="editor-handle-hint">⠿</span>をドラッグで移動、<span class="editor-del-hint">×</span>で削除。</p>
+
+    <div class="editor-toolbar">
+      <button id="editorAddTextBtn" type="button" class="btn btn-secondary small">＋ テキスト追加</button>
+      <label class="editor-inline-field">
+        <span>サイズ</span>
+        <input id="editorFontSize" type="range" min="10" max="72" value="20" />
+      </label>
+      <input id="editorColor" type="color" value="#1a1a1a" />
+      <button id="editorDeleteBoxBtn" type="button" class="icon-action danger" title="選択中のテキストを削除">🗑</button>
+    </div>
+
+    <div class="editor-canvas-scroll">
+      <div class="editor-canvas-wrap" id="editorCanvasWrap"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="editorSaveBtn" type="button" class="btn btn-primary full">保存してページに反映</button>
+      <button id="editorCancelBtn" type="button" class="btn btn-secondary full">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <!-- インストール促し バナー -->
 <div id="installBanner" class="install-banner" hidden>
   <span class="install-emblem" aria-hidden="true">🔖</span>
