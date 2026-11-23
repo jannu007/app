@@ -42,7 +42,7 @@ function toast(msg, ms = 2600) {
    ========================================================= */
 const DEFAULTS = {
   mode: "auto", flow: "page", font: "mincho", size: 19, lh: 1.85, ls: 0.02, margin: 26,
-  theme: "kin", bright: 1, anim: "slide", tap: "std", justify: true, bold: false, spread: true,
+  theme: "urushi", bright: 1, anim: "slide", tap: "std", justify: true, bold: false, spread: true,
   wake: true, ttsRate: 1, autoSec: 20,
 };
 function loadJSON(key, fallback) {
@@ -50,6 +50,12 @@ function loadJSON(key, fallback) {
 }
 const settings = { ...DEFAULTS, ...loadJSON("hb.settings", {}) };
 const saveSettings = () => localStorage.setItem("hb.settings", JSON.stringify(settings));
+// 黒と金の新しい意匠へ：一度だけ読書面の色を「漆」にそろえる
+if (localStorage.getItem("hb.design") !== "urushi") {
+  settings.theme = "urushi";
+  localStorage.setItem("hb.design", "urushi");
+  saveSettings();
+}
 
 const stats = Object.assign({ days: {}, books: {}, speed: 500, goal: 15, finished: 0 }, loadJSON("hb.stats", {}));
 const saveStats = () => localStorage.setItem("hb.stats", JSON.stringify(stats));
@@ -184,11 +190,26 @@ async function importFiles(files) {
   if (added) { closeSheet(); go("library"); }
 }
 
+// 旧名「花琵琶文庫」で入れた付属の本を新しい名前にそろえる
+async function migrateNames() {
+  const OLD = "\u82b1\u7435\u7436\u6587\u5eab"; // 花琵琶文庫
+  for (const b of books) {
+    if (!b.builtin) continue;
+    const t = b.title.replace(OLD, "弁天文庫");
+    const a = (b.author || "").replace(OLD, "弁天文庫");
+    if (t !== b.title || a !== b.author) {
+      b.title = t;
+      b.author = a;
+      await db.putBook(b);
+    }
+  }
+}
+
 async function seedBooks() {
   if (localStorage.getItem("hb.seeded")) return;
   const story = parseAozora(SAMPLE_STORY, "金地の四弦.txt");
   await saveParsed(story, { builtin: true, added: Date.now() - 1000 });
-  const guide = parseAozora(SAMPLE_GUIDE, "花琵琶文庫の手引き.txt");
+  const guide = parseAozora(SAMPLE_GUIDE, "弁天文庫の手引き.txt");
   await saveParsed(guide, { builtin: true, added: Date.now() });
   localStorage.setItem("hb.seeded", "1");
 }
@@ -241,7 +262,7 @@ const sheetOpen = () => !$("#sheet").hidden;
 function openImportSheet() {
   const body = openSheet("本を追加", `
     <div class="import-drop" id="importDrop">
-      <p class="import-emblem" aria-hidden="true">📜</p>
+      <p class="import-emblem" aria-hidden="true">卷</p>
       <p><strong>ファイルを選ぶ</strong><br /><small>またはここへドラッグ</small></p>
       <p class="import-types">TXT ・ 青空文庫ZIP ・ EPUB ・ HTML ・ Markdown</p>
     </div>
@@ -437,7 +458,7 @@ async function onBookEnd() {
   const spent = (stats.books[R.book.id] || 0) / 60;
   const body = openSheet("読了", `
     <div class="finish">
-      <p class="finish-emblem" aria-hidden="true">🌸</p>
+      <p class="finish-emblem" aria-hidden="true">❀</p>
       <h4>『${esc(R.book.title)}』を読み終えました</h4>
       <p>読んだ時間 ${fmtMin(spent)} ・ マーカー ${R.book.highlights.length}件</p>
       <p class="muted">これまでに読み終えた本：${stats.finished}冊</p>
@@ -716,6 +737,7 @@ function openTocSheet(tab = "toc") {
 
 /* ---- 表示の設定 ---- */
 const THEMES = [
+  { id: "urushi", label: "漆" },
   { id: "kin", label: "金屏風" },
   { id: "kinari", label: "生成り" },
   { id: "sakura", label: "桜" },
@@ -1124,7 +1146,7 @@ setInterval(() => {
   saveStats();
   const goal = stats.goal * 60;
   if (before < goal && dayRec().sec >= goal) {
-    toast(`🌸 きょうの目標 ${stats.goal}分 を達成しました`, 3500);
+    toast(`❀ きょうの目標 ${stats.goal}分 を達成しました`, 3500);
     petalBurst(document.body, 24);
   }
 }, 5000);
@@ -1154,12 +1176,12 @@ function renderStats() {
   const petals = Math.round(frac * 5);
   const ring = `
     <svg viewBox="0 0 120 120" class="ring" aria-hidden="true">
-      <circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="8"/>
-      <circle cx="60" cy="60" r="52" fill="none" stroke="var(--sakura-deep)" stroke-width="8" stroke-linecap="round"
+      <circle cx="60" cy="60" r="52" fill="none" stroke="#221d16" stroke-width="5"/>
+      <defs><linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5e2a4"/><stop offset=".5" stop-color="#c9a55a"/><stop offset="1" stop-color="#8a6a2c"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="url(#ringG)" stroke-width="5" stroke-linecap="round"
         stroke-dasharray="${(2 * Math.PI * 52 * frac).toFixed(1)} 999" transform="rotate(-90 60 60)"/>
       <g transform="translate(60,60)">
-        ${[0, 72, 144, 216, 288].map((r, i) => `<path d="M0,0 C-7,-5 -10,-15 -6,-22 L0,-18.5 L6,-22 C10,-15 7,-5 0,0Z" transform="rotate(${r}) scale(1.15)" fill="${i < petals ? "#f3b6c4" : "none"}" stroke="${i < petals ? "#d9798f" : "var(--line)"}" stroke-width="1"/>`).join("")}
-        <circle r="4" fill="${petals >= 5 ? "#f7e7a8" : "var(--line)"}"/>
+        ${[0, 72, 144, 216, 288].map((r, i) => `<path d="M0,0 C-7,-5 -10,-15 -6,-22 L0,-18.5 L6,-22 C10,-15 7,-5 0,0Z" transform="rotate(${r}) scale(1.15)" fill="${i < petals ? "url(#ringG)" : "none"}" stroke="${i < petals ? "#f0d995" : "#3a3124"}" stroke-width="1"/>`).join("")}
+        <circle r="4" fill="${petals >= 5 ? "#0b0907" : "#3a3124"}" stroke="${petals >= 5 ? "#f0d995" : "none"}"/>
       </g>
     </svg>`;
 
@@ -1201,7 +1223,7 @@ function renderStats() {
       <div>
         <small>きょう読んだ時間</small>
         <p class="big-num">${fmtMin(min)}</p>
-        <p class="muted">目標 ${goal}分 ・ ${frac >= 1 ? "達成 🌸" : `あと${fmtMin(goal - min)}`}</p>
+        <p class="muted">目標 ${goal}分 ・ ${frac >= 1 ? "達成 ❀" : `あと${fmtMin(goal - min)}`}</p>
         <label class="goal-pick">一日の目標
           <select id="goalSel" class="select">${[5, 10, 15, 20, 30, 45, 60, 90].map((g) => `<option value="${g}" ${g === goal ? "selected" : ""}>${g}分</option>`).join("")}</select>
         </label>
@@ -1238,7 +1260,7 @@ function renderNotes() {
   sel.innerHTML = `<option value="all">すべての本</option>${withNotes.map((b) => `<option value="${b.id}" ${cur === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("")}`;
   const list = cur === "all" ? withNotes : withNotes.filter((b) => b.id === cur);
   if (!list.length) {
-    $("#notesBody").innerHTML = '<div class="empty"><p class="empty-emblem" aria-hidden="true">🖍️</p><p>マーカーやメモはまだありません。<br />本文を長押しして文字を選ぶと、マーカーを引けます。</p></div>';
+    $("#notesBody").innerHTML = '<div class="empty"><p class="empty-emblem" aria-hidden="true">筆</p><p>マーカーやメモはまだありません。<br />本文を長押しして文字を選ぶと、マーカーを引けます。</p></div>';
     return;
   }
   $("#notesBody").innerHTML = list.map((b) => `
@@ -1284,7 +1306,7 @@ function download(name, text, type = "text/plain") {
 function exportNotes(list) {
   if (!list.length) { toast("書き出すメモがありません"); return; }
   const colors = { 1: "桜", 2: "山吹", 3: "若草", 4: "藤" };
-  let md = `# 花琵琶文庫 マーカーとメモ\n\n書き出した日：${fmtDate(Date.now())}\n\n`;
+  let md = `# 弁天文庫 マーカーとメモ\n\n書き出した日：${fmtDate(Date.now())}\n\n`;
   for (const b of list) {
     md += `## ${b.title}${b.author ? ` / ${b.author}` : ""}\n\n`;
     for (const h of [...b.highlights].sort((x, y) => x.sec - y.sec || x.start - y.start)) {
@@ -1294,15 +1316,88 @@ function exportNotes(list) {
       md += "\n";
     }
   }
-  download(`花琵琶文庫_メモ_${todayKey()}.md`, md, "text/markdown");
+  download(`弁天文庫_メモ_${todayKey()}.md`, md, "text/markdown");
   toast("メモを書き出しました");
 }
 
 /* =========================================================
    設定の画面
    ========================================================= */
+/* ---- インストール（PWA） ---- */
 let installEvt = null;
-window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; });
+const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || navigator.standalone === true;
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function updateInstallUI() {
+  $("#installBtn").hidden = isStandalone();
+}
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; updateInstallUI(); });
+window.addEventListener("appinstalled", () => {
+  installEvt = null;
+  updateInstallUI();
+  closeSheet();
+  toast("インストールしました。ホーム画面やアプリ一覧から開けます", 4000);
+});
+async function installApp() {
+  if (installEvt) {
+    const evt = installEvt;
+    installEvt = null;
+    evt.prompt();
+    const choice = await evt.userChoice.catch(() => null);
+    if (choice?.outcome !== "accepted") installEvt = evt;
+    updateInstallUI();
+    return;
+  }
+  openInstallGuide();
+}
+function openInstallGuide() {
+  const ua = navigator.userAgent;
+  const ios = isIOS();
+  const android = /Android/.test(ua);
+  const iosOther = ios && /CriOS|FxiOS|EdgiOS/.test(ua);
+  let steps;
+  if (ios) {
+    steps = [
+      iosOther ? "この画面を <b>Safari</b> で開きます（iPhoneでは、ほかのブラウザーでも共有メニューから追加できる場合があります）" : "画面下（iPadは上）の <b>共有ボタン</b> <span class=\"kbd\">□↑</span> をタップ",
+      "メニューを下へ送り <b>「ホーム画面に追加」</b> をタップ",
+      "右上の <b>「追加」</b> をタップ。ホーム画面に金の琵琶のアイコンが並びます",
+    ];
+  } else if (android) {
+    steps = [
+      "ブラウザー右上の <b>︙</b> メニューを開く",
+      "<b>「アプリをインストール」</b> または <b>「ホーム画面に追加」</b> をタップ",
+      "<b>「インストール」</b> をタップ。アプリ一覧とホーム画面に追加されます",
+    ];
+  } else {
+    steps = [
+      "Chrome・Edge ではアドレスバー右端の <b>インストールのアイコン</b>（画面に↓の印）をクリック",
+      "見つからないときは、ブラウザーのメニューから <b>「アプリ」→「このサイトをアプリとしてインストール」</b>（Edge）や <b>「キャスト、保存、共有」→「ページをアプリとしてインストール」</b>（Chrome）を選ぶ",
+      "<b>「インストール」</b> を押すと、独立したウィンドウで開けるようになります",
+    ];
+  }
+  const body = openSheet("アプリをインストール", `
+    <div class="install-hero">
+      <img src="icons/icon-192.png" alt="" />
+      <p class="muted">弁天文庫はインストールできるWebアプリです。<b class="installed-note">無料・登録不要</b>で、ストアを通さずに数秒で入ります。</p>
+    </div>
+    ${installEvt ? '<button class="btn btn-primary full" id="doInstall">いますぐインストール</button>' : ""}
+    <ol class="install-steps">${steps.map((t) => `<li>${t}</li>`).join("")}</ol>
+    <ul class="howto">
+      <li>ホーム画面から1タップで、全画面で開けます</li>
+      <li>電波のない場所でも、入れた本を読めます</li>
+      <li>本・メモ・記録はいままでどおり端末の中だけに保存されます</li>
+    </ul>`);
+  $("#doInstall", body)?.addEventListener("click", installApp);
+}
+$("#installBtn").addEventListener("click", installApp);
+
+// OSの「このアプリで開く」から渡されたファイルを読み込む
+if ("launchQueue" in window) {
+  window.launchQueue.setConsumer(async (params) => {
+    if (!params.files?.length) return;
+    const files = await Promise.all(params.files.map((h) => h.getFile()));
+    importFiles(files);
+  });
+}
 
 async function renderSettings() {
   let usage = "";
@@ -1313,14 +1408,20 @@ async function renderSettings() {
   $("#settingsBody").innerHTML = `
     <section class="card">
       <h3 class="card-title">使い方</h3>
-      <p class="muted">はじめての方は、本棚の『花琵琶文庫の手引き』をどうぞ。読みながら操作を覚えられます。</p>
+      <p class="muted">はじめての方は、本棚の『弁天文庫の手引き』をどうぞ。読みながら操作を覚えられます。</p>
       <ul class="howto">
         <li><b>ページをめくる</b>：縦書きは左をタップで次へ、横書きは右をタップで次へ。スワイプ・矢印キー・ホイールも使えます。</li>
         <li><b>メニュー</b>：画面の真ん中をタップ。</li>
         <li><b>マーカー</b>：本文を長押しして文字を選ぶ。</li>
         <li><b>栞</b>：メニュー上部の🔖。</li>
       </ul>
-      <div class="btn-row"><button class="btn btn-ghost" id="openGuide">手引きを開く</button>${installEvt ? '<button class="btn btn-primary" id="installBtn">ホーム画面に追加</button>' : ""}</div>
+      <div class="btn-row"><button class="btn btn-ghost" id="openGuide">手引きを開く</button></div>
+    </section>
+    <section class="card">
+      <h3 class="card-title">アプリとして使う</h3>
+      ${isStandalone()
+        ? '<p class="muted installed-note">インストール済みのアプリとして開いています。</p>'
+        : '<p class="muted">ホーム画面やアプリ一覧に追加すると、全画面・オフラインで読めます。</p><div class="btn-row"><button class="btn btn-primary" id="setInstall">アプリをインストール</button></div>'}
     </section>
     <section class="card">
       <h3 class="card-title">データの保存とバックアップ</h3>
@@ -1337,16 +1438,16 @@ async function renderSettings() {
       <input type="file" id="bkFile" accept=".json,application/json" hidden />
     </section>
     <section class="card about">
-      <h3 class="card-title">花琵琶文庫について</h3>
+      <h3 class="card-title">弁天文庫について</h3>
       <p>完全無料・広告なし・登録不要の読書アプリです。通信はフォントの読み込みだけで、読み込んだ本やメモが外へ送られることはありません。</p>
       <p>金地に桜と琵琶の絵、表紙の文様、付属の小説『金地の四弦』と手引きは、すべてこのアプリのための書き下ろしです。</p>
       <p class="muted">書体：しっぽり明朝・Zen オールド明朝・Zen 丸ゴシック・BIZ UDPゴシック・Klee One（いずれも SIL Open Font License）</p>
     </section>`;
   $("#openGuide").onclick = () => {
-    const g = books.find((b) => b.title === "花琵琶文庫の手引き");
+    const g = books.find((b) => b.title === "弁天文庫の手引き");
     if (g) openBook(g.id); else toast("手引きが見つかりません。「付属の本をもう一度入れる」をお試しください。");
   };
-  $("#installBtn")?.addEventListener("click", async () => { installEvt.prompt(); installEvt = null; renderSettings(); });
+  $("#setInstall")?.addEventListener("click", installApp);
   $("#bkExport").onclick = exportBackup;
   $("#bkImport").onclick = () => $("#bkFile").click();
   $("#bkFile").onchange = (e) => { const f = e.target.files[0]; if (f) importBackup(f); e.target.value = ""; };
@@ -1376,14 +1477,14 @@ async function exportBackup() {
     books,
     contents: withBooks ? await db.allContents() : [],
   };
-  download(`花琵琶文庫_バックアップ_${todayKey()}.json`, JSON.stringify(data), "application/json");
+  download(`弁天文庫_バックアップ_${todayKey()}.json`, JSON.stringify(data), "application/json");
   toast("バックアップを書き出しました");
 }
 
 async function importBackup(file) {
   try {
     const data = JSON.parse(await file.text());
-    if (data.app !== "hanabiwa-bunko") throw new Error("花琵琶文庫のバックアップではありません");
+    if (data.app !== "hanabiwa-bunko") throw new Error("弁天文庫のバックアップではありません");
     const contents = new Map((data.contents || []).map((c) => [c.id, c]));
     let n = 0;
     for (const b of data.books || []) {
@@ -1481,17 +1582,21 @@ function startPetals() {
 
 async function init() {
   $("#heroArt").innerHTML = heroSVG();
+  updateInstallUI();
   $("#shelfSort").value = localStorage.getItem("hb.sort") || "recent";
   startPetals();
   requestPersist();
   try {
     await loadBooks();
+    await migrateNames();
     await seedBooks();
   } catch (e) {
     console.error(e);
     toast("保存領域を開けませんでした。プライベートブラウズでは使えないことがあります。", 6000);
   }
   renderShelf();
+  const start = location.hash.replace("#", "");
+  if (["stats", "notes", "settings"].includes(start)) go(start);
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   }

@@ -1,4 +1,4 @@
-const CACHE_NAME = "hanabiwa-bunko-v1";
+const CACHE_NAME = "hanabiwa-bunko-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -14,6 +14,9 @@ const ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
+  "./icons/icon-maskable-192.png",
+  "./icons/icon-maskable-512.png",
+  "./icons/favicon-32.png",
 ];
 
 self.addEventListener("install", (event) => {

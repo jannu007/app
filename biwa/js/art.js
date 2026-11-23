@@ -1,4 +1,4 @@
-// オリジナルの絵：金地・桜・琵琶・襲（かさね）色。すべてSVGとCSSで描く。
+// オリジナルの絵：黒漆に金の蒔絵（桜・琵琶・十二単の袖）。すべてSVGとCSSで描く。
 
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -7,106 +7,123 @@ const PETAL = "M0,0 C-7,-5 -10,-15 -6,-22 L0,-18.5 L6,-22 C10,-15 7,-5 0,0Z";
 function flowerDefs(id, fill, edge) {
   return `<g id="${id}">
     ${[0, 72, 144, 216, 288].map((r) => `<path d="${PETAL}" transform="rotate(${r})" fill="${fill}" stroke="${edge}" stroke-width="0.8"/>`).join("")}
-    <circle r="3.4" fill="#f7e7a8"/>
-    ${[0, 72, 144, 216, 288].map((r) => `<line x1="0" y1="0" x2="0" y2="-7" transform="rotate(${r + 36})" stroke="#c2465a" stroke-width="0.9"/><circle cx="0" cy="-7.6" r="1.1" transform="rotate(${r + 36})" fill="#c2465a"/>`).join("")}
+    <circle r="3.4" fill="#1a130b"/>
+    ${[0, 72, 144, 216, 288].map((r) => `<line x1="0" y1="0" x2="0" y2="-7" transform="rotate(${r + 36})" stroke="#5a4218" stroke-width="0.9"/><circle cx="0" cy="-7.6" r="1.1" transform="rotate(${r + 36})" fill="#f6e3a6"/>`).join("")}
   </g>`;
 }
 
-/** 本棚の上に飾る絵：金屏風に桜、琵琶と撥、十二単の襲の色 */
+/** 本棚の上に飾る絵：黒漆に金の蒔絵。桜、琵琶と撥、十二単の袖、霞と切金 */
 export function heroSVG() {
   const blossoms = [
     [262, 26, 0.95, 10], [300, 48, 0.8, 40], [236, 58, 0.7, -20], [330, 20, 0.75, 15], [208, 30, 0.6, 33],
     [342, 78, 0.65, -12], [276, 86, 0.55, 22], [184, 64, 0.5, 5], [318, 112, 0.5, 48],
   ];
   const buds = [[222, 18], [290, 14], [352, 52], [250, 96], [196, 48]];
-  const petals = [[120, 70, 30], [96, 140, -40], [160, 210, 70], [60, 220, 12], [318, 200, -24], [140, 32, 60]];
+  const petals = [[120, 70, 30], [96, 140, -40], [160, 210, 70], [60, 220, 12], [318, 200, -24], [140, 32, 60], [196, 150, 18]];
+  // 切金（きりかね）：細かな金箔の四角を散らす（決まった並びにして毎回同じ絵にする）
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  let kirikane = "";
+  for (let i = 0; i < 70; i++) {
+    const x = rnd() * 360, y = rnd() * 260, s = 0.8 + rnd() * 2.6, r = rnd() * 90;
+    kirikane += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${s.toFixed(1)}" height="${s.toFixed(1)}" transform="rotate(${r.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})" opacity="${(0.25 + rnd() * 0.55).toFixed(2)}"/>`;
+  }
+  let dust = "";
+  for (let i = 0; i < 110; i++) dust += `<circle cx="${(rnd() * 360).toFixed(1)}" cy="${(rnd() * 260).toFixed(1)}" r="${(0.25 + rnd() * 0.7).toFixed(2)}" opacity="${(0.2 + rnd() * 0.5).toFixed(2)}"/>`;
+  // 青海波（衣の文様）
+  let waves = "";
+  for (let y = 222; y <= 270; y += 9) for (let x = (y / 9) % 2 ? 0 : 9; x <= 220; x += 18) {
+    waves += [8, 5.5, 3].map((r) => `<path d="M${x - r},${y} A${r},${r} 0 0 1 ${x + r},${y}"/>`).join("");
+  }
   return `
-<svg viewBox="0 0 360 260" preserveAspectRatio="xMaxYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="金地に桜と琵琶の絵">
+<svg viewBox="0 0 360 260" preserveAspectRatio="xMaxYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="黒漆に金の蒔絵で描いた桜と琵琶">
   <defs>
-    <radialGradient id="gGold" cx="35%" cy="30%" r="85%">
-      <stop offset="0" stop-color="#f6e6ad"/>
-      <stop offset="0.55" stop-color="#e9cd82"/>
-      <stop offset="1" stop-color="#d4ad5c"/>
+    <radialGradient id="gLacquer" cx="62%" cy="40%" r="80%">
+      <stop offset="0" stop-color="#211a12"/>
+      <stop offset="0.55" stop-color="#110d09"/>
+      <stop offset="1" stop-color="#050403"/>
     </radialGradient>
-    <linearGradient id="gWood" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#b98447"/>
-      <stop offset="0.6" stop-color="#8d5a2b"/>
-      <stop offset="1" stop-color="#5e3a1c"/>
+    <linearGradient id="gKin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6e3a6"/>
+      <stop offset="0.35" stop-color="#d7b468"/>
+      <stop offset="0.65" stop-color="#9c7630"/>
+      <stop offset="1" stop-color="#e9cf86"/>
     </linearGradient>
-    <linearGradient id="gBachi" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fbf3dc"/>
-      <stop offset="1" stop-color="#e2d2a6"/>
+    <linearGradient id="gKinSoft" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c9a55a" stop-opacity="0"/>
+      <stop offset="0.25" stop-color="#c9a55a" stop-opacity="0.32"/>
+      <stop offset="0.75" stop-color="#e2c57c" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#c9a55a" stop-opacity="0"/>
     </linearGradient>
-    <filter id="fPaper" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
-      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.32  0 0 0 0 0.12  0 0 0 0.10 0"/>
-      <feComposite in2="SourceGraphic" operator="in"/>
-    </filter>
-    <filter id="fSoft"><feGaussianBlur stdDeviation="0.4"/></filter>
+    <linearGradient id="gBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3dc9a"/>
+      <stop offset="0.45" stop-color="#c9a55a"/>
+      <stop offset="0.8" stop-color="#8a6a2c"/>
+      <stop offset="1" stop-color="#b8924a"/>
+    </linearGradient>
     <clipPath id="cBody"><path d="M0,-40 C30,-38 52,0 52,50 C52,100 28,125 0,125 C-28,125 -52,100 -52,50 C-52,0 -30,-38 0,-40Z"/></clipPath>
-    ${flowerDefs("fl", "#fbd9df", "#e89aab")}
+    ${flowerDefs("fl", "url(#gKin)", "#6b5020")}
   </defs>
 
-  <rect width="360" height="260" fill="url(#gGold)"/>
-  <rect width="360" height="260" fill="#000" filter="url(#fPaper)" opacity="0.9"/>
-  <!-- 金箔の継ぎ目 -->
-  <g stroke="#c79c4c" stroke-opacity="0.35" stroke-width="0.8">
-    <line x1="0" y1="86" x2="360" y2="86"/><line x1="0" y1="172" x2="360" y2="172"/>
-    <line x1="90" y1="0" x2="90" y2="86"/><line x1="210" y1="86" x2="210" y2="172"/><line x1="130" y1="172" x2="130" y2="260"/>
+  <rect width="360" height="260" fill="url(#gLacquer)"/>
+  <!-- 霞（すやり霞） -->
+  <g fill="url(#gKinSoft)">
+    <rect x="150" y="150" width="240" height="16" rx="8"/>
+    <rect x="120" y="186" width="260" height="14" rx="7"/>
+    <rect x="170" y="126" width="120" height="10" rx="5"/>
   </g>
-  <!-- 金雲 -->
-  <path d="M-10,214 C30,196 60,206 90,198 C126,188 150,206 190,200 C230,194 250,210 300,204 C330,200 350,212 370,208 L370,260 L-10,260Z" fill="#dcb963" opacity="0.7"/>
+  <g fill="#d9bb72">${kirikane}</g>
+  <g fill="#e8cf8a">${dust}</g>
 
-  <!-- 桜の枝 -->
-  <g fill="none" stroke-linecap="round">
-    <path d="M372,6 C340,18 312,26 288,40 C262,55 238,52 214,44" stroke="#4a3223" stroke-width="7"/>
-    <path d="M288,40 C296,62 312,80 330,104" stroke="#4a3223" stroke-width="4.5"/>
-    <path d="M250,48 C240,30 226,22 206,24" stroke="#4a3223" stroke-width="3.5"/>
-    <path d="M214,44 C200,52 190,60 178,64" stroke="#4a3223" stroke-width="3"/>
-    <path d="M330,104 C340,110 346,120 350,132" stroke="#4a3223" stroke-width="2.4"/>
-    <path d="M300,30 C304,18 300,10 292,4" stroke="#4a3223" stroke-width="2.4"/>
-    <path d="M372,6 C340,18 312,26 288,40" stroke="#7b5a3e" stroke-width="2" stroke-opacity="0.6" transform="translate(-1,-2)"/>
+  <!-- 桜の枝（金の高蒔絵） -->
+  <g fill="none" stroke-linecap="round" stroke="url(#gKin)">
+    <path d="M372,6 C340,18 312,26 288,40 C262,55 238,52 214,44" stroke-width="6"/>
+    <path d="M288,40 C296,62 312,80 330,104" stroke-width="4"/>
+    <path d="M250,48 C240,30 226,22 206,24" stroke-width="3"/>
+    <path d="M214,44 C200,52 190,60 178,64" stroke-width="2.6"/>
+    <path d="M330,104 C340,110 346,120 350,132" stroke-width="2"/>
+    <path d="M300,30 C304,18 300,10 292,4" stroke-width="2"/>
   </g>
-  ${buds.map(([x, y]) => `<g transform="translate(${x},${y})"><ellipse rx="3.4" ry="5" fill="#f0a1b3" stroke="#c2465a" stroke-width="0.6"/><path d="M-3,3 L0,7 L3,3" fill="#6e8a4a"/></g>`).join("")}
+  ${buds.map(([x, y]) => `<g transform="translate(${x},${y})"><ellipse rx="3.2" ry="4.8" fill="url(#gKin)" stroke="#6b5020" stroke-width="0.5"/></g>`).join("")}
   ${blossoms.map(([x, y, s, r]) => `<use href="#fl" transform="translate(${x},${y}) rotate(${r}) scale(${s})"/>`).join("")}
 
-  <!-- 襲の色の衣（十二単の袖のかさなり） -->
-  <g>
-    <path d="M-10,262 C10,214 44,196 84,200 C112,203 120,226 150,232 C176,237 196,226 210,262Z" fill="#b8a3c8"/>
-    <path d="M-10,262 C8,226 38,212 72,214 C100,216 112,238 140,244 C160,248 180,244 192,262Z" fill="#cf5a3e"/>
-    <path d="M-10,262 C6,238 30,228 58,229 C86,230 100,248 124,252 C140,255 156,254 168,262Z" fill="#6f9a72"/>
-    <path d="M-10,262 C4,248 22,242 44,243 C66,244 80,256 96,262Z" fill="#2c2522"/>
-    <path d="M30,212 C46,222 52,236 50,250" stroke="#2c2522" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
-    <path d="M104,206 C120,214 128,228 126,244" stroke="#2c2522" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.55"/>
+  <!-- 十二単の袖：黒の重ねに金の縁と青海波 -->
+  <g stroke="url(#gKin)" stroke-width="1.1">
+    <path d="M-10,262 C10,214 44,196 84,200 C112,203 120,226 150,232 C176,237 196,226 210,262Z" fill="#1d1711"/>
+    <path d="M-10,262 C8,226 38,212 72,214 C100,216 112,238 140,244 C160,248 180,244 192,262Z" fill="#2a1712"/>
+    <path d="M-10,262 C6,238 30,228 58,229 C86,230 100,248 124,252 C140,255 156,254 168,262Z" fill="#14110d"/>
+    <path d="M-10,262 C4,248 22,242 44,243 C66,244 80,256 96,262Z" fill="#0a0806"/>
   </g>
+  <g fill="none" stroke="#c9a55a" stroke-width="0.6" opacity="0.45" clip-path="url(#cSleeve)">${waves}</g>
+  <clipPath id="cSleeve"><path d="M-10,262 C10,214 44,196 84,200 C112,203 120,226 150,232 C176,237 196,226 210,262Z"/></clipPath>
 
   <!-- 琵琶 -->
   <g transform="translate(252,150) rotate(-30) scale(0.82)">
-    <path d="M-7,-38 L-5,-96 L5,-96 L7,-38Z" fill="#6b4422"/>
-    <path d="M-5,-96 L5,-96 L15,-132 L5,-135Z" fill="#4e301a"/>
-    ${[-104, -112, -120, -128].map((y, i) => `<line x1="${i % 2 ? 2 : -14}" y1="${y}" x2="${i % 2 ? 20 : 4}" y2="${y + 2}" stroke="#2b1a0e" stroke-width="3" stroke-linecap="round" transform="rotate(${i * 2} 5 ${y})"/>`).join("")}
-    <path d="M0,-40 C30,-38 52,0 52,50 C52,100 28,125 0,125 C-28,125 -52,100 -52,50 C-52,0 -30,-38 0,-40Z" fill="url(#gWood)" stroke="#3b2412" stroke-width="2"/>
+    <path d="M-7,-38 L-5,-96 L5,-96 L7,-38Z" fill="#7a5c26"/>
+    <path d="M-5,-96 L5,-96 L15,-132 L5,-135Z" fill="#5e461c"/>
+    ${[-104, -112, -120, -128].map((y, i) => `<line x1="${i % 2 ? 2 : -14}" y1="${y}" x2="${i % 2 ? 20 : 4}" y2="${y + 2}" stroke="#e2c57c" stroke-width="2.6" stroke-linecap="round" transform="rotate(${i * 2} 5 ${y})"/>`).join("")}
+    <path d="M0,-40 C30,-38 52,0 52,50 C52,100 28,125 0,125 C-28,125 -52,100 -52,50 C-52,0 -30,-38 0,-40Z" fill="url(#gBody)" stroke="#f3dfa3" stroke-width="1.4"/>
     <g clip-path="url(#cBody)">
-      <path d="M-60,30 L60,52 L60,86 L-60,64Z" fill="#231c19"/>
+      <path d="M-60,30 L60,52 L60,86 L-60,64Z" fill="#0c0a08"/>
       <use href="#fl" transform="translate(-16,52) scale(0.42)"/>
       <use href="#fl" transform="translate(18,62) scale(0.32) rotate(20)"/>
-      <path d="M-60,30 L60,52" stroke="#c79c4c" stroke-width="1.4"/>
-      <path d="M-60,64 L60,86" stroke="#c79c4c" stroke-width="1.4"/>
-      <ellipse cx="-12" cy="-6" rx="30" ry="40" fill="#fff" opacity="0.08"/>
+      <path d="M-60,30 L60,52" stroke="#f0d995" stroke-width="1.2"/>
+      <path d="M-60,64 L60,86" stroke="#f0d995" stroke-width="1.2"/>
+      <ellipse cx="-14" cy="-6" rx="28" ry="42" fill="#fff8dc" opacity="0.16"/>
     </g>
-    <path d="M-34,2 q6,-7 12,0 q-6,-3 -12,0Z" fill="#2b1a0e"/>
-    <path d="M22,2 q6,-7 12,0 q-6,-3 -12,0Z" fill="#2b1a0e"/>
-    <rect x="-24" y="97" width="48" height="7" rx="2" fill="#2b1a0e"/>
-    ${[-9, -3, 3, 9].map((x) => `<line x1="${x * 0.5}" y1="-96" x2="${x * 1.9}" y2="99" stroke="#f4e6c0" stroke-width="0.9"/>`).join("")}
+    <rect x="-24" y="97" width="48" height="7" rx="2" fill="#0c0a08" stroke="#c9a55a" stroke-width="0.8"/>
+    ${[-9, -3, 3, 9].map((x) => `<line x1="${x * 0.5}" y1="-96" x2="${x * 1.9}" y2="99" stroke="#2a2014" stroke-width="0.9"/>`).join("")}
   </g>
   <!-- 撥 -->
   <g transform="translate(300,178) rotate(28)">
-    <path d="M0,0 L-24,-52 Q0,-62 24,-52Z" fill="url(#gBachi)" stroke="#8d7240" stroke-width="1.2"/>
-    <rect x="-4" y="-2" width="8" height="18" rx="3" fill="#e2d2a6" stroke="#8d7240" stroke-width="1"/>
+    <path d="M0,0 L-24,-52 Q0,-62 24,-52Z" fill="#0e0b08" stroke="url(#gKin)" stroke-width="1.4"/>
+    <path d="M-14,-44 Q0,-50 14,-44" fill="none" stroke="#c9a55a" stroke-width="0.6" opacity="0.7"/>
+    <rect x="-4" y="-2" width="8" height="18" rx="3" fill="url(#gKin)"/>
   </g>
 
-  <!-- 舞う花びら -->
-  ${petals.map(([x, y, r]) => `<path d="M0,0 C-4,-3 -5,-9 -3,-12 L0,-10 L3,-12 C5,-9 4,-3 0,0Z" transform="translate(${x},${y}) rotate(${r})" fill="#f8cfd8" stroke="#e39aab" stroke-width="0.6"/>`).join("")}
+  <!-- 舞う花びら（金） -->
+  ${petals.map(([x, y, r]) => `<path d="M0,0 C-4,-3 -5,-9 -3,-12 L0,-10 L3,-12 C5,-9 4,-3 0,0Z" transform="translate(${x},${y}) rotate(${r})" fill="url(#gKin)" opacity="0.85"/>`).join("")}
+  <rect x="0.5" y="0.5" width="359" height="259" fill="none" stroke="#c9a55a" stroke-opacity="0.35"/>
 </svg>`;
 }
 
@@ -114,14 +131,13 @@ export function heroSVG() {
 
 // 襲の色目（表・裏・題簽の色）
 const KASANE = [
-  { name: "桜", a: "#f7e3e6", b: "#e9aab8", ink: "#6e2a3a" },
-  { name: "藤", a: "#e2d8ec", b: "#a58fbf", ink: "#3e2f56" },
-  { name: "山吹", a: "#f7df9c", b: "#d99a3a", ink: "#5a3b12" },
-  { name: "若草", a: "#dde9c7", b: "#89a86a", ink: "#304423" },
-  { name: "紅梅", a: "#f2c6c2", b: "#c2554f", ink: "#5c1f1b" },
-  { name: "青藍", a: "#cfdbe6", b: "#4f6f95", ink: "#1f2f45" },
-  { name: "金地", a: "#f1dea0", b: "#c99a46", ink: "#4a3412" },
-  { name: "墨", a: "#4a403a", b: "#221c19", ink: "#f3e8d6" },
+  { name: "黒漆", a: "#15110d", b: "#c9a55a", ink: "#e9d6a4" },
+  { name: "深緋", a: "#3a1512", b: "#d0a85c", ink: "#f0dca8" },
+  { name: "濃紫", a: "#24182e", b: "#c9a55a", ink: "#e6d3a6" },
+  { name: "鉄紺", a: "#131b2a", b: "#c7a75f", ink: "#e4d4aa" },
+  { name: "千歳緑", a: "#142319", b: "#c9a55a", ink: "#e3d6a8" },
+  { name: "黒橡", a: "#201a14", b: "#d6b26a", ink: "#eddcaa" },
+  { name: "金地", a: "#b8924a", b: "#2a1f12", ink: "#1a130b" },
 ];
 
 export function hashStr(s) {
