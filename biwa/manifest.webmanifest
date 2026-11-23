@@ -1,0 +1,30 @@
+{
+  "name": "花琵琶文庫 - 縦書き・ルビ対応の無料読書アプリ",
+  "short_name": "花琵琶文庫",
+  "description": "縦書き・ルビ・青空文庫ZIP・EPUB・TXTに対応した、広告なし・登録不要・完全無料の読書アプリ。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4ead2",
+  "theme_color": "#efe0b0",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["books", "education", "entertainment"],
+  "file_handlers": [
+    {
+      "action": "./index.html",
+      "accept": {
+        "text/plain": [".txt"],
+        "application/epub+zip": [".epub"],
+        "application/zip": [".zip"]
+      }
+    }
+  ],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
