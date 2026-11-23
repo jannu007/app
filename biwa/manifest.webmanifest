@@ -1,30 +1,43 @@
 {
+  "id": "./",
   "name": "花琵琶文庫 - 縦書き・ルビ対応の無料読書アプリ",
   "short_name": "花琵琶文庫",
-  "description": "縦書き・ルビ・青空文庫ZIP・EPUB・TXTに対応した、広告なし・登録不要・完全無料の読書アプリ。",
+  "description": "黒漆に金の蒔絵。縦書き・ルビ・青空文庫ZIP・EPUB・TXTに対応した、広告なし・登録不要・完全無料の読書アプリ。オフラインでも読めます。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#f4ead2",
-  "theme_color": "#efe0b0",
+  "background_color": "#0b0907",
+  "theme_color": "#0b0907",
   "lang": "ja",
   "dir": "ltr",
   "categories": ["books", "education", "entertainment"],
+  "launch_handler": { "client_mode": "focus-existing" },
   "file_handlers": [
     {
       "action": "./index.html",
       "accept": {
         "text/plain": [".txt"],
         "application/epub+zip": [".epub"],
-        "application/zip": [".zip"]
+        "application/zip": [".zip"],
+        "text/markdown": [".md"]
       }
     }
+  ],
+  "shortcuts": [
+    { "name": "本棚", "short_name": "本棚", "url": "./index.html#library", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "読書記録", "short_name": "記録", "url": "./index.html#stats", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "screenshots/narrow-shelf.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "黒漆と金の本棚" },
+    { "src": "screenshots/narrow-reader.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "ルビつきの縦書き" },
+    { "src": "screenshots/wide-shelf.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "本棚" }
   ]
 }
