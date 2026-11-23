@@ -1,0 +1,20 @@
+{
+  "name": "どうぶつ言の葉 - 犬・猫の気持ちがわかる無料アプリ",
+  "short_name": "言の葉",
+  "description": "犬や猫の鳴き声としぐさから気持ちを推定して「ことば」にする無料アプリ。音声は端末内だけで解析します。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6efe1",
+  "theme_color": "#f6efe1",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["lifestyle", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

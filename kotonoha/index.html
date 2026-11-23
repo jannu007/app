@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+<meta name="referrer" content="no-referrer" />
+<title>どうぶつ言の葉 - 犬・猫の気持ちがわかる無料アプリ</title>
+<meta name="description" content="犬や猫の鳴き声を録音すると、声の高さ・長さ・回数・音色と状況から気持ちを推定して「ことば」にする完全無料アプリ。しっぽ・耳・目などのしぐさからの気持ち診断と記録つき。音声は端末内だけで解析し、サーバーには一切送信されません。" />
+<meta name="theme-color" content="#f6efe1" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#211d19" media="(prefers-color-scheme: dark)" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="どうぶつ言の葉" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/app.js" defer></script>
+</head>
+<body>
+
+<div class="washi-bg" aria-hidden="true"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <img class="brand-emblem" src="icons/favicon-32.png" width="30" height="30" alt="" />
+      <h1>どうぶつ言の葉</h1>
+    </div>
+    <button id="menuBtn" type="button" class="icon-btn" aria-label="メニュー" aria-haspopup="true" aria-expanded="false" aria-controls="menuPanel">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M4 7h16v2H4zM4 15h16v2H4z"/></svg>
+    </button>
+    <nav id="menuPanel" class="menu-panel" hidden>
+      <a class="menu-item" href="../">🏠 アプリ一覧へ</a>
+      <button type="button" data-action="about" class="menu-item">📖 このアプリのしくみ</button>
+      <button type="button" data-action="clear" class="menu-item danger">🗑 記録をすべて削除</button>
+    </nav>
+  </header>
+  <div id="menuScrim" class="menu-scrim" hidden></div>
+
+  <div class="wave-divider" aria-hidden="true"></div>
+
+  <!-- 動物の種類と名前 -->
+  <section class="card pet-card" aria-label="どの子の気持ちを聞く？">
+    <div class="species-switch" role="radiogroup" aria-label="動物の種類">
+      <button type="button" class="species-btn" role="radio" data-species="dog" aria-checked="true"><span aria-hidden="true">🐶</span> 犬</button>
+      <button type="button" class="species-btn" role="radio" data-species="cat" aria-checked="false"><span aria-hidden="true">🐱</span> 猫</button>
+    </div>
+    <label class="pet-name">
+      <span>名前</span>
+      <input id="petName" type="text" maxlength="20" autocomplete="off" placeholder="例：こむぎ（任意）" />
+    </label>
+  </section>
+
+  <nav class="tab-bar" role="tablist" aria-label="機能">
+    <button type="button" class="tab-btn active" data-tab="voice" role="tab" aria-selected="true" aria-controls="panel-voice">
+      <span class="tab-icon" aria-hidden="true">🎙️</span><span>鳴き声</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="body" role="tab" aria-selected="false" aria-controls="panel-body">
+      <span class="tab-icon" aria-hidden="true">🐾</span><span>しぐさ</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="history" role="tab" aria-selected="false" aria-controls="panel-history">
+      <span class="tab-icon" aria-hidden="true">📔</span><span>記録</span>
+    </button>
+  </nav>
+
+  <main class="main-area">
+
+    <!-- ===================== 鳴き声タブ ===================== -->
+    <section id="panel-voice" class="tab-panel" role="tabpanel">
+
+      <section class="card">
+        <h2 class="section-title">いまの状況は？<small>（任意・精度が上がります）</small></h2>
+        <div id="contextChips" class="chips" role="radiogroup" aria-label="状況"></div>
+      </section>
+
+      <section class="card record-card">
+        <canvas id="scope" class="scope" width="600" height="140" aria-hidden="true"></canvas>
+        <p id="recordHint" class="record-hint">鳴いたらボタンを押して、そのまま近づけて録音（最大6秒）</p>
+        <button id="recordBtn" type="button" class="record-btn" aria-pressed="false">
+          <span class="record-dot" aria-hidden="true"></span>
+          <span id="recordLabel">録音する</span>
+        </button>
+        <p id="recordTimer" class="record-timer" aria-live="off">0.0 / 6.0 秒</p>
+        <label class="file-btn">
+          <input id="fileInput" type="file" accept="audio/*,video/*" />
+          <span>📁 録音済みの音声・動画から</span>
+        </label>
+      </section>
+
+      <section id="voiceResult" class="card result-card" hidden aria-live="polite"></section>
+
+      <section class="card note-card">
+        <p><strong>ご注意：</strong>動物の「ことば」を正確に翻訳できる技術は、まだ世界に存在しません。このアプリは、鳴き声の<em>高さ・長さ・回数・抑揚・音色</em>と状況から、動物行動学の研究で知られている傾向にもとづいて「こんな気持ちかも」を推定します。しぐさタブと合わせて使うと、より確かになります。</p>
+        <p>🔒 録音した音声は<strong>この端末の中だけ</strong>で解析し、保存も送信もしません。</p>
+      </section>
+    </section>
+
+    <!-- ===================== しぐさタブ ===================== -->
+    <section id="panel-body" class="tab-panel" role="tabpanel" hidden>
+      <section class="card">
+        <h2 class="section-title">見えているしぐさを選んでください<small>（いくつでも）</small></h2>
+        <div id="signalGroups" class="signal-groups"></div>
+        <div class="row-actions">
+          <button id="bodyResetBtn" type="button" class="btn btn-ghost">選び直す</button>
+          <button id="bodyBtn" type="button" class="btn btn-primary">気持ちを読む</button>
+        </div>
+      </section>
+      <section id="bodyResult" class="card result-card" hidden aria-live="polite"></section>
+    </section>
+
+    <!-- ===================== 記録タブ ===================== -->
+    <section id="panel-history" class="tab-panel" role="tabpanel" hidden>
+      <section class="card">
+        <h2 class="section-title">言の葉の記録</h2>
+        <p id="historyEmpty" class="empty">まだ記録がありません。結果画面の「記録する」で残せます。</p>
+        <ol id="historyList" class="history-list"></ol>
+      </section>
+    </section>
+
+  </main>
+
+  <dialog id="aboutDialog" class="dialog" aria-labelledby="aboutTitle">
+    <h2 id="aboutTitle">このアプリのしくみ</h2>
+    <ol>
+      <li>録音した音から、<strong>声の高さ（基本周波数）・鳴いた回数と長さ・テンポ・語尾の上がり下がり・音色（澄んだ声か、ザラザラした雑音か）・大きさ・ゴロゴロ音のリズム</strong>を計算します。</li>
+      <li>「低く濁った声は威嚇、高く澄んだ声は不安や甘え」「見知らぬ人への吠えは低く速い」「猫の要求のニャーは語尾が上がりやすい」など、動物行動学の研究で報告されている傾向と照らし合わせて、当てはまりの度合いを計算します。</li>
+      <li>選んだ「状況」も手がかりにして、いちばん近い気持ちを「ことば」にします。</li>
+    </ol>
+    <p>結果はあくまで推定です。個体差や犬種・猫種、録音環境で大きく変わります。体調の異変が心配なときは、アプリではなく獣医師に相談してください。</p>
+    <p>通信を使うのは、アプリ本体と文字フォントの読み込みだけです。音声・記録・名前はこの端末のブラウザ内にだけ保存されます。</p>
+    <button id="aboutClose" class="btn btn-primary" type="button">閉じる</button>
+  </dialog>
+
+  <footer class="app-footer">音声はサーバーに送信されません ・ 完全無料</footer>
+</div>
+
+</body>
+</html>

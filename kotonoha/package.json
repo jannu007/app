@@ -1,0 +1,21 @@
+{
+  "name": "kotonoha",
+  "private": true,
+  "version": "1.0.0",
+  "description": "どうぶつ言の葉 - 鳴き声としぐさから犬・猫の気持ちを推定する無料アプリ（端末内で完結）",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3"
+  }
+}
