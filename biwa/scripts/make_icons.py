@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""花琵琶文庫のアイコン（黒漆に金蒔絵の琵琶と桜）を生成する。Pillow使用。"""
+"""弁天文庫のアイコン（黒漆に金蒔絵の琵琶と桜）を生成する。Pillow使用。"""
 import math
 import os
 import random

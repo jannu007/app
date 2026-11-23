@@ -190,11 +190,26 @@ async function importFiles(files) {
   if (added) { closeSheet(); go("library"); }
 }
 
+// 旧名「花琵琶文庫」で入れた付属の本を新しい名前にそろえる
+async function migrateNames() {
+  const OLD = "\u82b1\u7435\u7436\u6587\u5eab"; // 花琵琶文庫
+  for (const b of books) {
+    if (!b.builtin) continue;
+    const t = b.title.replace(OLD, "弁天文庫");
+    const a = (b.author || "").replace(OLD, "弁天文庫");
+    if (t !== b.title || a !== b.author) {
+      b.title = t;
+      b.author = a;
+      await db.putBook(b);
+    }
+  }
+}
+
 async function seedBooks() {
   if (localStorage.getItem("hb.seeded")) return;
   const story = parseAozora(SAMPLE_STORY, "金地の四弦.txt");
   await saveParsed(story, { builtin: true, added: Date.now() - 1000 });
-  const guide = parseAozora(SAMPLE_GUIDE, "花琵琶文庫の手引き.txt");
+  const guide = parseAozora(SAMPLE_GUIDE, "弁天文庫の手引き.txt");
   await saveParsed(guide, { builtin: true, added: Date.now() });
   localStorage.setItem("hb.seeded", "1");
 }
@@ -1291,7 +1306,7 @@ function download(name, text, type = "text/plain") {
 function exportNotes(list) {
   if (!list.length) { toast("書き出すメモがありません"); return; }
   const colors = { 1: "桜", 2: "山吹", 3: "若草", 4: "藤" };
-  let md = `# 花琵琶文庫 マーカーとメモ\n\n書き出した日：${fmtDate(Date.now())}\n\n`;
+  let md = `# 弁天文庫 マーカーとメモ\n\n書き出した日：${fmtDate(Date.now())}\n\n`;
   for (const b of list) {
     md += `## ${b.title}${b.author ? ` / ${b.author}` : ""}\n\n`;
     for (const h of [...b.highlights].sort((x, y) => x.sec - y.sec || x.start - y.start)) {
@@ -1301,7 +1316,7 @@ function exportNotes(list) {
       md += "\n";
     }
   }
-  download(`花琵琶文庫_メモ_${todayKey()}.md`, md, "text/markdown");
+  download(`弁天文庫_メモ_${todayKey()}.md`, md, "text/markdown");
   toast("メモを書き出しました");
 }
 
@@ -1362,7 +1377,7 @@ function openInstallGuide() {
   const body = openSheet("アプリをインストール", `
     <div class="install-hero">
       <img src="icons/icon-192.png" alt="" />
-      <p class="muted">花琵琶文庫はインストールできるWebアプリです。<b class="installed-note">無料・登録不要</b>で、ストアを通さずに数秒で入ります。</p>
+      <p class="muted">弁天文庫はインストールできるWebアプリです。<b class="installed-note">無料・登録不要</b>で、ストアを通さずに数秒で入ります。</p>
     </div>
     ${installEvt ? '<button class="btn btn-primary full" id="doInstall">いますぐインストール</button>' : ""}
     <ol class="install-steps">${steps.map((t) => `<li>${t}</li>`).join("")}</ol>
@@ -1393,7 +1408,7 @@ async function renderSettings() {
   $("#settingsBody").innerHTML = `
     <section class="card">
       <h3 class="card-title">使い方</h3>
-      <p class="muted">はじめての方は、本棚の『花琵琶文庫の手引き』をどうぞ。読みながら操作を覚えられます。</p>
+      <p class="muted">はじめての方は、本棚の『弁天文庫の手引き』をどうぞ。読みながら操作を覚えられます。</p>
       <ul class="howto">
         <li><b>ページをめくる</b>：縦書きは左をタップで次へ、横書きは右をタップで次へ。スワイプ・矢印キー・ホイールも使えます。</li>
         <li><b>メニュー</b>：画面の真ん中をタップ。</li>
@@ -1423,13 +1438,13 @@ async function renderSettings() {
       <input type="file" id="bkFile" accept=".json,application/json" hidden />
     </section>
     <section class="card about">
-      <h3 class="card-title">花琵琶文庫について</h3>
+      <h3 class="card-title">弁天文庫について</h3>
       <p>完全無料・広告なし・登録不要の読書アプリです。通信はフォントの読み込みだけで、読み込んだ本やメモが外へ送られることはありません。</p>
       <p>金地に桜と琵琶の絵、表紙の文様、付属の小説『金地の四弦』と手引きは、すべてこのアプリのための書き下ろしです。</p>
       <p class="muted">書体：しっぽり明朝・Zen オールド明朝・Zen 丸ゴシック・BIZ UDPゴシック・Klee One（いずれも SIL Open Font License）</p>
     </section>`;
   $("#openGuide").onclick = () => {
-    const g = books.find((b) => b.title === "花琵琶文庫の手引き");
+    const g = books.find((b) => b.title === "弁天文庫の手引き");
     if (g) openBook(g.id); else toast("手引きが見つかりません。「付属の本をもう一度入れる」をお試しください。");
   };
   $("#setInstall")?.addEventListener("click", installApp);
@@ -1462,14 +1477,14 @@ async function exportBackup() {
     books,
     contents: withBooks ? await db.allContents() : [],
   };
-  download(`花琵琶文庫_バックアップ_${todayKey()}.json`, JSON.stringify(data), "application/json");
+  download(`弁天文庫_バックアップ_${todayKey()}.json`, JSON.stringify(data), "application/json");
   toast("バックアップを書き出しました");
 }
 
 async function importBackup(file) {
   try {
     const data = JSON.parse(await file.text());
-    if (data.app !== "hanabiwa-bunko") throw new Error("花琵琶文庫のバックアップではありません");
+    if (data.app !== "hanabiwa-bunko") throw new Error("弁天文庫のバックアップではありません");
     const contents = new Map((data.contents || []).map((c) => [c.id, c]));
     let n = 0;
     for (const b of data.books || []) {
@@ -1573,6 +1588,7 @@ async function init() {
   requestPersist();
   try {
     await loadBooks();
+    await migrateNames();
     await seedBooks();
   } catch (e) {
     console.error(e);

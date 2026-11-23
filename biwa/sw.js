@@ -1,4 +1,4 @@
-const CACHE_NAME = "hanabiwa-bunko-v2";
+const CACHE_NAME = "hanabiwa-bunko-v3";
 const ASSETS = [
   "./",
   "./index.html",
